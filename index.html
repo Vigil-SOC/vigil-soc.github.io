@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VIGIL — Your AI SOC, Open Source</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:       #1a2744;
+      --navy-light: #2a3d6b;
+      --green:      #2d6e45;
+      --green-mid:  #3a8c58;
+      --green-light:#e6f2ea;
+      --silver:     #8a9bb5;
+      --silver-light:#d6dde8;
+      --silver-pale: #eef1f6;
+      --white:      #ffffff;
+      --bg-alt:     #f8f9fc;
+      --text:       #1a2744;
+      --text-muted: #5a6a82;
+      --red-warn:   #c0392b;
+      --radius:     10px;
+      --radius-lg:  18px;
+      --shadow:     0 4px 24px rgba(26,39,68,0.09);
+      --shadow-lg:  0 8px 40px rgba(26,39,68,0.14);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--white);
+      color: var(--text);
+      line-height: 1.65;
+      font-size: 16px;
+    }
+    img { display: block; max-width: 100%; }
+    a { color: var(--green); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code, kbd, pre { font-family: 'Fira Mono', 'Cascadia Code', 'Consolas', monospace; }
+
+    /* ─── Utility ──────────────────────────────────────────────────── */
+    .container { max-width: 1080px; margin: 0 auto; padding: 0 28px; }
+    .section    { padding: 80px 0; }
+    .section-alt { background: var(--bg-alt); }
+    .tag {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      padding: 4px 12px; border-radius: 99px;
+      background: var(--green-light); color: var(--green);
+      margin-bottom: 14px;
+    }
+    .tag-navy { background: #e6eaf3; color: var(--navy); }
+    h1 { font-size: clamp(2.4rem, 5vw, 3.8rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
+    h2 { font-size: clamp(1.7rem, 3vw, 2.4rem); font-weight: 800; letter-spacing: -.01em; margin-bottom: 16px; }
+    h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; }
+    p  { color: var(--text-muted); margin-bottom: 14px; }
+    p:last-child { margin-bottom: 0; }
+    .lead { font-size: 1.18rem; color: var(--text-muted); line-height: 1.7; }
+    .center { text-align: center; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+    @media (max-width: 700px) { .grid-4 { grid-template-columns: 1fr 1fr; } }
+
+    /* ─── Buttons ──────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 26px; border-radius: var(--radius);
+      font-size: .95rem; font-weight: 700; cursor: pointer;
+      transition: all .18s ease; border: 2px solid transparent;
+      text-decoration: none !important;
+    }
+    .btn-primary {
+      background: var(--green); color: var(--white);
+    }
+    .btn-primary:hover { background: var(--green-mid); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(45,110,69,.3); }
+    .btn-outline {
+      background: transparent; color: var(--navy);
+      border-color: var(--silver-light);
+    }
+    .btn-outline:hover { border-color: var(--navy); background: var(--silver-pale); transform: translateY(-2px); }
+    .btn-ghost {
+      background: rgba(255,255,255,.12); color: white;
+      border-color: rgba(255,255,255,.3);
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,.22); transform: translateY(-2px); }
+
+    /* ─── Nav ──────────────────────────────────────────────────────── */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--silver-light);
+      padding: 0 28px;
+    }
+    .nav-inner {
+      max-width: 1080px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.2rem; color: var(--navy); text-decoration: none !important; }
+    .nav-logo img { height: 36px; width: 36px; }
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-link { font-size: .88rem; font-weight: 600; color: var(--text-muted); padding: 6px 12px; border-radius: 8px; transition: all .15s; }
+    .nav-link:hover { color: var(--navy); background: var(--silver-pale); text-decoration: none; }
+    .nav-cta { background: var(--navy); color: white !important; padding: 7px 16px; border-radius: 8px; font-size: .88rem; font-weight: 700; }
+    .nav-cta:hover { background: var(--navy-light); text-decoration: none; }
+    @media (max-width: 700px) { .nav-links .nav-link:not(.nav-cta) { display: none; } }
+
+    /* ─── Hero ─────────────────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(160deg, var(--navy) 0%, #2a3d6b 45%, #1f4d35 100%);
+      padding: 90px 28px 80px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-logo {
+      width: 120px; height: 120px;
+      margin: 0 auto 28px;
+      filter: drop-shadow(0 8px 32px rgba(0,0,0,.4));
+      animation: floatIn .7s ease both;
+    }
+    @keyframes floatIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .hero h1 { color: white; margin-bottom: 14px; animation: fadeUp .6s .1s ease both; }
+    .hero h1 span { color: #5fd68c; }
+    .hero .lead { color: rgba(255,255,255,.78); max-width: 600px; margin: 0 auto 36px; animation: fadeUp .6s .2s ease both; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; animation: fadeUp .6s .3s ease both; }
+    .hero-terminal {
+      margin: 44px auto 0;
+      max-width: 640px;
+      background: rgba(0,0,0,.5);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      font-size: .88rem;
+      text-align: left;
+      animation: fadeUp .6s .4s ease both;
+    }
+    .terminal-bar {
+      background: rgba(255,255,255,.07);
+      padding: 10px 16px;
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .terminal-dot-red   { background: #ff5f57; }
+    .terminal-dot-yellow{ background: #febc2e; }
+    .terminal-dot-green { background: #28c840; }
+    .terminal-title { font-size: .75rem; color: rgba(255,255,255,.4); margin-left: auto; }
+    .terminal-body { padding: 20px 24px; line-height: 2; }
+    .t-prompt { color: #5fd68c; }
+    .t-cmd    { color: rgba(255,255,255,.9); }
+    .t-comment{ color: rgba(255,255,255,.4); }
+    .t-output { color: rgba(255,255,255,.55); font-size: .82rem; }
+
+    /* ─── Stats Bar ────────────────────────────────────────────────── */
+    .stats-bar {
+      background: var(--navy);
+      padding: 28px;
+    }
+    .stats-inner {
+      max-width: 1080px; margin: 0 auto;
+      display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;
+    }
+    .stat { text-align: center; }
+    .stat-num { font-size: 2rem; font-weight: 800; color: #5fd68c; line-height: 1; }
+    .stat-label { font-size: .8rem; color: rgba(255,255,255,.55); text-transform: uppercase; letter-spacing: .08em; margin-top: 4px; }
+
+    /* ─── Shade Banner ─────────────────────────────────────────────── */
+    .shade-banner {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-left: 4px solid #e74c3c;
+      padding: 28px 32px;
+      border-radius: var(--radius-lg);
+      margin: 0 auto 60px;
+      max-width: 960px;
+      position: relative;
+      overflow: hidden;
+    }
+    .shade-banner::before {
+      content: '⚔️';
+      position: absolute; right: 24px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 4rem; opacity: .12;
+    }
+    .shade-banner .shade-title {
+      color: #ff6b6b; font-size: 1rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px;
+    }
+    .shade-banner p { color: rgba(255,255,255,.7); margin: 0; font-size: .95rem; }
+    .shade-banner strong { color: white; }
+
+    /* ─── Cards ────────────────────────────────────────────────────── */
+    .card {
+      background: var(--white);
+      border: 1.5px solid var(--silver-light);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      box-shadow: var(--shadow);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .card-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; margin-bottom: 16px;
+      background: var(--green-light);
+    }
+    .card-icon-navy { background: #e6eaf3; }
+    .card-icon-silver { background: var(--silver-pale); }
+    .card h3 { color: var(--navy); }
+    .card p { font-size: .9rem; }
+
+    /* ─── Agent Grid ───────────────────────────────────────────────── */
+    .agent-pill {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--white);
+      border: 1.5px solid var(--silver-light);
+      border-radius: 99px;
+      padding: 10px 18px;
+      font-size: .88rem; font-weight: 600;
+      color: var(--navy);
+      transition: all .15s;
+    }
+    .agent-pill:hover { border-color: var(--green); background: var(--green-light); }
+    .agent-badge {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .8rem; font-weight: 800; color: white;
+    }
+    .badge-green  { background: var(--green); }
+    .badge-navy   { background: var(--navy); }
+    .badge-silver { background: var(--silver); }
+    .badge-teal   { background: #0d7a74; }
+    .badge-red    { background: #c0392b; }
+    .agent-list {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      justify-content: center;
+    }
+
+    /* ─── Comparison Table ─────────────────────────────────────────── */
+    .compare-table {
+      width: 100%; border-collapse: collapse;
+      font-size: .9rem;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+    }
+    .compare-table thead tr {
+      background: var(--navy);
+    }
+    .compare-table thead th {
+      padding: 16px 20px; color: white; font-weight: 700;
+      text-align: left;
+    }
+    .compare-table thead th:first-child { width: 28%; }
+    .compare-table thead th.vigil-col {
+      background: var(--green);
+      color: white;
+    }
+    .compare-table tbody tr { border-bottom: 1px solid var(--silver-light); }
+    .compare-table tbody tr:nth-child(even) { background: var(--bg-alt); }
+    .compare-table tbody tr:hover { background: var(--green-light); }
+    .compare-table td { padding: 14px 20px; vertical-align: top; }
+    .compare-table td:first-child { font-weight: 700; color: var(--navy); }
+    .compare-table td.vigil-val { color: var(--green); font-weight: 600; }
+    .compare-table td.them-val { color: var(--text-muted); }
+    .check  { color: var(--green); font-weight: 700; }
+    .cross  { color: var(--red-warn); }
+
+    /* ─── Code Block ───────────────────────────────────────────────── */
+    .code-block {
+      background: #0d1117;
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      color: #c9d1d9;
+      font-size: .88rem;
+      line-height: 1.9;
+      overflow-x: auto;
+      position: relative;
+    }
+    .code-block .c-green { color: #3fb950; }
+    .code-block .c-blue  { color: #58a6ff; }
+    .code-block .c-grey  { color: #6e7681; }
+    .code-block .c-yellow{ color: #e3b341; }
+    .copy-btn {
+      position: absolute; top: 12px; right: 12px;
+      background: rgba(255,255,255,.1); color: rgba(255,255,255,.6);
+      border: 1px solid rgba(255,255,255,.15); border-radius: 6px;
+      padding: 4px 12px; font-size: .75rem; font-weight: 600;
+      cursor: pointer; transition: all .15s;
+    }
+    .copy-btn:hover { background: rgba(255,255,255,.2); color: white; }
+
+    /* ─── Skill Cards ──────────────────────────────────────────────── */
+    .skill-card {
+      background: var(--white);
+      border: 1.5px solid var(--silver-light);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      display: flex; flex-direction: column; gap: 10px;
+      transition: all .18s;
+      box-shadow: var(--shadow);
+    }
+    .skill-card:hover { border-color: var(--green); transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+    .skill-header { display: flex; align-items: center; gap: 12px; }
+    .skill-icon { font-size: 1.8rem; }
+    .skill-name { font-size: 1rem; font-weight: 700; color: var(--navy); }
+    .skill-chain {
+      display: flex; align-items: center; gap: 6px;
+      flex-wrap: wrap;
+    }
+    .skill-step {
+      background: var(--silver-pale);
+      border: 1px solid var(--silver-light);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: .78rem; font-weight: 700; color: var(--navy);
+    }
+    .skill-arrow { color: var(--green); font-weight: 700; font-size: .8rem; }
+    .skill-desc { font-size: .86rem; color: var(--text-muted); }
+
+    /* ─── Quote / Callout ──────────────────────────────────────────── */
+    .callout {
+      background: var(--green-light);
+      border-left: 4px solid var(--green);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 20px 24px;
+      margin: 24px 0;
+    }
+    .callout p { color: var(--navy); font-weight: 500; margin: 0; }
+
+    /* ─── Contributing ─────────────────────────────────────────────── */
+    .contrib-item {
+      display: flex; gap: 16px; align-items: flex-start;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--silver-light);
+    }
+    .contrib-item:last-child { border-bottom: none; }
+    .contrib-num {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--navy); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: .9rem; flex-shrink: 0;
+    }
+    .contrib-body h3 { color: var(--navy); margin-bottom: 4px; }
+    .contrib-body p  { margin: 0; font-size: .9rem; }
+
+    /* ─── Architecture ─────────────────────────────────────────────── */
+    .arch-layer {
+      border-radius: var(--radius-lg);
+      padding: 22px 28px;
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 20px;
+    }
+    .arch-layer-1 { background: linear-gradient(90deg, #e6eaf3 0%, #eef1f6 100%); border: 1.5px solid #c5cfe0; }
+    .arch-layer-2 { background: linear-gradient(90deg, var(--green-light) 0%, #eef8f2 100%); border: 1.5px solid #b5d9c3; }
+    .arch-layer-3 { background: linear-gradient(90deg, #e8f4f8 0%, #eef5fa 100%); border: 1.5px solid #b5d0de; }
+    .arch-label { font-weight: 800; font-size: .82rem; text-transform: uppercase; letter-spacing: .08em; min-width: 90px; }
+    .arch-title { font-weight: 700; font-size: 1rem; color: var(--navy); margin-bottom: 2px; }
+    .arch-desc  { font-size: .85rem; color: var(--text-muted); }
+
+    /* ─── Community / Footer ───────────────────────────────────────── */
+    .community {
+      background: linear-gradient(160deg, var(--navy) 0%, #1f4d35 100%);
+      padding: 80px 28px;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .community h2 { color: white; }
+    .community p  { color: rgba(255,255,255,.68); max-width: 580px; margin: 0 auto 36px; }
+    .community-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
+    .community-link {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      color: white; border-radius: 99px;
+      padding: 10px 22px; font-size: .9rem; font-weight: 600;
+      transition: all .18s; text-decoration: none !important;
+    }
+    .community-link:hover { background: rgba(255,255,255,.2); transform: translateY(-2px); }
+    footer {
+      background: #0f1a2d;
+      padding: 28px;
+      text-align: center;
+      font-size: .83rem;
+      color: rgba(255,255,255,.35);
+    }
+    footer a { color: rgba(255,255,255,.5); }
+    footer a:hover { color: rgba(255,255,255,.8); }
+
+    /* ─── Section headers ──────────────────────────────────────────── */
+    .section-header { text-align: center; margin-bottom: 56px; }
+    .section-header h2 { color: var(--navy); }
+    .section-header .lead { max-width: 600px; margin: 0 auto; }
+
+    /* ─── Roadmap ──────────────────────────────────────────────────── */
+    .roadmap-item {
+      display: flex; gap: 18px; align-items: flex-start;
+      padding: 18px 0;
+      border-bottom: 1px dashed var(--silver-light);
+    }
+    .roadmap-item:last-child { border-bottom: none; }
+    .roadmap-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--green); flex-shrink: 0; margin-top: 5px;
+    }
+    .roadmap-item h3 { font-size: .95rem; color: var(--navy); margin-bottom: 2px; }
+    .roadmap-item p  { font-size: .85rem; margin: 0; }
+
+    /* ─── vs cards ─────────────────────────────────────────────────── */
+    .vs-row {
+      display: flex; align-items: stretch; gap: 20px;
+      margin-bottom: 20px;
+    }
+    .vs-col {
+      flex: 1; border-radius: var(--radius-lg); padding: 24px;
+    }
+    .vs-vigil {
+      background: linear-gradient(135deg, #e6f2ea 0%, #d6eee0 100%);
+      border: 2px solid var(--green);
+    }
+    .vs-them  {
+      background: var(--bg-alt);
+      border: 1.5px solid var(--silver-light);
+    }
+    .vs-label { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 12px; }
+    .vs-label-vigil { color: var(--green); }
+    .vs-label-them  { color: var(--text-muted); }
+
+    /* ─── Placeholders for images ──────────────────────────────────── */
+    .img-placeholder {
+      background: var(--silver-pale);
+      border: 2px dashed var(--silver-light);
+      border-radius: var(--radius-lg);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 8px;
+      color: var(--silver);
+      font-size: .82rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .08em;
+    }
+    .img-placeholder .ph-icon { font-size: 2rem; opacity: .5; }
+    .screenshot-ph {
+      height: 340px;
+    }
+    .screenshot-ph-sm { height: 200px; }
+
+    /* ─── Responsive tweaks ────────────────────────────────────────── */
+    @media (max-width: 700px) {
+      .section { padding: 56px 0; }
+      .hero    { padding: 64px 20px 56px; }
+      .compare-table { font-size: .78rem; }
+      .compare-table td, .compare-table th { padding: 10px 12px; }
+      .vs-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     NAV
+═══════════════════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <img src="logo.svg" alt="VIGIL" />
+      VIGIL
+    </a>
+    <div class="nav-links">
+      <a href="#what" class="nav-link">What</a>
+      <a href="#how" class="nav-link">How</a>
+      <a href="#agents" class="nav-link">Agents</a>
+      <a href="#compare" class="nav-link">Compare</a>
+      <a href="#contribute" class="nav-link">Contribute</a>
+      <a href="#start" class="nav-link">Get Started</a>
+      <a href="https://github.com/deeptempo/vigil" target="_blank" class="nav-link nav-cta">⭐ Star on GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════
+     HERO
+═══════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="container">
+    <img src="logo.svg" alt="VIGIL Logo" class="hero-logo" />
+    <h1>Your AI SOC,<br><span>Open Source.</span></h1>
+    <p class="lead">
+      A coordinated team of 13 specialized AI agents in your SOC. Built on the Claude Agent SDK and MCP.
+      Your data never leaves your machine. The reasoning is always inspectable.
+    </p>
+    <div class="hero-actions">
+      <a href="https://github.com/deeptempo/vigil" target="_blank" class="btn btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        Clone &amp; Run Vigil
+      </a>
+      <a href="#what" class="btn btn-ghost">Learn More →</a>
+    </div>
+
+    <div class="hero-terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot terminal-dot-red"></span>
+        <span class="terminal-dot terminal-dot-yellow"></span>
+        <span class="terminal-dot terminal-dot-green"></span>
+        <span class="terminal-title">bash — vigil</span>
+      </div>
+      <div class="terminal-body">
+        <div><span class="t-prompt">$ </span><span class="t-cmd">git clone --recurse-submodules https://github.com/deeptempo/vigil.git</span></div>
+        <div><span class="t-prompt">$ </span><span class="t-cmd">cd vigil &amp;&amp; ./start_web.sh</span></div>
+        <div class="t-comment"># ✅ Agents initializing...</div>
+        <div class="t-comment"># ✅ 30+ MCP integrations discovered</div>
+        <div class="t-comment"># ✅ 7,200 detection rules loaded</div>
+        <div class="t-output">Open http://localhost:6988 — your AI SOC is running.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     STATS BAR
+═══════════════════════════════════════════════════════ -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat"><div class="stat-num">13</div><div class="stat-label">Specialized Agents</div></div>
+    <div class="stat"><div class="stat-num">30+</div><div class="stat-label">MCP Integrations</div></div>
+    <div class="stat"><div class="stat-num">7,200+</div><div class="stat-label">Detection Rules</div></div>
+    <div class="stat"><div class="stat-num">$0</div><div class="stat-label">License Cost (Apache 2.0)</div></div>
+    <div class="stat"><div class="stat-num">&lt; 3 min</div><div class="stat-label">Time to Running SOC</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SHADE BANNER — calling out the "so 2025" vendors
+═══════════════════════════════════════════════════════ -->
+<section class="section section-alt" id="shade">
+  <div class="container">
+    <div class="shade-banner">
+      <div class="shade-title">⚠️ A Word About the "AI SOC" Market</div>
+      <p>
+        The year is 2025. A venture-backed startup wraps a Claude API call in some middleware,
+        slaps "Agentic AI SOC" on the homepage, and charges you <strong>$36,000–$200,000 a year</strong> to start.
+        The agent reasoning? <strong>A black box.</strong> The integrations? <strong>Proprietary.</strong>
+        Your data? <strong>Uploaded to their cloud.</strong> When you ask why an agent made a call?
+        <strong>"Trust us."</strong> — We're looking at you, Dropzone, Conifers, Radiant, Prophet, Exaforce, Torq HyperSOC, and the rest.
+        Zero-day exploitation climbed from 16% in 2018 to <strong>67% in 2026</strong>.
+        82% of 2025 intrusions were <strong>malware-free</strong>.
+        The silver bullet cycle isn't working. It's time to build the capability, not buy the box.
+        <strong>That's Vigil.</strong>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     WHAT IS VIGIL
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="what">
+  <div class="container">
+    <div class="section-header">
+      <span class="tag">Open Source AI SOC</span>
+      <h2>What Is Vigil?</h2>
+      <p class="lead">
+        Vigil is an open-source AI security operations platform. It puts a coordinated team of 13 specialized AI agents
+        in your SOC, each with deep access to your security stack, each purpose-built for a specific part of the investigation lifecycle.
+      </p>
+    </div>
+
+    <div class="grid-2" style="gap: 40px; align-items: center;">
+      <div>
+        <p style="font-size:1.05rem; color: var(--text-muted); margin-bottom: 20px;">
+          Built on the <strong style="color:var(--navy)">Claude Agent SDK</strong> and the <strong style="color:var(--navy)">Model Context Protocol (MCP)</strong>,
+          Vigil is designed around a simple principle: <em>AI agents should do the work, not just answer questions.</em>
+        </p>
+        <div class="callout">
+          <p>Say <strong>"Run incident response on finding f-20260215-abc123"</strong> and four agents execute in sequence:
+          triage scores the alert, the investigator traces root cause, the responder submits containment actions,
+          and the reporter generates audit-ready documentation. No hand-offs required.</p>
+        </div>
+        <p style="margin-top: 16px;">
+          Apache 2.0 licensed. Your data never leaves your machine. Every agent's reasoning is inspectable.
+          Every workflow is a text file you can read, modify, and share.
+        </p>
+        <div style="margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
+          <a href="https://github.com/deeptempo/vigil" target="_blank" class="btn btn-primary">View on GitHub</a>
+          <a href="#start" class="btn btn-outline">Quick Start →</a>
+        </div>
+      </div>
+      <div>
+        <div class="img-placeholder screenshot-ph">
+          <span class="ph-icon">🖥️</span>
+          <span>Vigil Web UI Screenshot</span>
+          <span style="font-size:.72rem; color: var(--silver-light)">Replace with actual screenshot</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     WHY OPEN SOURCE
+═══════════════════════════════════════════════════════ -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header">
+      <span class="tag tag-navy">The Problem</span>
+      <h2>Why Open Source?</h2>
+      <p class="lead">
+        The cybersecurity market has a well-documented structural problem. Closed-source AI SOC platforms deepen it.
+      </p>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-icon">🔍</div>
+        <h3>Transparency</h3>
+        <p>When agent reasoning is inspectable, detection quality becomes measurable. You know <em>why</em> an agent made a call, not just <em>that</em> it did.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon card-icon-navy">🔗</div>
+        <h3>Open Integrations</h3>
+        <p>Built on MCP—an open standard. When integrations are built on open standards, the ecosystem grows the platform. Every new MCP server is a free Vigil integration.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon card-icon-silver">🤝</div>
+        <h3>Collective Knowledge</h3>
+        <p>When skills are text files, the community's collective operational knowledge compounds. Share a playbook and everyone's SOC gets smarter.</p>
+      </div>
+    </div>
+    <div style="margin-top: 40px; text-align: center;">
+      <p style="font-size: 1rem; color: var(--navy); font-weight: 600; max-width: 680px; margin: 0 auto;">
+        "Security operations shouldn't be a black box you buy. It should be a capability you build, together."
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     HOW IT WORKS — SKILLS / MCP / AGENTS
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="how">
+  <div class="container">
+    <div class="section-header">
+      <span class="tag">Architecture</span>
+      <h2>How Vigil Works</h2>
+      <p class="lead">Three interlocking layers that give every agent real-time access to your entire stack.</p>
+    </div>
+
+    <!-- Skills -->
+    <div style="margin-bottom: 64px;">
+      <h3 style="font-size: 1.4rem; color: var(--navy); margin-bottom: 8px;">⚙️ Skills — Complete Workflows in a Single Command</h3>
+      <p style="max-width: 760px; margin-bottom: 28px;">
+        A skill is a multi-agent workflow that chains specialized agents into a complete, end-to-end playbook.
+        Each skill maps to a real operational workflow and produces real outputs. Creating your own skill is writing a
+        <code style="background:var(--silver-pale); padding: 2px 6px; border-radius: 4px;">SKILL.md</code> file. If your team has a workflow, Vigil can run it.
+      </p>
+      <div class="grid-2">
+        <div class="skill-card">
+          <div class="skill-header"><span class="skill-icon">🚨</span><span class="skill-name">Incident Response</span></div>
+          <div class="skill-chain">
+            <span class="skill-step">Triage</span>
+            <span class="skill-arrow">→</span>
+            <span class="skill-step">Investigate</span>
+            <span class="skill-arrow">→</span>
+            <span class="skill-step">Respond</span>
+            <span class="skill-arrow">→</span>
+            <span class="skill-step">Report</span>
+          </div>
+          <p class="skill-desc">End-to-end from alert to audit-ready documentation.</p>
+        </div>
+        <div class="skill-card">
+          <div class="skill-header"><span class="skill-icon">🔬</span><span class="skill-name">Full Investigation</span></div>
+          <div class="skill-chain">
+            <span class="skill-step">Deep Dive</span>
+            <span class="skill-arrow">→</span>
+            <span class="skill-step">Correlate</span>
+            <span class="skill-arrow">→</span>
+            <span class="skill-step">Timeline</span>
+          </div>
+          <p class="skill-desc">Deep-dive reconstruction with correlation across all connected data sources.</p>
+        </div>
+        <div class="skill-card">
+          <div class="skill-header"><span class="skill-icon">🎯</span><span class="skill-name">Threat Hunt</span></div>
+          <div class="skill-chain">
+            <span class="skill-step">Hypothesis</span>
+            <span class="skill-arrow">→</span>
+            <span class="skill-step">Hunt</span>
+            <span class="skill-arrow">→</span>
+            <span class="skill-step">ATT&amp;CK Map</span>
+          </div>
+          <p class="skill-desc">Proactive hypothesis-driven search using MITRE ATT&amp;CK as the framework.</p>
+        </div>
+        <div class="skill-card">
+          <div class="skill-header"><span class="skill-icon">⚖️</span><span class="skill-name">Forensic Analysis</span></div>
+          <div class="skill-chain">
+            <span class="skill-step">Collect</span>
+            <span class="skill-arrow">→</span>
+            <span class="skill-step">Chain-of-Custody</span>
+            <span class="skill-arrow">→</span>
+            <span class="skill-step">Report</span>
+          </div>
+          <p class="skill-desc">Evidence collection and analysis suitable for legal proceedings.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- MCP -->
+    <div style="margin-bottom: 64px;">
+      <h3 style="font-size: 1.4rem; color: var(--navy); margin-bottom: 8px;">🔌 MCP — Your Entire Stack, Connected</h3>
+      <p style="max-width: 760px; margin-bottom: 28px;">
+        Vigil uses the Model Context Protocol to give every agent real-time access to your existing tools.
+        30+ integrations out of the box. If a tool has an MCP server, Vigil can connect to it.
+      </p>
+      <div class="grid-4">
+        <!-- integration pills -->
+        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--navy);">Splunk</div>
+        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--navy);">CrowdStrike</div>
+        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--navy);">VirusTotal</div>
+        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--navy);">Shodan</div>
+        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--navy);">Hybrid Analysis</div>
+        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--navy);">Jira</div>
+        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--navy);">Slack</div>
+        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--navy);">DeepTempo</div>
+        <div style="background:var(--green-light); border: 1px dashed var(--green); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--green);">+ 22 more</div>
+        <div style="background:var(--green-light); border: 1px dashed var(--green); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:700; color:var(--green); grid-column: span 3;">Write your own → Any MCP server plugs right in</div>
+      </div>
+    </div>
+
+    <!-- Architecture Diagram -->
+    <div>
+      <h3 style="font-size: 1.4rem; color: var(--navy); margin-bottom: 16px;">🏗️ Architecture</h3>
+      <div class="arch-layer arch-layer-3">
+        <div class="arch-label" style="color: #0d5f7a;">Skills Layer</div>
+        <div>
+          <div class="arch-title">SKILL.md Files — Multi-Agent Workflows</div>
+          <div class="arch-desc">Composable playbooks. Define agent sequence, phase-level tool access, and natural-language instructions. Skills can invoke other skills as sub-workflows.</div>
+        </div>
+      </div>
+      <div style="text-align:center; font-size: 1.2rem; color: var(--silver); margin: -4px 0; z-index:1; position:relative;">↕</div>
+      <div class="arch-layer arch-layer-1">
+        <div class="arch-label" style="color: var(--navy-light);">Agent Layer</div>
+        <div>
+          <div class="arch-title">Claude Agent SDK — 13 Specialized Agents</div>
+          <div class="arch-desc">Defined roles, tool access, and reasoning modes. The SDK handles coordination, state management, and tool invocation. 23 backend tools + 100+ extended tools via MCP.</div>
+        </div>
+      </div>
+      <div style="text-align:center; font-size: 1.2rem; color: var(--silver); margin: -4px 0; z-index:1; position:relative;">↕</div>
+      <div class="arch-layer arch-layer-2">
+        <div class="arch-label" style="color: var(--green);">Integration Layer</div>
+        <div>
+          <div class="arch-title">MCP — 30+ Tool Integrations</div>
+          <div class="arch-desc">Any MCP-speaking tool or data source plugs in without custom code. Handles authentication, rate limiting, and response normalization. Open standard — ecosystem grows the platform.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     13 AGENTS
+═══════════════════════════════════════════════════════ -->
+<section class="section section-alt" id="agents">
+  <div class="container">
+    <div class="section-header">
+      <span class="tag">The Team</span>
+      <h2>13 Agents. Each Built for a Job.</h2>
+      <p class="lead">
+        Specialists with defined roles, tuned reasoning modes, and access to 23 backend tools plus 100+ extended tools via MCP.
+        You set the automation thresholds. Vigil keeps humans in the loop where it counts—and gets out of the way everywhere else.
+      </p>
+    </div>
+
+    <div class="agent-list" style="margin-bottom: 40px;">
+      <div class="agent-pill"><span class="agent-badge badge-green">T</span> Triage Agent <span style="font-size:.75rem; color:var(--text-muted)">⚡ Fast mode</span></div>
+      <div class="agent-pill"><span class="agent-badge badge-navy">I</span> Investigator <span style="font-size:.75rem; color:var(--text-muted)">🧠 Deep mode</span></div>
+      <div class="agent-pill"><span class="agent-badge badge-teal">M</span> MITRE Analyst</div>
+      <div class="agent-pill"><span class="agent-badge badge-navy">C</span> Correlator</div>
+      <div class="agent-pill"><span class="agent-badge badge-red">R</span> Responder <span style="font-size:.75rem; color:var(--text-muted)">🔒 Threshold routing</span></div>
+      <div class="agent-pill"><span class="agent-badge badge-silver">📄</span> Reporter</div>
+      <div class="agent-pill"><span class="agent-badge badge-green">D</span> Detection Engineer</div>
+      <div class="agent-pill"><span class="agent-badge badge-silver">🔎</span> Enrichment</div>
+      <div class="agent-pill"><span class="agent-badge badge-navy">👤</span> Identity Analyst</div>
+      <div class="agent-pill"><span class="agent-badge badge-teal">🌐</span> Network Forensics</div>
+      <div class="agent-pill"><span class="agent-badge badge-red">🦠</span> Malware Analyst</div>
+      <div class="agent-pill"><span class="agent-badge badge-silver">📋</span> Compliance Mapping</div>
+      <div class="agent-pill"><span class="agent-badge badge-navy">📂</span> Case Management</div>
+    </div>
+
+    <div class="callout">
+      <p>
+        🔒 <strong>The Confidence Threshold:</strong> The Responder auto-approves containment actions at 0.90+ confidence.
+        Below that, it routes to a human reviewer. You control the automation boundary.
+        No surprises. No runaway automation.
+      </p>
+    </div>
+
+    <div class="grid-2" style="margin-top: 40px; gap: 20px;">
+      <div class="card">
+        <div class="card-icon">🛡️</div>
+        <h3>7,200+ Detection Rules</h3>
+        <p>Spanning Sigma, Splunk, Elastic, and KQL formats. AI-assisted coverage analysis, gap identification, and template generation. Every new community rule improves every deployment.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon card-icon-navy">💬</div>
+        <h3>Chat-Driven Case Management</h3>
+        <p>Build and update cases through natural language. Tell the system a finding is part of the lateral movement kill chain—it handles the MITRE tagging, timeline updates, and case linkage automatically.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon card-icon-silver">🔁</div>
+        <h3>Headless Autonomous Mode</h3>
+        <p>Run Vigil as a daemon for 24/7 monitoring without touching the UI. Use <code>./start_daemon.sh</code> for always-on coverage, or the full React + FastAPI frontend for interactive investigations.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🏠</div>
+        <h3>Local-First Architecture</h3>
+        <p>Your data never leaves your environment. No cloud dependency for core functionality. MCP connections are under your control. State persists locally in SQLite (or Postgres for team deployments).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     TRY IN 60 SECONDS
+═══════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="grid-2" style="gap:48px; align-items: center;">
+      <div>
+        <span class="tag">60-Second Demo</span>
+        <h2>See It Work in Under a Minute</h2>
+        <p>After starting Vigil, open the web UI and try the full incident response workflow live—using sample data included in the repo.</p>
+        <div class="contrib-item">
+          <div class="contrib-num">1</div>
+          <div class="contrib-body">
+            <h3>Paste a finding</h3>
+            <p>Use a real alert ID from your SIEM, or one of the included sample findings from the repo.</p>
+          </div>
+        </div>
+        <div class="contrib-item">
+          <div class="contrib-num">2</div>
+          <div class="contrib-body">
+            <h3>Run the skill</h3>
+            <p>Type: <code style="background:var(--silver-pale); padding:2px 6px; border-radius:4px;">Run incident response on finding f-20260215-abc123</code></p>
+          </div>
+        </div>
+        <div class="contrib-item">
+          <div class="contrib-num">3</div>
+          <div class="contrib-body">
+            <h3>Watch 4 agents execute</h3>
+            <p>Triage → Investigate → Respond → Report. Every step visible, every decision inspectable.</p>
+          </div>
+        </div>
+        <div class="contrib-item" style="border: none;">
+          <div class="contrib-num">4</div>
+          <div class="contrib-body">
+            <h3>Review the output</h3>
+            <p>Complete incident report with MITRE ATT&CK mapping, timeline, and recommended actions. Audit-ready.</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="img-placeholder screenshot-ph" style="height: 420px;">
+          <span class="ph-icon">🔍</span>
+          <span>Vigil — Incident Response Walkthrough</span>
+          <span style="font-size:.72rem; color: var(--silver-light)">Replace with demo GIF or screenshot</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     COMPARISON TABLE
+═══════════════════════════════════════════════════════ -->
+<section class="section section-alt" id="compare">
+  <div class="container">
+    <div class="section-header">
+      <span class="tag">The Honest Comparison</span>
+      <h2>Vigil vs. Commercial AI SOCs</h2>
+      <p class="lead">
+        Every serious AI SOC platform on the market is closed source. Here's the full picture.
+        <br><em style="font-size:.9rem;">(Including Dropzone AI, Conifers CognitiveSOC, Radiant Security, Prophet Security, Exaforce, Torq HyperSOC. None are open source. None use MCP.)</em>
+      </p>
+    </div>
+
+    <div style="overflow-x: auto;">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="vigil-col">⚔️ Vigil (Open Source)</th>
+            <th>Commercial AI SOCs</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>License</td>
+            <td class="vigil-val"><span class="check">✓</span> Apache 2.0 — free forever</td>
+            <td class="them-val"><span class="cross">✗</span> Proprietary, $36K–$200K+/yr</td>
+          </tr>
+          <tr>
+            <td>Source Code</td>
+            <td class="vigil-val"><span class="check">✓</span> Fully inspectable on GitHub</td>
+            <td class="them-val"><span class="cross">✗</span> Closed / opaque</td>
+          </tr>
+          <tr>
+            <td>Agent Logic</td>
+            <td class="vigil-val"><span class="check">✓</span> Transparent, modifiable Python</td>
+            <td class="them-val"><span class="cross">✗</span> Black box or patented</td>
+          </tr>
+          <tr>
+            <td>Integrations</td>
+            <td class="vigil-val"><span class="check">✓</span> MCP (open standard), 30+</td>
+            <td class="them-val">Proprietary APIs, 50–100+</td>
+          </tr>
+          <tr>
+            <td>Extensibility</td>
+            <td class="vigil-val"><span class="check">✓</span> Write a SKILL.md file</td>
+            <td class="them-val"><span class="cross">✗</span> Vendor roadmap or pro services</td>
+          </tr>
+          <tr>
+            <td>Data Residency</td>
+            <td class="vigil-val"><span class="check">✓</span> 100% local, your machine</td>
+            <td class="them-val"><span class="cross">✗</span> Cloud APIs, data leaves your env</td>
+          </tr>
+          <tr>
+            <td>Time to Try</td>
+            <td class="vigil-val"><span class="check">✓</span> git clone, &lt; 3 minutes</td>
+            <td class="them-val"><span class="cross">✗</span> Sales call, 30-day POC, procurement</td>
+          </tr>
+          <tr>
+            <td>Community</td>
+            <td class="vigil-val"><span class="check">✓</span> Open contributions welcome</td>
+            <td class="them-val">Feature requests into a backlog</td>
+          </tr>
+          <tr>
+            <td>Detection Rules</td>
+            <td class="vigil-val"><span class="check">✓</span> 7,200+ included, community-maintained</td>
+            <td class="them-val">Proprietary or third-party subscription</td>
+          </tr>
+          <tr>
+            <td>LLM Backend</td>
+            <td class="vigil-val"><span class="check">✓</span> Claude (default), extensible architecture</td>
+            <td class="them-val"><span class="cross">✗</span> Vendor-locked to one provider</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     CONTRIBUTING
+═══════════════════════════════════════════════════════ -->
+<section class="section" id="contribute">
+  <div class="container">
+    <div class="section-header">
+      <span class="tag">Community</span>
+      <h2>Built to Be Extended</h2>
+      <p class="lead">Vigil is a platform, not a product. Here's what you can build—no vendor permission required.</p>
+    </div>
+
+    <div class="grid-2" style="gap: 40px;">
+      <div>
+        <div class="contrib-item">
+          <div class="contrib-num" style="background:var(--green);">📝</div>
+          <div class="contrib-body">
+            <h3>Write a New Skill</h3>
+            <p>Skills are markdown files defining multi-agent workflows. Phishing triage, cloud incident response, insider threat—encode any playbook and share it with the community. No code required.</p>
+          </div>
+        </div>
+        <div class="contrib-item">
+          <div class="contrib-num" style="background:var(--green);">🔌</div>
+          <div class="contrib-body">
+            <h3>Build an MCP Integration</h3>
+            <p>If your security tool has an API, wrap it in an MCP server and Vigil connects to it. SIEM, threat intel, firewalls, identity providers—all welcome.</p>
+          </div>
+        </div>
+        <div class="contrib-item">
+          <div class="contrib-num" style="background:var(--green);">🛡️</div>
+          <div class="contrib-body">
+            <h3>Add Detection Rules</h3>
+            <p>Contribute rules in Sigma, Splunk SPL, Elastic KQL, or any format. Every new rule improves the Detection Engineer agent for everyone.</p>
+          </div>
+        </div>
+        <div class="contrib-item" style="border:none;">
+          <div class="contrib-num" style="background:var(--green);">🤖</div>
+          <div class="contrib-body">
+            <h3>Improve an Agent</h3>
+            <p>Each agent's behavior is readable Python. Better MITRE mapping, tighter forensic chain-of-custody formatting, sharper triage scoring—open a PR.</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div class="card-icon">🗺️</div>
+            <h3>Roadmap</h3>
+            <div style="margin-top: 16px;">
+              <div class="roadmap-item">
+                <div class="roadmap-dot"></div>
+                <div><h3>Expanded MCP Integrations</h3><p>Sentinel, Elastic, Palo Alto Cortex, Google Chronicle, AWS Security Hub.</p></div>
+              </div>
+              <div class="roadmap-item">
+                <div class="roadmap-dot"></div>
+                <div><h3>Community Skills Catalog</h3><p>An npm for SOC workflows—searchable by use case, alert type, and tool stack.</p></div>
+              </div>
+              <div class="roadmap-item">
+                <div class="roadmap-dot"></div>
+                <div><h3>Additional LLM Backends</h3><p>OpenAI, local models via Ollama, and other providers.</p></div>
+              </div>
+              <div class="roadmap-item">
+                <div class="roadmap-dot"></div>
+                <div><h3>Federated Deployment</h3><p>Run agents across multiple environments—data stays local to each.</p></div>
+              </div>
+              <div class="roadmap-item" style="border:none;">
+                <div class="roadmap-dot"></div>
+                <div><h3>Detection-as-Code Pipeline</h3><p>Version-controlled detection rules with automated testing and deployment.</p></div>
+              </div>
+            </div>
+          </div>
+          <a href="https://github.com/deeptempo/vigil" target="_blank" class="btn btn-primary" style="margin-top: 20px; justify-content: center;">
+            See Full Roadmap on GitHub →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     GET STARTED
+═══════════════════════════════════════════════════════ -->
+<section class="section section-alt" id="start">
+  <div class="container">
+    <div class="section-header">
+      <span class="tag">Quick Start</span>
+      <h2>Up and Running in 3 Minutes</h2>
+      <p class="lead">Three commands. No sales call. No procurement. No 30-day POC.</p>
+    </div>
+
+    <div class="grid-2" style="gap: 40px; align-items: flex-start;">
+      <div>
+        <h3 style="color:var(--navy); margin-bottom: 16px;">Requirements</h3>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 28px;">
+          <div style="display:flex; gap:10px; align-items:center;">
+            <span style="color:var(--green); font-size:1.1rem;">✓</span>
+            <span>Python 3.11+</span>
+          </div>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <span style="color:var(--green); font-size:1.1rem;">✓</span>
+            <span>Node.js 18+</span>
+          </div>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <span style="color:var(--green); font-size:1.1rem;">✓</span>
+            <span>Docker Desktop</span>
+          </div>
+          <div style="display:flex; gap:10px; align-items:center; color: var(--text-muted);">
+            <span style="color:var(--silver); font-size:1.1rem;">○</span>
+            <span>Claude API key <em>(optional for initial testing)</em></span>
+          </div>
+        </div>
+
+        <h3 style="color:var(--navy); margin-bottom: 16px;">Installation</h3>
+        <div class="code-block" style="position:relative;">
+          <button class="copy-btn" onclick="navigator.clipboard.writeText('git clone --recurse-submodules https://github.com/deeptempo/vigil.git\ncd vigil\n./start_web.sh')">Copy</button>
+          <div><span class="c-green">$</span> <span class="c-blue">git clone</span> --recurse-submodules \</div>
+          <div style="padding-left:16px;">https://github.com/deeptempo/vigil.git</div>
+          <div><span class="c-green">$</span> <span class="c-blue">cd</span> vigil</div>
+          <div><span class="c-green">$</span> ./start_web.sh</div>
+          <div>&nbsp;</div>
+          <div><span class="c-grey"># First run: 2–3 minutes</span></div>
+          <div><span class="c-grey"># Subsequent starts: &lt;30 seconds</span></div>
+        </div>
+
+        <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+          <div style="background: var(--silver-pale); border-radius: var(--radius); padding: 10px 16px; font-size:.85rem;">
+            <strong>Frontend:</strong> <code>http://localhost:6988</code>
+          </div>
+          <div style="background: var(--silver-pale); border-radius: var(--radius); padding: 10px 16px; font-size:.85rem;">
+            <strong>API Docs:</strong> <code>http://localhost:6987/docs</code>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="color:var(--navy); margin-bottom: 16px;">Connect Your Tools</h3>
+        <p>Vigil auto-discovers MCP servers configured in your environment. To connect a tool manually:</p>
+
+        <div class="code-block">
+          <div><span class="c-grey"># Add a tool integration</span></div>
+          <div><span class="c-green">$</span> vigil config add-mcp splunk \</div>
+          <div style="padding-left:16px;">https://your-splunk:8089/mcp</div>
+          <div>&nbsp;</div>
+          <div><span class="c-grey"># 24/7 headless daemon mode</span></div>
+          <div><span class="c-green">$</span> ./start_daemon.sh</div>
+        </div>
+
+        <div style="margin-top: 24px;">
+          <h3 style="color:var(--navy); margin-bottom: 12px;">DeepTempo + Vigil</h3>
+          <p style="font-size:.9rem;">
+            Vigil is sponsored by <a href="https://deeptempo.ai" target="_blank" style="color:var(--green);">DeepTempo</a>.
+            DeepTempo's <strong>LogLM</strong> connects to Vigil via MCP as a high-fidelity behavioral detection layer—
+            giving you AI-native detections on top of an open AI SOC. Vigil works with Splunk alone.
+            Adding DeepTempo means AI-native behavioral detection on top of it.
+          </p>
+        </div>
+
+        <div style="margin-top: 24px;">
+          <a href="https://github.com/deeptempo/vigil" target="_blank" class="btn btn-primary" style="width:100%; justify-content: center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            Clone Vigil on GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     COMMUNITY CTA
+═══════════════════════════════════════════════════════ -->
+<section class="community">
+  <div class="container">
+    <img src="logo.svg" alt="VIGIL" style="width:80px; height:80px; margin: 0 auto 24px; filter: drop-shadow(0 4px 16px rgba(0,0,0,.4));" />
+    <h2>Join the Community</h2>
+    <p>
+      Vigil is early. The architecture is solid, the agents are working, and the skills system is production-tested.
+      What we need now is the community—people who run SOCs, build integrations, write detections,
+      and know what's broken in their security operations today.
+      <br><br>
+      The agents are transparent. The skills are text files. The integrations are open standard.
+      <strong style="color: #5fd68c;">Everything is designed for you to make it yours.</strong>
+    </p>
+    <div class="community-links">
+      <a href="https://github.com/deeptempo/vigil" target="_blank" class="community-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        ⭐ Star the Repo
+      </a>
+      <a href="https://discord.gg/vigil-soc" target="_blank" class="community-link">
+        💬 Join the Discord
+      </a>
+      <a href="https://docs.vigil-soc.dev" target="_blank" class="community-link">
+        📚 Read the Docs
+      </a>
+      <a href="https://x.com/vigil_soc" target="_blank" class="community-link">
+        🐦 @vigil_soc on X
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════ -->
+<footer>
+  <div>
+    <strong style="color:rgba(255,255,255,.6);">VIGIL</strong> — Open Source AI SOC &nbsp;|&nbsp;
+    <a href="https://github.com/deeptempo/vigil" target="_blank">github.com/deeptempo/vigil</a> &nbsp;|&nbsp;
+    Apache 2.0 License &nbsp;|&nbsp;
+    Sponsored by <a href="https://deeptempo.ai" target="_blank">DeepTempo</a>
+  </div>
+  <div style="margin-top: 8px;">
+    Built with the <a href="https://www.anthropic.com" target="_blank">Claude Agent SDK</a> &amp;
+    <a href="https://modelcontextprotocol.io" target="_blank">Model Context Protocol</a>
+  </div>
+</footer>
+
+<script>
+  // Smooth nav active state
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const match = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+        if (match) match.classList.add('active');
+      }
+    });
+  }, { threshold: 0.4 });
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
