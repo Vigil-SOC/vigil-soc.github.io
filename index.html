@@ -9,23 +9,28 @@
     /* ─── Reset & Base ─────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --navy:       #1a2744;
-      --navy-light: #2a3d6b;
-      --green:      #2d6e45;
-      --green-mid:  #3a8c58;
-      --green-light:#e6f2ea;
-      --silver:     #8a9bb5;
-      --silver-light:#d6dde8;
-      --silver-pale: #eef1f6;
-      --white:      #ffffff;
-      --bg-alt:     #f8f9fc;
-      --text:       #1a2744;
-      --text-muted: #5a6a82;
-      --red-warn:   #c0392b;
-      --radius:     10px;
-      --radius-lg:  18px;
-      --shadow:     0 4px 24px rgba(26,39,68,0.09);
-      --shadow-lg:  0 8px 40px rgba(26,39,68,0.14);
+      --orange:       #E05C20;
+      --orange-mid:   #F07535;
+      --orange-light: #FBF0EA;
+      --forest:       #2D5A1B;
+      --forest-mid:   #3D7A25;
+      --forest-light: #EBF3E6;
+      --brown:        #3D1F12;
+      --brown-mid:    #6B3D2E;
+      --brown-light:  #9B6B52;
+      --brown-pale:   #F5EDE8;
+      --silver:       #9B8B7A;
+      --silver-light: #DDD0C8;
+      --silver-pale:  #F5EDE8;
+      --white:        #ffffff;
+      --bg-alt:       #FAF5F0;
+      --text:         #3D1F12;
+      --text-muted:   #7A5A4A;
+      --red-warn:     #c0392b;
+      --radius:       10px;
+      --radius-lg:    18px;
+      --shadow:       0 4px 24px rgba(61,31,18,0.09);
+      --shadow-lg:    0 8px 40px rgba(61,31,18,0.14);
     }
     html { scroll-behavior: smooth; }
     body {
@@ -36,7 +41,7 @@
       font-size: 16px;
     }
     img { display: block; max-width: 100%; }
-    a { color: var(--green); text-decoration: none; }
+    a { color: var(--orange); text-decoration: none; }
     a:hover { text-decoration: underline; }
     code, kbd, pre { font-family: 'Fira Mono', 'Cascadia Code', 'Consolas', monospace; }
 
@@ -48,10 +53,10 @@
       display: inline-block; font-size: 11px; font-weight: 700;
       letter-spacing: .1em; text-transform: uppercase;
       padding: 4px 12px; border-radius: 99px;
-      background: var(--green-light); color: var(--green);
+      background: var(--forest-light); color: var(--forest);
       margin-bottom: 14px;
     }
-    .tag-navy { background: #e6eaf3; color: var(--navy); }
+    .tag-navy { background: var(--brown-pale); color: var(--brown); }
     h1 { font-size: clamp(2.4rem, 5vw, 3.8rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
     h2 { font-size: clamp(1.7rem, 3vw, 2.4rem); font-weight: 800; letter-spacing: -.01em; margin-bottom: 16px; }
     h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; }
@@ -74,14 +79,14 @@
       text-decoration: none !important;
     }
     .btn-primary {
-      background: var(--green); color: var(--white);
+      background: var(--orange); color: var(--white);
     }
-    .btn-primary:hover { background: var(--green-mid); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(45,110,69,.3); }
+    .btn-primary:hover { background: var(--orange-mid); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(224,92,32,.3); }
     .btn-outline {
-      background: transparent; color: var(--navy);
+      background: transparent; color: var(--brown);
       border-color: var(--silver-light);
     }
-    .btn-outline:hover { border-color: var(--navy); background: var(--silver-pale); transform: translateY(-2px); }
+    .btn-outline:hover { border-color: var(--brown); background: var(--silver-pale); transform: translateY(-2px); }
     .btn-ghost {
       background: rgba(255,255,255,.12); color: white;
       border-color: rgba(255,255,255,.3);
@@ -105,14 +110,14 @@
     .nav-logo img { height: 44px; width: 44px; }
     .nav-links { display: flex; align-items: center; gap: 8px; }
     .nav-link { font-size: .88rem; font-weight: 600; color: var(--text-muted); padding: 6px 12px; border-radius: 8px; transition: all .15s; }
-    .nav-link:hover { color: var(--navy); background: var(--silver-pale); text-decoration: none; }
-    .nav-cta { background: var(--navy); color: white !important; padding: 7px 16px; border-radius: 8px; font-size: .88rem; font-weight: 700; }
-    .nav-cta:hover { background: var(--navy-light); text-decoration: none; }
+    .nav-link:hover { color: var(--brown); background: var(--silver-pale); text-decoration: none; }
+    .nav-cta { background: var(--orange); color: white !important; padding: 7px 16px; border-radius: 8px; font-size: .88rem; font-weight: 700; }
+    .nav-cta:hover { background: var(--orange-mid); text-decoration: none; }
     @media (max-width: 700px) { .nav-links .nav-link:not(.nav-cta) { display: none; } }
 
     /* ─── Hero ─────────────────────────────────────────────────────── */
     .hero {
-      background: linear-gradient(160deg, var(--navy) 0%, #2a3d6b 45%, #1f4d35 100%);
+      background: linear-gradient(160deg, #3D1F12 0%, #6B3D2E 45%, #2D5A1B 100%);
       padding: 90px 28px 80px;
       text-align: center;
       position: relative;
@@ -134,7 +139,7 @@
       to   { opacity: 1; transform: translateY(0); }
     }
     .hero h1 { color: white; margin-bottom: 14px; animation: fadeUp .6s .1s ease both; }
-    .hero h1 span { color: #5fd68c; }
+    .hero h1 span { color: #E05C20; }
     .hero .lead { color: rgba(255,255,255,.78); max-width: 600px; margin: 0 auto 36px; animation: fadeUp .6s .2s ease both; }
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(16px); }
@@ -164,14 +169,14 @@
     .terminal-dot-green { background: #28c840; }
     .terminal-title { font-size: .75rem; color: rgba(255,255,255,.4); margin-left: auto; }
     .terminal-body { padding: 20px 24px; line-height: 2; }
-    .t-prompt { color: #5fd68c; }
+    .t-prompt { color: #E05C20; }
     .t-cmd    { color: rgba(255,255,255,.9); }
     .t-comment{ color: rgba(255,255,255,.4); }
     .t-output { color: rgba(255,255,255,.55); font-size: .82rem; }
 
     /* ─── Stats Bar ────────────────────────────────────────────────── */
     .stats-bar {
-      background: var(--navy);
+      background: var(--brown);
       padding: 28px;
     }
     .stats-inner {
@@ -179,13 +184,13 @@
       display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;
     }
     .stat { text-align: center; }
-    .stat-num { font-size: 2rem; font-weight: 800; color: #5fd68c; line-height: 1; }
+    .stat-num { font-size: 2rem; font-weight: 800; color: #E05C20; line-height: 1; }
     .stat-label { font-size: .8rem; color: rgba(255,255,255,.55); text-transform: uppercase; letter-spacing: .08em; margin-top: 4px; }
 
     /* ─── Shade Banner ─────────────────────────────────────────────── */
     .shade-banner {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      border-left: 4px solid #e74c3c;
+      background: linear-gradient(135deg, #2A1208 0%, #3D1F12 100%);
+      border-left: 4px solid #E05C20;
       padding: 28px 32px;
       border-radius: var(--radius-lg);
       margin: 0 auto 60px;
@@ -200,7 +205,7 @@
       font-size: 4rem; opacity: .12;
     }
     .shade-banner .shade-title {
-      color: #ff6b6b; font-size: 1rem; font-weight: 800;
+      color: #E05C20; font-size: 1rem; font-weight: 800;
       text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px;
     }
     .shade-banner p { color: rgba(255,255,255,.7); margin: 0; font-size: .95rem; }
@@ -220,11 +225,11 @@
       width: 48px; height: 48px; border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
       font-size: 1.5rem; margin-bottom: 16px;
-      background: var(--green-light);
+      background: var(--forest-light);
     }
-    .card-icon-navy { background: #e6eaf3; }
+    .card-icon-navy { background: var(--brown-pale); }
     .card-icon-silver { background: var(--silver-pale); }
-    .card h3 { color: var(--navy); }
+    .card h3 { color: var(--brown); }
     .card p { font-size: .9rem; }
 
     /* ─── Agent Grid ───────────────────────────────────────────────── */
@@ -235,17 +240,17 @@
       border-radius: 99px;
       padding: 10px 18px;
       font-size: .88rem; font-weight: 600;
-      color: var(--navy);
+      color: var(--brown);
       transition: all .15s;
     }
-    .agent-pill:hover { border-color: var(--green); background: var(--green-light); }
+    .agent-pill:hover { border-color: var(--forest); background: var(--forest-light); }
     .agent-badge {
       width: 28px; height: 28px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-size: .8rem; font-weight: 800; color: white;
     }
-    .badge-green  { background: var(--green); }
-    .badge-navy   { background: var(--navy); }
+    .badge-green  { background: var(--forest); }
+    .badge-navy   { background: var(--brown); }
     .badge-silver { background: var(--silver); }
     .badge-teal   { background: #0d7a74; }
     .badge-red    { background: #c0392b; }
@@ -263,7 +268,7 @@
       box-shadow: var(--shadow-lg);
     }
     .compare-table thead tr {
-      background: var(--navy);
+      background: var(--brown);
     }
     .compare-table thead th {
       padding: 16px 20px; color: white; font-weight: 700;
@@ -271,17 +276,17 @@
     }
     .compare-table thead th:first-child { width: 28%; }
     .compare-table thead th.vigil-col {
-      background: var(--green);
+      background: var(--forest);
       color: white;
     }
     .compare-table tbody tr { border-bottom: 1px solid var(--silver-light); }
     .compare-table tbody tr:nth-child(even) { background: var(--bg-alt); }
-    .compare-table tbody tr:hover { background: var(--green-light); }
+    .compare-table tbody tr:hover { background: var(--forest-light); }
     .compare-table td { padding: 14px 20px; vertical-align: top; }
-    .compare-table td:first-child { font-weight: 700; color: var(--navy); }
-    .compare-table td.vigil-val { color: var(--green); font-weight: 600; }
+    .compare-table td:first-child { font-weight: 700; color: var(--brown); }
+    .compare-table td.vigil-val { color: var(--forest); font-weight: 600; }
     .compare-table td.them-val { color: var(--text-muted); }
-    .check  { color: var(--green); font-weight: 700; }
+    .check  { color: var(--forest); font-weight: 700; }
     .cross  { color: var(--red-warn); }
 
     /* ─── Code Block ───────────────────────────────────────────────── */
@@ -318,10 +323,10 @@
       transition: all .18s;
       box-shadow: var(--shadow);
     }
-    .skill-card:hover { border-color: var(--green); transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+    .skill-card:hover { border-color: var(--forest); transform: translateY(-3px); box-shadow: var(--shadow-lg); }
     .skill-header { display: flex; align-items: center; gap: 12px; }
     .skill-icon { font-size: 1.8rem; }
-    .skill-name { font-size: 1rem; font-weight: 700; color: var(--navy); }
+    .skill-name { font-size: 1rem; font-weight: 700; color: var(--brown); }
     .skill-chain {
       display: flex; align-items: center; gap: 6px;
       flex-wrap: wrap;
@@ -331,20 +336,20 @@
       border: 1px solid var(--silver-light);
       border-radius: 6px;
       padding: 3px 10px;
-      font-size: .78rem; font-weight: 700; color: var(--navy);
+      font-size: .78rem; font-weight: 700; color: var(--brown);
     }
-    .skill-arrow { color: var(--green); font-weight: 700; font-size: .8rem; }
+    .skill-arrow { color: var(--forest); font-weight: 700; font-size: .8rem; }
     .skill-desc { font-size: .86rem; color: var(--text-muted); }
 
     /* ─── Quote / Callout ──────────────────────────────────────────── */
     .callout {
-      background: var(--green-light);
-      border-left: 4px solid var(--green);
+      background: var(--forest-light);
+      border-left: 4px solid var(--forest);
       border-radius: 0 var(--radius) var(--radius) 0;
       padding: 20px 24px;
       margin: 24px 0;
     }
-    .callout p { color: var(--navy); font-weight: 500; margin: 0; }
+    .callout p { color: var(--brown); font-weight: 500; margin: 0; }
 
     /* ─── Contributing ─────────────────────────────────────────────── */
     .contrib-item {
@@ -355,11 +360,11 @@
     .contrib-item:last-child { border-bottom: none; }
     .contrib-num {
       width: 36px; height: 36px; border-radius: 10px;
-      background: var(--navy); color: white;
+      background: var(--brown); color: white;
       display: flex; align-items: center; justify-content: center;
       font-weight: 800; font-size: .9rem; flex-shrink: 0;
     }
-    .contrib-body h3 { color: var(--navy); margin-bottom: 4px; }
+    .contrib-body h3 { color: var(--brown); margin-bottom: 4px; }
     .contrib-body p  { margin: 0; font-size: .9rem; }
 
     /* ─── Architecture ─────────────────────────────────────────────── */
@@ -369,16 +374,16 @@
       margin-bottom: 12px;
       display: flex; align-items: center; gap: 20px;
     }
-    .arch-layer-1 { background: linear-gradient(90deg, #e6eaf3 0%, #eef1f6 100%); border: 1.5px solid #c5cfe0; }
-    .arch-layer-2 { background: linear-gradient(90deg, var(--green-light) 0%, #eef8f2 100%); border: 1.5px solid #b5d9c3; }
-    .arch-layer-3 { background: linear-gradient(90deg, #e8f4f8 0%, #eef5fa 100%); border: 1.5px solid #b5d0de; }
+    .arch-layer-1 { background: linear-gradient(90deg, #F5EDE8 0%, #F5EDE8 100%); border: 1.5px solid #DDD0C8; }
+    .arch-layer-2 { background: linear-gradient(90deg, var(--forest-light) 0%, #EBF3E6 100%); border: 1.5px solid #3D7A25; }
+    .arch-layer-3 { background: linear-gradient(90deg, #FBF0EA 0%, #FAF5F0 100%); border: 1.5px solid #DDD0C8; }
     .arch-label { font-weight: 800; font-size: .82rem; text-transform: uppercase; letter-spacing: .08em; min-width: 90px; }
-    .arch-title { font-weight: 700; font-size: 1rem; color: var(--navy); margin-bottom: 2px; }
+    .arch-title { font-weight: 700; font-size: 1rem; color: var(--brown); margin-bottom: 2px; }
     .arch-desc  { font-size: .85rem; color: var(--text-muted); }
 
     /* ─── Community / Footer ───────────────────────────────────────── */
     .community {
-      background: linear-gradient(160deg, var(--navy) 0%, #1f4d35 100%);
+      background: linear-gradient(160deg, #3D1F12 0%, #2D5A1B 100%);
       padding: 80px 28px;
       text-align: center;
       position: relative; overflow: hidden;
@@ -396,7 +401,7 @@
     }
     .community-link:hover { background: rgba(255,255,255,.2); transform: translateY(-2px); }
     footer {
-      background: #0f1a2d;
+      background: #2A1208;
       padding: 28px;
       text-align: center;
       font-size: .83rem;
@@ -407,7 +412,7 @@
 
     /* ─── Section headers ──────────────────────────────────────────── */
     .section-header { text-align: center; margin-bottom: 56px; }
-    .section-header h2 { color: var(--navy); }
+    .section-header h2 { color: var(--brown); }
     .section-header .lead { max-width: 600px; margin: 0 auto; }
 
     /* ─── Roadmap ──────────────────────────────────────────────────── */
@@ -419,9 +424,9 @@
     .roadmap-item:last-child { border-bottom: none; }
     .roadmap-dot {
       width: 12px; height: 12px; border-radius: 50%;
-      background: var(--green); flex-shrink: 0; margin-top: 5px;
+      background: var(--forest); flex-shrink: 0; margin-top: 5px;
     }
-    .roadmap-item h3 { font-size: .95rem; color: var(--navy); margin-bottom: 2px; }
+    .roadmap-item h3 { font-size: .95rem; color: var(--brown); margin-bottom: 2px; }
     .roadmap-item p  { font-size: .85rem; margin: 0; }
 
     /* ─── vs cards ─────────────────────────────────────────────────── */
@@ -433,15 +438,15 @@
       flex: 1; border-radius: var(--radius-lg); padding: 24px;
     }
     .vs-vigil {
-      background: linear-gradient(135deg, #e6f2ea 0%, #d6eee0 100%);
-      border: 2px solid var(--green);
+      background: linear-gradient(135deg, #EBF3E6 0%, #EBF3E6 100%);
+      border: 2px solid var(--forest);
     }
     .vs-them  {
       background: var(--bg-alt);
       border: 1.5px solid var(--silver-light);
     }
     .vs-label { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 12px; }
-    .vs-label-vigil { color: var(--green); }
+    .vs-label-vigil { color: var(--forest); }
     .vs-label-them  { color: var(--text-muted); }
 
     /* ─── Placeholders for images ──────────────────────────────────── */
@@ -581,7 +586,7 @@
     <div class="grid-2" style="gap: 40px; align-items: center;">
       <div>
         <p style="font-size:1.05rem; color: var(--text-muted); margin-bottom: 20px;">
-          Built on the <strong style="color:var(--navy)">Claude Agent SDK</strong> and the <strong style="color:var(--navy)">Model Context Protocol (MCP)</strong>,
+          Built on the <strong style="color:var(--brown)">Claude Agent SDK</strong> and the <strong style="color:var(--brown)">Model Context Protocol (MCP)</strong>,
           Vigil is designed around a simple principle: <em>AI agents should do the work, not just answer questions.</em>
         </p>
         <div class="callout">
@@ -639,7 +644,7 @@
       </div>
     </div>
     <div style="margin-top: 40px; text-align: center;">
-      <p style="font-size: 1rem; color: var(--navy); font-weight: 600; max-width: 680px; margin: 0 auto;">
+      <p style="font-size: 1rem; color: var(--brown); font-weight: 600; max-width: 680px; margin: 0 auto;">
         "Security operations shouldn't be a black box you buy. It should be a capability you build, together."
       </p>
     </div>
@@ -659,7 +664,7 @@
 
     <!-- Skills -->
     <div style="margin-bottom: 64px;">
-      <h3 style="font-size: 1.4rem; color: var(--navy); margin-bottom: 8px;">⚙️ Skills — Complete Workflows in a Single Command</h3>
+      <h3 style="font-size: 1.4rem; color: var(--brown); margin-bottom: 8px;">⚙️ Skills — Complete Workflows in a Single Command</h3>
       <p style="max-width: 760px; margin-bottom: 28px;">
         A skill is a multi-agent workflow that chains specialized agents into a complete, end-to-end playbook.
         Each skill maps to a real operational workflow and produces real outputs. Creating your own skill is writing a
@@ -717,29 +722,29 @@
 
     <!-- MCP -->
     <div style="margin-bottom: 64px;">
-      <h3 style="font-size: 1.4rem; color: var(--navy); margin-bottom: 8px;">🔌 MCP — Your Entire Stack, Connected</h3>
+      <h3 style="font-size: 1.4rem; color: var(--brown); margin-bottom: 8px;">🔌 MCP — Your Entire Stack, Connected</h3>
       <p style="max-width: 760px; margin-bottom: 28px;">
         Vigil uses the Model Context Protocol to give every agent real-time access to your existing tools.
         30+ integrations out of the box. If a tool has an MCP server, Vigil can connect to it.
       </p>
       <div class="grid-4">
         <!-- integration pills -->
-        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--navy);">Splunk</div>
-        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--navy);">CrowdStrike</div>
-        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--navy);">VirusTotal</div>
-        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--navy);">Shodan</div>
-        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--navy);">Hybrid Analysis</div>
-        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--navy);">Jira</div>
-        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--navy);">Slack</div>
-        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--navy);">DeepTempo</div>
-        <div style="background:var(--green-light); border: 1px dashed var(--green); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--green);">+ 22 more</div>
-        <div style="background:var(--green-light); border: 1px dashed var(--green); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:700; color:var(--green); grid-column: span 3;">Write your own → Any MCP server plugs right in</div>
+        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--brown);">Splunk</div>
+        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--brown);">CrowdStrike</div>
+        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--brown);">VirusTotal</div>
+        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--brown);">Shodan</div>
+        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--brown);">Hybrid Analysis</div>
+        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--brown);">Jira</div>
+        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--brown);">Slack</div>
+        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--brown);">DeepTempo</div>
+        <div style="background:var(--forest-light); border: 1px dashed var(--forest); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--forest);">+ 22 more</div>
+        <div style="background:var(--forest-light); border: 1px dashed var(--forest); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:700; color:var(--forest); grid-column: span 3;">Write your own → Any MCP server plugs right in</div>
       </div>
     </div>
 
     <!-- Architecture Diagram -->
     <div>
-      <h3 style="font-size: 1.4rem; color: var(--navy); margin-bottom: 16px;">🏗️ Architecture</h3>
+      <h3 style="font-size: 1.4rem; color: var(--brown); margin-bottom: 16px;">🏗️ Architecture</h3>
       <div class="arch-layer arch-layer-3">
         <div class="arch-label" style="color: #0d5f7a;">Skills Layer</div>
         <div>
@@ -749,7 +754,7 @@
       </div>
       <div style="text-align:center; font-size: 1.2rem; color: var(--silver); margin: -4px 0; z-index:1; position:relative;">↕</div>
       <div class="arch-layer arch-layer-1">
-        <div class="arch-label" style="color: var(--navy-light);">Agent Layer</div>
+        <div class="arch-label" style="color: var(--brown-mid);">Agent Layer</div>
         <div>
           <div class="arch-title">Claude Agent SDK — 13 Specialized Agents</div>
           <div class="arch-desc">Defined roles, tool access, and reasoning modes. The SDK handles coordination, state management, and tool invocation. 23 backend tools + 100+ extended tools via MCP.</div>
@@ -757,7 +762,7 @@
       </div>
       <div style="text-align:center; font-size: 1.2rem; color: var(--silver); margin: -4px 0; z-index:1; position:relative;">↕</div>
       <div class="arch-layer arch-layer-2">
-        <div class="arch-label" style="color: var(--green);">Integration Layer</div>
+        <div class="arch-label" style="color: var(--forest);">Integration Layer</div>
         <div>
           <div class="arch-title">MCP — 30+ Tool Integrations</div>
           <div class="arch-desc">Any MCP-speaking tool or data source plugs in without custom code. Handles authentication, rate limiting, and response normalization. Open standard — ecosystem grows the platform.</div>
@@ -974,28 +979,28 @@
     <div class="grid-2" style="gap: 40px;">
       <div>
         <div class="contrib-item">
-          <div class="contrib-num" style="background:var(--green);">📝</div>
+          <div class="contrib-num" style="background:var(--forest);">📝</div>
           <div class="contrib-body">
             <h3>Write a New Skill</h3>
             <p>Skills are markdown files defining multi-agent workflows. Phishing triage, cloud incident response, insider threat—encode any playbook and share it with the community. No code required.</p>
           </div>
         </div>
         <div class="contrib-item">
-          <div class="contrib-num" style="background:var(--green);">🔌</div>
+          <div class="contrib-num" style="background:var(--forest);">🔌</div>
           <div class="contrib-body">
             <h3>Build an MCP Integration</h3>
             <p>If your security tool has an API, wrap it in an MCP server and Vigil connects to it. SIEM, threat intel, firewalls, identity providers—all welcome.</p>
           </div>
         </div>
         <div class="contrib-item">
-          <div class="contrib-num" style="background:var(--green);">🛡️</div>
+          <div class="contrib-num" style="background:var(--forest);">🛡️</div>
           <div class="contrib-body">
             <h3>Add Detection Rules</h3>
             <p>Contribute rules in Sigma, Splunk SPL, Elastic KQL, or any format. Every new rule improves the Detection Engineer agent for everyone.</p>
           </div>
         </div>
         <div class="contrib-item" style="border:none;">
-          <div class="contrib-num" style="background:var(--green);">🤖</div>
+          <div class="contrib-num" style="background:var(--forest);">🤖</div>
           <div class="contrib-body">
             <h3>Improve an Agent</h3>
             <p>Each agent's behavior is readable Python. Better MITRE mapping, tighter forensic chain-of-custody formatting, sharper triage scoring—open a PR.</p>
@@ -1053,18 +1058,18 @@
 
     <div class="grid-2" style="gap: 40px; align-items: flex-start;">
       <div>
-        <h3 style="color:var(--navy); margin-bottom: 16px;">Requirements</h3>
+        <h3 style="color:var(--brown); margin-bottom: 16px;">Requirements</h3>
         <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 28px;">
           <div style="display:flex; gap:10px; align-items:center;">
-            <span style="color:var(--green); font-size:1.1rem;">✓</span>
+            <span style="color:var(--forest); font-size:1.1rem;">✓</span>
             <span>Python 3.11+</span>
           </div>
           <div style="display:flex; gap:10px; align-items:center;">
-            <span style="color:var(--green); font-size:1.1rem;">✓</span>
+            <span style="color:var(--forest); font-size:1.1rem;">✓</span>
             <span>Node.js 18+</span>
           </div>
           <div style="display:flex; gap:10px; align-items:center;">
-            <span style="color:var(--green); font-size:1.1rem;">✓</span>
+            <span style="color:var(--forest); font-size:1.1rem;">✓</span>
             <span>Docker Desktop</span>
           </div>
           <div style="display:flex; gap:10px; align-items:center; color: var(--text-muted);">
@@ -1072,7 +1077,7 @@
             <span>Claude API key <em>(optional for initial testing)</em></span>
           </div>
         </div>
-        <h3 style="color:var(--navy); margin-bottom: 16px;">Installation</h3>
+        <h3 style="color:var(--brown); margin-bottom: 16px;">Installation</h3>
         <div class="code-block" style="position:relative;">
           <button class="copy-btn" onclick="navigator.clipboard.writeText('git clone --recurse-submodules https://github.com/deeptempo/vigil.git\ncd vigil\n./start_web.sh')">Copy</button>
           <div><span class="c-green">$</span> <span class="c-blue">git clone</span> --recurse-submodules \</div>
@@ -1094,9 +1099,9 @@
         </div>
       </div>
         <div style="margin-top: 24px;">
-          <h3 style="color:var(--navy); margin-bottom: 12px;">DeepTempo + Vigil</h3>
+          <h3 style="color:var(--brown); margin-bottom: 12px;">DeepTempo + Vigil</h3>
           <p style="font-size:.9rem;">
-            Vigil is sponsored by <a href="https://deeptempo.ai" target="_blank" style="color:var(--green);">DeepTempo</a>.
+            Vigil is sponsored by <a href="https://deeptempo.ai" target="_blank" style="color:var(--forest);">DeepTempo</a>.
             DeepTempo's <strong>LogLM</strong> connects to Vigil via MCP as a high-fidelity behavioral detection layer—
             giving you AI-native detections on top of an open AI SOC. Vigil works with Splunk alone.
             Adding DeepTempo means AI-native behavioral detection on top of it.
@@ -1127,7 +1132,7 @@
       and know what's broken in their security operations today.
       <br><br>
       The agents are transparent. The skills are text files. The integrations are open standard.
-      <strong style="color: #5fd68c;">Everything is designed for you to make it yours.</strong>
+      <strong style="color: #E05C20;">Everything is designed for you to make it yours.</strong>
     </p>
     <div class="community-links">
       <a href="https://github.com/deeptempo/vigil" target="_blank" class="community-link">
