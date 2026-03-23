@@ -495,6 +495,19 @@
       height: 340px;
     }
     .screenshot-ph-sm { height: 200px; }
+    .screenshot-frame {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid rgba(61, 31, 18, 0.1);
+      box-shadow: var(--shadow);
+      background: var(--brown);
+    }
+    .screenshot-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+    }
 
     /* ─── Responsive tweaks ────────────────────────────────────────── */
     @media (max-width: 700px) {
@@ -635,10 +648,8 @@
         </div>
       </div>
       <div>
-        <div class="img-placeholder screenshot-ph">
-          <span class="ph-icon">🖥️</span>
-          <span>Vigil Web UI Screenshot</span> <!-- Replace with actual screenshot -->  
-          <span style="font-size:.72rem; color: var(--silver-light)"></span>
+        <div class="screenshot-frame screenshot-ph">
+          <img src="dashboard.png" alt="Vigil web dashboard — AI SOC interface" loading="lazy" decoding="async" />
         </div>
       </div>
     </div>
@@ -871,7 +882,7 @@
 ═══════════════════════════════════════════════════════ -->
 <section class="section">
   <div class="container">
-    <div class="grid-2" style="gap:48px; align-items: center;">
+    <div class="grid-1" style="gap:48px; align-items: center;">
       <div>
         <span class="tag">60-Second Demo</span>
         <h2>See It Work in Under a Minute</h2>
@@ -905,13 +916,16 @@
           </div>
         </div>
       </div>
+      
+      <!-- 
       <div>
-        <div class="img-placeholder screenshot-ph" style="height: 420px;"> <!-- Replace with actual screenshot -->  
+        <div class="img-placeholder screenshot-ph" style="height: 420px;"> 
           <span class="ph-icon">🔍</span>
           <span>Vigil — Incident Response Walkthrough</span>
           <span style="font-size:.72rem; color: var(--silver-light)"></span>
         </div>
       </div>
+    -->
     </div>
   </div>
 </section>
