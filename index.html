@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VIGIL — Your AI SOC: Open Source</title>
+  <title>VIGIL | Open Source AI SOC</title>
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -444,19 +444,78 @@
     .section-header h2 { color: var(--brown); }
     .section-header .lead { max-width: 600px; margin: 0 auto; }
 
-    /* ─── Roadmap ──────────────────────────────────────────────────── */
-    .roadmap-item {
-      display: flex; gap: 18px; align-items: flex-start;
-      padding: 18px 0;
-      border-bottom: 1px dashed var(--silver-light);
+    /* ─── Roadmap (horizontal) ─────────────────────────────────────── */
+    .roadmap-horiz-wrap {
+      background: var(--white);
+      border: 1.5px solid var(--silver-light);
+      border-radius: var(--radius-lg);
+      padding: 28px 28px 24px;
+      box-shadow: var(--shadow);
     }
-    .roadmap-item:last-child { border-bottom: none; }
-    .roadmap-dot {
-      width: 12px; height: 12px; border-radius: 50%;
-      background: var(--forest); flex-shrink: 0; margin-top: 5px;
+    .roadmap-horiz-wrap h3 { color: var(--brown); margin-bottom: 0; }
+    .roadmap-horiz {
+      display: flex;
+      position: relative;
+      height: 280px;
+      margin-top: 8px;
+      overflow-x: auto;
+      overflow-y: visible;
     }
-    .roadmap-item h3 { font-size: .95rem; color: var(--brown); margin-bottom: 2px; }
-    .roadmap-item p  { font-size: .85rem; margin: 0; }
+    .roadmap-horiz::before {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      top: 50%; transform: translateY(-50%);
+      height: 3px;
+      background: repeating-linear-gradient(
+        to right,
+        var(--silver-light) 0, var(--silver-light) 10px,
+        transparent 10px, transparent 20px
+      );
+    }
+    .road-h-stop {
+      flex: 1;
+      min-width: 140px;
+      position: relative;
+    }
+    .road-h-node {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--forest);
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .78rem; font-weight: 800;
+      border: 3px solid var(--white);
+      box-shadow: 0 0 0 2px var(--forest);
+      z-index: 1;
+    }
+    .road-h-top {
+      position: absolute;
+      bottom: 50%;
+      padding-bottom: 28px;
+      left: 6px; right: 6px;
+      text-align: center;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-end;
+    }
+    .road-h-bottom {
+      position: absolute;
+      top: 50%;
+      padding-top: 28px;
+      left: 6px; right: 6px;
+      text-align: center;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-start;
+    }
+    .road-h-top h4, .road-h-bottom h4 {
+      font-size: .78rem; font-weight: 700;
+      color: var(--brown); margin-bottom: 3px; line-height: 1.3;
+    }
+    .road-h-top p, .road-h-bottom p {
+      font-size: .72rem; margin: 0; line-height: 1.4;
+    }
 
     /* ─── vs cards ─────────────────────────────────────────────────── */
     .vs-row {
@@ -520,34 +579,49 @@
 
     /* ─── Github Star button ───────────────────────────────────────── */
     .nav-github-star {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 13px;
-    border-radius: 8px;
-    border: 1.5px solid var(--silver-light);
-    background: transparent;
-    color: var(--text);
-    font-size: .84rem;
-    font-weight: 600;
-    text-decoration: none !important;
-    transition: background .15s, border-color .15s, color .15s;
-    white-space: nowrap;
-  }
-  .nav-github-star:hover {
-    background: var(--silver-pale);
-    border-color: var(--brown);
-    color: var(--brown);
-    text-decoration: none;
-  }
-  .nav-github-star svg {
-    color: var(--orange);
-    flex-shrink: 0;
-  }
-  .nav-star-divider {
-    color: var(--silver-light);
-    font-weight: 400;
-  }
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      font-size: .84rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .nav-star-action {
+      display: inline-flex; align-items: center; gap: 1px;
+      padding: 5px 10px;
+      color: var(--text);
+      text-decoration: none !important;
+      transition: background .15s, color .15s;
+    }
+    .nav-star-action:hover {
+      background: var(--silver-pale);
+      color: var(--brown);
+    }
+    .nav-star-action svg { color: var(--orange); flex-shrink: 0; }
+    .nav-star-count {
+      display: inline-flex; align-items: center;
+      padding: 5px 10px;
+      color: var(--text-muted);
+      text-decoration: none !important;
+      transition: background .15s, color .15s;
+      font-size: .82rem;
+    }
+    .nav-star-count:hover {
+      background: var(--silver-pale);
+      color: var(--brown);
+    }
+    .nav-star-divider {
+      color: var(--silver-light);
+      font-weight: 400;
+      font-size: .9rem;
+      line-height: 1;
+      align-self: stretch;
+      display: flex; align-items: center;
+    }
   </style>
 </head>
 <body>
@@ -571,10 +645,15 @@
         <a href="https://github.com/Vigil-SOC/vigil" target="_blank" rel="noopener noreferrer" class="nav-github" aria-label="Vigil on GitHub">
           <svg viewBox="0 0 98 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.225-22.23-5.378-22.23-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z"/></svg>
         </a>
-        <div style="display:flex; align-items:center; line-height:1;">
-          <a class="github-button" href="https://github.com/Vigil-SOC/vigil"
-             data-icon="octicon-star" data-size="large" data-show-count="true"
-             aria-label="Star Vigil-SOC/vigil on GitHub">Star</a>
+        <div class="nav-github-star" role="group" aria-label="Star Vigil on GitHub">
+          <a href="https://github.com/Vigil-SOC/vigil" target="_blank" rel="noopener noreferrer"
+             class="nav-star-action" aria-label="Star Vigil on GitHub">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Star
+          </a>
+          <span class="nav-star-divider">|</span>
+          <a href="https://github.com/Vigil-SOC/vigil/stargazers" target="_blank" rel="noopener noreferrer"
+             class="nav-star-count" id="gh-star-count" aria-label="View stargazers">—</a>
         </div>
       </div>
     </div>
@@ -587,7 +666,7 @@
 <section class="hero">
   <div class="container">
     <img src="logo.png" alt="VIGIL Logo" class="hero-logo" />
-    <h1>Your AI SOC,<br><span>Open Source.</span></h1>
+    <h1>Your AI SOC, <span>Open Source.</h1>
     <p class="lead">
       A coordinated team of 13 specialized AI agents in your SOC. Built on the Claude Agent SDK and MCP.
     </p>
@@ -715,7 +794,7 @@
       <div class="card">
         <div class="card-icon card-icon-navy">🔗</div>
         <h3>Open Integrations</h3>
-        <p>Built on MCP—an open standard. When integrations are built on open standards, the ecosystem grows the platform. Every new MCP server is a free Vigil integration.</p>
+        <p>Built on MCP: an open standard. When integrations are built on open standards, the ecosystem grows the platform. Every new MCP server is a free Vigil integration.</p>
       </div>
       <div class="card">
         <div class="card-icon card-icon-silver">🤝</div>
@@ -744,7 +823,7 @@
 
     <!-- Skills -->
     <div style="margin-bottom: 64px;">
-      <h3 style="font-size: 1.4rem; color: var(--brown); margin-bottom: 8px;">⚙️ Skills — Complete Workflows in a Single Command</h3>
+      <h3 style="font-size: 1.4rem; color: var(--brown); margin-bottom: 8px;">⚙️ Skills: Complete Workflows in a Single Command</h3>
       <p style="max-width: 760px; margin-bottom: 28px;">
         A skill is a multi-agent workflow that chains specialized agents into a complete, end-to-end playbook.
         Each skill maps to a real operational workflow and produces real outputs. Creating your own skill is writing a
@@ -802,7 +881,7 @@
 
     <!-- MCP -->
     <div style="margin-bottom: 64px;">
-      <h3 style="font-size: 1.4rem; color: var(--brown); margin-bottom: 8px;">🔌 MCP — Your Entire Stack, Connected</h3>
+      <h3 style="font-size: 1.4rem; color: var(--brown); margin-bottom: 8px;">🔌 MCP: Your Entire Stack, Connected</h3>
       <p style="max-width: 760px; margin-bottom: 28px;">
         Vigil uses the Model Context Protocol to give every agent real-time access to your existing tools.
         30+ integrations out of the box. If a tool has an MCP server, Vigil can connect to it.
@@ -828,7 +907,7 @@
       <div class="arch-layer arch-layer-3">
         <div class="arch-label" style="color: #0d5f7a;">Skills Layer</div>
         <div>
-          <div class="arch-title">SKILL.md Files — Multi-Agent Workflows</div>
+          <div class="arch-title">SKILL.md Files: Multi-Agent Workflows</div>
           <div class="arch-desc">Composable playbooks. Define agent sequence, phase-level tool access, and natural-language instructions. Skills can invoke other skills as sub-workflows.</div>
         </div>
       </div>
@@ -836,15 +915,15 @@
       <div class="arch-layer arch-layer-1">
         <div class="arch-label" style="color: var(--brown-mid);">Agent Layer</div>
         <div>
-          <div class="arch-title">Claude Agent SDK — 13 Specialized Agents</div>
-          <div class="arch-desc">Defined roles, tool access, and reasoning modes. The SDK handles coordination, state management, and tool invocation. 23 backend tools + 100+ extended tools via MCP.</div>
+          <div class="arch-title">Claude Agent SDK: 13 Specialized Agents</div>
+          <div class="arch-desc">Defined roles, tool access, and reasoning modes. The SDK handles coordination, state management, and tool invocation. 23 backend tools and 100+ extended tools via MCP.</div>
         </div>
       </div>
       <div style="text-align:center; font-size: 1.2rem; color: var(--silver); margin: -4px 0; z-index:1; position:relative;">↕</div>
       <div class="arch-layer arch-layer-2">
         <div class="arch-label" style="color: var(--forest);">Integration Layer</div>
         <div>
-          <div class="arch-title">MCP — 30+ Tool Integrations</div>
+          <div class="arch-title">MCP: 30+ Tool Integrations</div>
           <div class="arch-desc">Any MCP-speaking tool or data source plugs in without custom code. Handles authentication, rate limiting, and response normalization. Open standard — ecosystem grows the platform.</div>
         </div>
       </div>
@@ -861,8 +940,8 @@
       <span class="tag">The Team</span>
       <h2>13 Agents. Each Built for a Job.</h2>
       <p class="lead">
-        Specialists with defined roles, tuned reasoning modes, and access to 23 backend tools plus 100+ extended tools via MCP.
-        You set the automation thresholds. Vigil keeps humans in the loop where it counts—and gets out of the way everywhere else.
+        Specialists with defined roles, tuned reasoning modes, and access to 23 backend tools and 100+ extended tools via MCP.
+        You set the automation thresholds. Vigil keeps humans in the loop where it counts–and gets out of the way everywhere else.
       </p>
     </div>
 
@@ -1059,69 +1138,66 @@
       <p class="lead">Vigil is a platform, not a product. Here's what you can build—no vendor permission required.</p>
     </div>
 
-    <div class="grid-2" style="gap: 40px;">
-      <div>
-        <div class="contrib-item">
-          <div class="contrib-num" style="background:var(--forest);">📝</div>
-          <div class="contrib-body">
-            <h3>Write a New Skill</h3>
-            <p>Skills are markdown files defining multi-agent workflows. Phishing triage, cloud incident response, insider threat—encode any playbook and share it with the community. No code required.</p>
-          </div>
-        </div>
-        <div class="contrib-item">
-          <div class="contrib-num" style="background:var(--forest);">🔌</div>
-          <div class="contrib-body">
-            <h3>Build an MCP Integration</h3>
-            <p>If your security tool has an API, wrap it in an MCP server and Vigil connects to it. SIEM, threat intel, firewalls, identity providers—all welcome.</p>
-          </div>
-        </div>
-        <div class="contrib-item">
-          <div class="contrib-num" style="background:var(--forest);">🛡️</div>
-          <div class="contrib-body">
-            <h3>Add Detection Rules</h3>
-            <p>Contribute rules in Sigma, Splunk SPL, Elastic KQL, or any format. Every new rule improves the Detection Engineer agent for everyone.</p>
-          </div>
-        </div>
-        <div class="contrib-item" style="border:none;">
-          <div class="contrib-num" style="background:var(--forest);">🤖</div>
-          <div class="contrib-body">
-            <h3>Improve an Agent</h3>
-            <p>Each agent's behavior is readable Python. Better MITRE mapping, tighter forensic chain-of-custody formatting, sharper triage scoring—open a PR.</p>
-          </div>
-        </div>
+    <!-- Contribution cards -->
+    <div class="grid-4" style="margin-bottom: 40px;">
+      <div class="card">
+        <div class="card-icon" style="background:var(--forest-light);">📝</div>
+        <h3>Write a New Skill</h3>
+        <p>Skills are markdown files defining multi-agent workflows. Phishing triage, cloud IR, insider threat—encode any playbook. No code required.</p>
       </div>
-      <div>
-        <div class="card" style="height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
-          <div>
-            <div class="card-icon">🗺️</div>
-            <h3>Roadmap</h3>
-            <div style="margin-top: 16px;">
-              <div class="roadmap-item">
-                <div class="roadmap-dot"></div>
-                <div><h3>Expanded MCP Integrations</h3><p>Sentinel, Elastic, Palo Alto Cortex, Google Chronicle, AWS Security Hub.</p></div>
-              </div>
-              <div class="roadmap-item">
-                <div class="roadmap-dot"></div>
-                <div><h3>Community Skills Catalog</h3><p>An npm for SOC workflows—searchable by use case, alert type, and tool stack.</p></div>
-              </div>
-              <div class="roadmap-item">
-                <div class="roadmap-dot"></div>
-                <div><h3>Additional LLM Backends</h3><p>OpenAI, local models via Ollama, and other providers.</p></div>
-              </div>
-              <div class="roadmap-item">
-                <div class="roadmap-dot"></div>
-                <div><h3>Federated Deployment</h3><p>Run agents across multiple environments—data stays local to each.</p></div>
-              </div>
-              <div class="roadmap-item" style="border:none;">
-                <div class="roadmap-dot"></div>
-                <div><h3>Detection-as-Code Pipeline</h3><p>Version-controlled detection rules with automated testing and deployment.</p></div>
-              </div>
-              <div class="roadmap-item" style="border:none;">
-                <div class="roadmap-dot"></div>
-                <div><h3>Auth is WIP</h3><p>Default is a Dev mode that bypasses it for now.</p></div>
-              </div>
-            </div>
-          </div>
+      <div class="card">
+        <div class="card-icon" style="background:var(--forest-light);">🔌</div>
+        <h3>Build an MCP Integration</h3>
+        <p>If your security tool has an API, wrap it in an MCP server and Vigil connects to it. SIEMs, threat intel, firewalls—all welcome.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:var(--forest-light);">🛡️</div>
+        <h3>Add Detection Rules</h3>
+        <p>Contribute rules in Sigma, Splunk SPL, Elastic KQL, or any format. Every new rule improves the Detection Engineer agent for everyone.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:var(--forest-light);">🤖</div>
+        <h3>Improve an Agent</h3>
+        <p>Each agent's behavior is readable Python. Better MITRE mapping, tighter forensic formatting, sharper triage scoring—open a PR.</p>
+      </div>
+    </div>
+
+    <!-- Horizontal roadmap -->
+    <div class="roadmap-horiz-wrap">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+        <div class="card-icon" style="width:36px;height:36px;margin:0;font-size:1.1rem;">🗺️</div>
+        <h3 style="margin:0;">Roadmap</h3>
+      </div>
+      <div class="roadmap-horiz">
+        <div class="road-h-stop">
+          <div class="road-h-top"><h4>Expanded MCP Integrations</h4><p>Sentinel, Elastic, Palo Alto Cortex, Chronicle, AWS Security Hub.</p></div>
+          <div class="road-h-node">1</div>
+          <div class="road-h-bottom"></div>
+        </div>
+        <div class="road-h-stop">
+          <div class="road-h-top"></div>
+          <div class="road-h-node">2</div>
+          <div class="road-h-bottom"><h4>Community Skills Catalog</h4><p>An npm for SOC workflows—searchable by use case, alert type, and tool stack.</p></div>
+        </div>
+        <div class="road-h-stop">
+          <div class="road-h-top"><h4>Additional LLM Backends</h4><p>OpenAI, local models via Ollama, and other providers.</p></div>
+          <div class="road-h-node">3</div>
+          <div class="road-h-bottom"></div>
+        </div>
+        <div class="road-h-stop">
+          <div class="road-h-top"></div>
+          <div class="road-h-node">4</div>
+          <div class="road-h-bottom"><h4>Federated Deployment</h4><p>Run agents across multiple environments—data stays local to each.</p></div>
+        </div>
+        <div class="road-h-stop">
+          <div class="road-h-top"><h4>Detection-as-Code Pipeline</h4><p>Version-controlled detection rules with automated testing and deployment.</p></div>
+          <div class="road-h-node">5</div>
+          <div class="road-h-bottom"></div>
+        </div>
+        <div class="road-h-stop">
+          <div class="road-h-top"></div>
+          <div class="road-h-node">6</div>
+          <div class="road-h-bottom"><h4>Auth</h4><p>Dev mode bypasses it for now. Full auth coming.</p></div>
         </div>
       </div>
     </div>
@@ -1133,14 +1209,20 @@
 ═══════════════════════════════════════════════════════ -->
 <section class="section section-alt" id="start">
   <div class="container">
-    <div class="section-header">
+    <div class="section-header" style="margin-bottom:32px;">
       <span class="tag">Quick Start</span>
       <h2>Up and Running in 3 Minutes</h2>
       <p class="lead">Three commands. No sales call. No procurement. No 30-day POC.</p>
     </div>
 
-    <div class="grid-2" style="gap: 40px; align-items: flex-start;">
-      <div>
+    <div style="text-align:center; margin-bottom:32px;">
+      <a href="https://github.com/Vigil-SOC/vigil" target="_blank" class="btn btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        Clone Vigil on GitHub
+      </a>
+    </div>
+    <div style="max-width: 600px; margin: 0 auto;">
+      <div class="card">
         <h3 style="color:var(--brown); margin-bottom: 16px;">Requirements</h3>
         <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 28px;">
           <div style="display:flex; gap:10px; align-items:center;">
@@ -1168,11 +1250,10 @@
           <div><span class="c-green">$</span> <span class="c-blue">cd</span> vigil</div>
           <div><span class="c-green">$</span> ./start_web.sh</div>
           <div>&nbsp;</div>
-          <div><span class="c-grey"># First run: 2–3 minutes</span></div>
-          <div><span class="c-grey"># Subsequent starts: &lt;30 seconds</span></div>
+          <div><span class="c-grey">First run: 2–3 minutes</span></div>
+          <div><span class="c-grey">Subsequent starts: &lt;30 seconds</span></div>
         </div>
-
-        <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+        <div style="margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
           <div style="background: var(--silver-pale); border-radius: var(--radius); padding: 10px 16px; font-size:.85rem;">
             <strong>Frontend:</strong> <code>http://localhost:6988</code>
           </div>
@@ -1181,26 +1262,27 @@
           </div>
         </div>
       </div>
-        <div style="margin-top: 24px;">
-          <h3 style="color:var(--brown); margin-bottom: 12px;">DeepTempo + Vigil</h3>
-          <p style="font-size:.9rem;">
-            Vigil is sponsored by <a href="https://deeptempo.ai" target="_blank" style="color:var(--forest);">DeepTempo</a>.
-            DeepTempo's <strong>LogLM</strong> connects to Vigil via MCP as a high-fidelity behavioral detection layer—
-            giving you AI-native detections on top of an open AI SOC. Vigil works with Splunk alone.
-            Adding DeepTempo means AI-native behavioral detection on top of it.
-          </p>
-        </div>
-
-        <div style="margin-top: 24px;">
-          <a href="https://github.com/Vigil-SOC/vigil" target="_blank" class="btn btn-primary" style="width:100%; justify-content: center;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-            Clone Vigil on GitHub
-          </a>
-        </div>
-      </div>
     </div>
   </div>
 </section>
+
+<!-- ══════════════════════════════════════════════════════
+     DEEPTEMPO CALLOUT
+═══════════════════════════════════════════════════════ -->
+<div style="background: var(--bg-); padding: 32px 28px;">
+  <div class="container">
+    <div style="display:flex; align-items:center; gap:32px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:220px;">
+        <p style="margin:0; font-size:.9rem; color:var(--text-muted);">
+          DeepTempo's <strong style="color:var(--brown);">LogLM</strong> connects to Vigil via MCP as a high-fidelity behavioral detection layer—giving you AI-native detections on top of an open AI SOC. Vigil works standalone; adding DeepTempo means behavioral detection on top of it.
+        </p>
+      </div>
+      <a href="https://deeptempo.ai" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="flex-shrink:0;">
+        Learn more →
+      </a>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════════════════════
      COMMUNITY CTA
@@ -1260,6 +1342,18 @@
   }, { threshold: 0.4 });
   sections.forEach(s => observer.observe(s));
 </script>
-  <script async defer src="https://buttons.github.io/buttons.js"></script>
+  <script>
+    fetch('https://api.github.com/repos/Vigil-SOC/vigil')
+      .then(r => r.json())
+      .then(d => {
+        const el = document.getElementById('gh-star-count');
+        if (el && d.stargazers_count != null) {
+          el.textContent = d.stargazers_count >= 1000
+            ? (d.stargazers_count / 1000).toFixed(1) + 'k'
+            : d.stargazers_count;
+        }
+      })
+      .catch(() => {});
+  </script>
 </body>
 </html>
