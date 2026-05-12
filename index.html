@@ -187,9 +187,12 @@
       position: absolute; inset: 0;
       background-image: url('assets/pattern.svg');
       background-repeat: repeat;
-      /* 246px (not 247) closes the 2-SVG-unit wider gap at the vertical
-         tile boundary so vertical row-spacing stays uniform. */
-      background-size: 720px 246px;
+      /* SVG has 15.5-unit edge margins on all sides; tiling at the natural
+         size creates +2 unit gaps vertically (rows 29 → 31) and +1 unit
+         gap horizontally (cols 30 → 31) at tile boundaries. Shrinking the
+         tile by those margins closes both seams. 1441×495 → 1440×493
+         (or 719.5×246 at the half-scale we use here). */
+      background-size: 719.5px 246px;
       /* SVG fills are dark (brand spec); invert so the rings render as
          light-on-dark over the charcoal hero. Pattern SVG is unchanged. */
       filter: invert(1);
