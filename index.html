@@ -185,14 +185,15 @@
     .hero::before {
       content: '';
       position: absolute; inset: 0;
-      background-image: url('assets/pattern.svg');
+      background-image: url('assets/pattern-tile.svg');
       background-repeat: repeat;
-      /* SVG has 15.5-unit edge margins on all sides; tiling at the natural
-         size creates +2 unit gaps vertically (rows 29 → 31) and +1 unit
-         gap horizontally (cols 30 → 31) at tile boundaries. Shrinking the
-         tile by those margins closes both seams. 1441×495 → 1440×493
-         (or 719.5×246 at the half-scale we use here). */
-      background-size: 719.5px 246px;
+      /* pattern-tile.svg has its viewBox cropped from the brand pattern.svg
+         to 120×116 — a natural seamless period (4 × 30 col-spacing,
+         4 × 29 row-spacing). At 60×58 the tile lands on integer pixels
+         and replicates many more times across the hero, keeping the
+         small circle size the brand pattern is designed at. Original
+         brand assets/pattern.svg is untouched. */
+      background-size: 60px 58px;
       /* SVG fills are dark (brand spec); invert so the rings render as
          light-on-dark over the charcoal hero. Pattern SVG is unchanged. */
       filter: invert(1);
