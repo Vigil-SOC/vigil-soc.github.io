@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Community — Vigil SOC</title>
+  <meta name="description" content="Vigil Workshops, contributors, and ways to plug in. The Open Source AI SOC community page." />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Space+Grotesk:wght@400;500;600;700&family=Martian+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/site.css" />
+  <style>
+    /* Community page-only tweaks */
+    .page-hero .hero-inner {
+      grid-template-columns: 1fr;
+      text-align: center;
+      max-width: 760px;
+    }
+    .page-hero { padding: 72px 28px 56px; }
+    .page-hero h1 { margin-left: auto; margin-right: auto; }
+    .page-hero .lead { margin-left: auto; margin-right: auto; }
+    .luma-wrap {
+      display: flex; justify-content: center;
+      margin: 0 auto;
+    }
+    .luma-wrap iframe {
+      width: 100%; max-width: 720px; height: 720px;
+      border: 1px solid #bfcbda88; border-radius: 8px;
+      background: var(--cream-warm);
+    }
+    @media (max-width: 700px) {
+      .luma-wrap iframe { height: 640px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     NAV
+═══════════════════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="../" class="nav-logo">
+      <img src="../assets/logo-black.svg" alt="VIGIL" />
+    </a>
+    <div class="nav-links">
+      <a href="../index.html#what" class="nav-link">What</a>
+      <a href="../index.html#how" class="nav-link">How</a>
+      <a href="../index.html#agents" class="nav-link">Agents</a>
+      <a href="../index.html#compare" class="nav-link">Compare</a>
+      <a href="./" class="nav-link active">Community</a>
+      <a href="../index.html#start" class="nav-link">Get Started</a>
+      <div style="display:flex; align-items:center; height:40px; gap:4px;">
+        <a href="https://github.com/Vigil-SOC/vigil" target="_blank" rel="noopener noreferrer" class="nav-github" aria-label="Vigil on GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE HERO
+═══════════════════════════════════════════════════════ -->
+<section class="hero page-hero">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <span class="hero-eyebrow">Community</span>
+      <h1>Open <span class="accent">together.</span></h1>
+      <p class="lead">
+        Vigil is built by the people who run SOCs. Workshops, working sessions, contributions
+        in detection rules, MCP integrations, agents, and workflows — this is where it happens.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     UPCOMING WORKSHOPS (Luma)
+═══════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="tag">Events</span>
+      <h2>Upcoming Workshops</h2>
+      <p class="lead">Hands-on sessions, AMAs, and detection exercises. Hosted on Luma — RSVP from the calendar below.</p>
+    </div>
+    <div class="luma-wrap">
+      <iframe
+        src="https://luma.com/embed/calendar/cal-f4p8FbCkeNIu9JA/events"
+        frameborder="0"
+        allowfullscreen=""
+        aria-hidden="false"
+        tabindex="0"
+        loading="lazy"
+        title="Vigil Workshops calendar"
+      ></iframe>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     CONTRIBUTING
+═══════════════════════════════════════════════════════ -->
+<section class="section section-alt" id="contribute">
+  <div class="container">
+    <div class="section-header">
+      <span class="tag">Contribute</span>
+      <h2>Built to Be Extended</h2>
+      <p class="lead">Vigil is a platform, not a product. Here's what you can build, with no vendor permission required.</p>
+    </div>
+
+    <div class="grid-2" style="gap: 40px;">
+      <div>
+        <div class="contrib-item">
+          <div class="contrib-num" style="background:var(--forest);">📝</div>
+          <div class="contrib-body">
+            <h3>Write a New Workflow</h3>
+            <p>Workflows are markdown files defining multi-agent playbooks. Phishing triage, cloud incident response, insider threat: encode any process and share it with the community. No code required.</p>
+          </div>
+        </div>
+        <div class="contrib-item">
+          <div class="contrib-num" style="background:var(--forest);">🔌</div>
+          <div class="contrib-body">
+            <h3>Build an MCP Integration</h3>
+            <p>If your security tool has an API, wrap it in an MCP server and Vigil connects to it. SIEM, threat intel, firewalls, identity providers: all welcome.</p>
+          </div>
+        </div>
+        <div class="contrib-item">
+          <div class="contrib-num" style="background:var(--forest);">🛡️</div>
+          <div class="contrib-body">
+            <h3>Add Detection Rules</h3>
+            <p>Contribute rules in Sigma, Splunk SPL, Elastic KQL, or any format. Every new rule improves detection coverage for every Vigil deployment.</p>
+          </div>
+        </div>
+        <div class="contrib-item" style="border:none;">
+          <div class="contrib-num" style="background:var(--forest);">🤖</div>
+          <div class="contrib-body">
+            <h3>Improve an Agent</h3>
+            <p>Each agent's behavior is readable Python. Better MITRE mapping, tighter forensic chain-of-custody formatting, sharper triage scoring: open a PR.</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div class="card-icon">🗺️</div>
+            <h3>Roadmap</h3>
+            <div style="margin-top: 16px;">
+              <div class="roadmap-item">
+                <div class="roadmap-dot"></div>
+                <div><h3>Community Workflow Catalog</h3><p>A searchable index of community workflows, by use case, alert type, and tool stack. Share a playbook, get one.</p></div>
+              </div>
+              <div class="roadmap-item">
+                <div class="roadmap-dot"></div>
+                <div><h3>Federated Deployment</h3><p>Run agents across multiple environments. Data stays local to each.</p></div>
+              </div>
+              <div class="roadmap-item">
+                <div class="roadmap-dot"></div>
+                <div><h3>Detection-as-Code Pipeline</h3><p>Version-controlled detection rules with automated testing and deployment.</p></div>
+              </div>
+              <div class="roadmap-item">
+                <div class="roadmap-dot"></div>
+                <div><h3>Local-Model Backends</h3><p>Ollama and other local LLM providers as drop-in alternatives to the default Claude backend.</p></div>
+              </div>
+              <div class="roadmap-item" style="border:none;">
+                <div class="roadmap-dot"></div>
+                <div><h3>Hardened Auth</h3><p>Currently DEV_MODE bypass. Production auth (SSO, scoped tokens, role-based access) is on deck.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     COMMUNITY CTA
+═══════════════════════════════════════════════════════ -->
+<section class="community">
+  <div class="container">
+    <img src="../assets/logo-black.svg" alt="VIGIL" style="width:160px; height:auto; margin: 0 auto 28px;" />
+    <h2>Join the Community</h2>
+    <p>
+      Vigil is early. The architecture is solid, the agents are working, and the workflow system is production-tested.
+      What we need now is the community: people who run SOCs, build integrations, write detections,
+      and know what's broken in their security operations today.
+      <br><br>
+      The agents are transparent. The workflows are text files. The integrations are open standard.
+      <strong style="color: var(--forest); font-weight: 600;">Everything is designed for you to make it yours.</strong>
+    </p>
+    <div class="community-links">
+      <a href="https://github.com/Vigil-SOC/vigil" target="_blank" class="community-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        Star the Repo
+      </a>
+      <a href="https://discord.gg/SBtSHzMYFZ" target="_blank" class="community-link alt">
+        Join the Discord →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════ -->
+<footer>
+  <div>
+    <strong style="color:rgba(255,255,255,.6);">VIGIL</strong> · Open Source AI SOC &nbsp;|&nbsp;
+    <a href="https://github.com/Vigil-SOC/vigil" target="_blank">github.com/Vigil-SOC/vigil</a> &nbsp;|&nbsp;
+    Apache 2.0 License &nbsp;|&nbsp;
+    Sponsored by <a href="https://deeptempo.ai" target="_blank">DeepTempo</a>
+  </div>
+  <div style="margin-top: 8px;">
+    Built with <a href="https://github.com/maximhq/bifrost" target="_blank">Bifrost</a> &amp;
+    <a href="https://modelcontextprotocol.io" target="_blank">Model Context Protocol</a>
+  </div>
+</footer>
+
+</body>
+</html>
