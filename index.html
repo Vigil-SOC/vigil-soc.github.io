@@ -257,27 +257,18 @@
     .hero-art {
       position: relative;
       animation: fadeUp .8s .2s ease both;
-      /* Organic scatter — icons absolutely positioned (% of container) with
-         varied sizes and small rotations so the cluster reads as
-         hand-placed, not as a spreadsheet grid. Mirrors the Figma layout. */
       width: 100%;
       max-width: 540px;
       aspect-ratio: 1 / 1;
       margin-left: auto;
     }
-    .hero-art .icon-cell {
-      position: absolute;
-    }
-    .hero-art .icon-cell img {
+    .hero-art .hero-video {
       width: 100%; height: 100%;
-      object-fit: contain;
+      object-fit: cover;
+      border-radius: 18px;
       display: block;
+      background: var(--charcoal);
     }
-    .hero-art .cell-asterisk { left: 12%; top:  6%; width: 28%; }
-    .hero-art .cell-arrow    { left: 58%; top:  4%; width: 30%; }
-    .hero-art .cell-mandala  { left: 54%; top: 38%; width: 28%; }
-    .hero-art .cell-log      { left:  8%; top: 58%; width: 34%; }
-    .hero-art .cell-shield   { left: 56%; top: 70%; width: 26%; }
     @media (max-width: 980px) {
       .hero-inner { grid-template-columns: 1fr; gap: 32px; }
       .hero-art { max-width: 440px; margin: 0 auto; }
@@ -838,12 +829,14 @@
         </a>
       </div>
     </div>
-    <div class="hero-art" aria-label="Vigil capability pillars">
-      <div class="icon-cell cell-asterisk"><img src="assets/icons/threat-detection.svg"      alt="" aria-hidden="true" /></div>
-      <div class="icon-cell cell-arrow"   ><img src="assets/icons/vulnerability-analysis.svg" alt="" aria-hidden="true" /></div>
-      <div class="icon-cell cell-mandala" ><img src="assets/icons/agent-red-teaming.svg"     alt="" aria-hidden="true" /></div>
-      <div class="icon-cell cell-log"     ><img src="assets/icons/secure-practices.svg"      alt="" aria-hidden="true" /></div>
-      <div class="icon-cell cell-shield"  ><img src="assets/icons/ai-soc.svg"                alt="" aria-hidden="true" /></div>
+    <div class="hero-art" aria-label="Vigil in motion">
+      <video class="hero-video"
+             autoplay muted loop playsinline
+             preload="metadata"
+             poster="assets/hero-poster.jpg">
+        <source src="assets/hero.webm" type="video/webm" />
+        <source src="assets/hero.mp4"  type="video/mp4"  />
+      </video>
     </div>
   </div>
 </section>
@@ -1582,6 +1575,11 @@
     });
   }, { threshold: 0.4 });
   sections.forEach(s => observer.observe(s));
+
+  // Honor prefers-reduced-motion: pause the hero loop and show the poster.
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelector('.hero-video')?.pause();
+  }
 </script>
   <script async defer src="https://buttons.github.io/buttons.js"></script>
 </body>
