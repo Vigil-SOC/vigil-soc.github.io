@@ -1,0 +1,24 @@
+title: Vigil SOC
+description: AI-native Security Operations — Open Source AI SOC
+url: "https://vigilsoc.org"
+baseurl: ""
+
+permalink: /blog/:year/:month/:day/:title/
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+  syntax_highlighter: rouge
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - CONTRIBUTING.md
+  - "*.sh"

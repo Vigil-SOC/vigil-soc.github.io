@@ -1,0 +1,35 @@
+---
+layout: base
+---
+
+<section class="blog-post-hero">
+  <div class="blog-post-hero-inner">
+    <a href="/blog/" class="blog-back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      All posts
+    </a>
+    <div class="post-meta">
+      <span class="tag{% if page.category == 'Research' %} tag-rust{% elsif page.category == 'Tutorial' %} tag-navy{% endif %}">{{ page.category | default: "Blog" }}</span>
+      <time class="post-date" datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%B %-d, %Y" }}</time>
+      {% if page.author %}<span class="post-author">by {{ page.author }}</span>{% endif %}
+    </div>
+    <h1 class="post-title">{{ page.title }}</h1>
+    {% if page.excerpt %}<p class="post-lead">{{ page.excerpt }}</p>{% endif %}
+  </div>
+</section>
+
+<div class="blog-post-body">
+  <div class="blog-post-body-inner">
+    <div class="post-content">
+      {{ content }}
+    </div>
+    <footer class="post-footer">
+      <a href="/blog/" class="btn btn-outline">← All Posts</a>
+      {% if page.tags.size > 0 %}
+      <div class="post-tags">
+        {% for tag in page.tags %}<span class="post-tag">{{ tag }}</span>{% endfor %}
+      </div>
+      {% endif %}
+    </footer>
+  </div>
+</div>

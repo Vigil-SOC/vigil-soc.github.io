@@ -1,0 +1,52 @@
+---
+layout: base
+title: Blog
+permalink: /blog/
+---
+
+<section class="hero page-hero blog-index-hero">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <span class="hero-eyebrow">Vigil SOC Blog</span>
+      <h1>Built in the <span class="accent">open.</span></h1>
+      <p class="lead">
+        Research, tutorials, and updates from the Vigil SOC community — written by the engineers, researchers, and builders who are defining AI-native security operations.
+      </p>
+      <div class="hero-actions">
+        <a href="https://github.com/vigil-soc/vigil-soc.github.io/blob/main/CONTRIBUTING.md" target="_blank" class="btn btn-outline">Submit a Post</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+
+    {% if site.posts.size == 0 %}
+    <div class="blog-empty">
+      <div class="blog-empty-icon">✦</div>
+      <h3>First post coming soon</h3>
+      <p>We're just getting started. Want to be the first contributor? Submit a pull request with your markdown post.</p>
+      <a href="https://github.com/vigil-soc/vigil-soc.github.io/blob/main/CONTRIBUTING.md" target="_blank" class="btn btn-primary" style="margin-top:8px;">How to contribute</a>
+    </div>
+    {% else %}
+    <div class="blog-list">
+      {% for post in site.posts %}
+      <a href="{{ post.url }}" class="blog-card">
+        <div class="blog-card-meta">
+          <span class="tag" style="margin:0;">{{ post.category | default: "Blog" }}</span>
+          <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%B %-d, %Y" }}</time>
+          {% if post.author %}<span>by {{ post.author }}</span>{% endif %}
+        </div>
+        <div class="blog-card-title">{{ post.title }}</div>
+        {% if post.excerpt %}
+        <p class="blog-card-excerpt">{{ post.excerpt | strip_html | truncate: 200 }}</p>
+        {% endif %}
+        <span class="blog-card-read">Read post →</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  </div>
+</section>
