@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "Shipping Fast, Breaking Less: A Vigil Summer Update"
+title: "Shipping Fast, Breaking Less: A Vigil SOC Summer Update"
 date: 2026-08-05
-author: "Vigil SOC Team"
+author: "John Van Lowe"
 category: "Engineering"
 tags: [engineering, mcp, release, kubernetes, community]
 excerpt: "The repo is moving at its highest pace ever, the core is refactored and spec-aligned, and MCP's new 2026-07-28 release turned our biggest pre-1.0 risk into a 12-month safety net along with a stateless core that drops straight into Kubernetes."
@@ -23,7 +23,7 @@ Since July 1, the repo has been *busy*:
 - **113 issues opened** and **133 issues closed** — yes, we closed more than came in
 - **114 PRs merged in the last 90 days**, which is more than half of every PR we've *ever* merged (206 all-time)
 
-Stepping back to the all-time view: 206 PRs merged, 216 issues closed, with 18 PRs and 96 issues currently open and in flight. Translation — this isn't a project coasting on an old burst of energy. The bulk of the merge history happened recently, and issue burndown is running slightly ahead of intake even while more people are filing more things. That's the healthy kind of busy.
+Stepping back to the all-time view: 206 PRs merged, 216 issues closed, with 18 PRs and 96 issues currently open and in flight. The bulk of the merge history happened recently, and issue burndown is running slightly ahead of intake even while more people are filing more things. That's the healthy kind of busy.
 
 Every one of those numbers is a person: someone who filed a bug, reviewed a diff, argued about a design in a thread, or dropped a meme in Discord that somehow turned into a feature request. Vigil's third pillar has always been **YOU**, and the graph is starting to look like it.
 
@@ -37,18 +37,16 @@ We've had our heads down on a focused refactor of the underlying tooling on **bo
 
 Two forces drove the cleanup:
 
-1. **Aligning with the MCP specification.** Vigil's whole pitch is that your integrations use an open standard, not a vendor's black box. That promise only holds if we actually track the spec closely — so a lot of this work was getting our client and server code lined up with where MCP is headed, not where it used to be.
-2. **Contributor feedback.** A steady stream of "why is this like this?" and "this would be so much easier if…" from the community. Some of it stung. Most of it was right. The refactor bakes a lot of that feedback directly into the structure of the code, so the next person to open the repo inherits the good decisions instead of the archaeology.
+1. **Aligning with the MCP specification.** Vigil's whole pitch is that your integrations use an open standard, not a vendor's black box. That promise only holds if we actually track the spec closely. A lot of this work was getting our client and server code lined up with where MCP is headed, not where it used to be.
+2. **Contributor feedback.** A steady stream of "why is this like this?" and "this would be so much easier if…" from the community. The refactor bakes a lot of that feedback directly into the structure of the code, so the next person to open the repo inherits the good decisions instead of the archaeology.
 
 The result is a leaner core that's easier to read, easier to fork, and easier to rewire.
 
 ## A quick recap from Boston
 
-I gave a quick intro to Vigil SOC at the **AI Cyber Alliance** gathering in Boston hosted by **Venture Guides**. 
+I gave a presentation to a diverse mix of practitioners at the **AI Cyber Alliance** gathering in Boston hosted by **Venture Guides**. From the Vigil SOC perspective it was a focus on markdown skills/playbooks, MCP first/native integrations, and how to use local inference when appropriate. The discussions covered the Semantic Inference Routing Protocol, MCP Gateways and observability, and full end to end proof of agentic activity.
 
-If you were in the room, thank you. The discussion kept circling back to a tension that anyone building on a young protocol feels in their bones: how do you adopt something moving this fast without getting whiplash every time the standard shifts?
-
-We didn't dodge it. We said the same thing in Boston that we've said in the README and in release notes all along: **while we're pre-1.0, breaking changes are on the table**, particularly where they follow changes to the MCP spec. Building on the frontier means occasionally rebuilding a piece of it.
+The discussion kept circling back to a tension that anyone building on a young protocol feels in their bones: how do you adopt something moving this fast without getting whiplash every time the standard shifts? I said the same thing in Boston that we've said in the README and in release notes all along: **while we're pre-1.0, breaking changes are on the table**, particularly where they follow changes to the MCP spec. Building on the frontier means occasionally rebuilding a piece of it. 
 
 ## The plot twist: MCP 2026-07-28
 
