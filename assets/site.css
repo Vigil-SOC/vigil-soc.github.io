@@ -641,7 +641,7 @@
       background: transparent; color: var(--charcoal); border-color: var(--charcoal);
     }
     .community-link.alt:hover { background: var(--charcoal); color: var(--cream); }
-    footer {
+    .site-footer {
       background: var(--charcoal);
       padding: 32px 28px;
       text-align: center;
@@ -649,8 +649,8 @@
       font-size: .78rem; letter-spacing: -.01em;
       color: rgba(238,237,229,.55);
     }
-    footer a { color: rgba(238,237,229,.75); }
-    footer a:hover { color: var(--cream); }
+    .site-footer a { color: rgba(238,237,229,.75); }
+    .site-footer a:hover { color: var(--cream); }
 
     /* ─── Section headers ──────────────────────────────────────────── */
     .section-header { text-align: center; margin-bottom: 56px; }
