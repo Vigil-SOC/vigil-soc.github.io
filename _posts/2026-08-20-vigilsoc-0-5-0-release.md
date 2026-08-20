@@ -29,7 +29,7 @@ Whether you are implementing VigilSOC in production, building custom detection l
 
 We are kicking off regular **VigilSOC Community Office Hours** hosted directly on our Discord server. It's a casual space to ask the maintainers questions, give feedback on 0.5.0, or discuss upcoming feature roadmaps. Times will be determined and posted in the primary channels.
 
-👉 Join the VigilSOC Discord server to get involved, check the schedule in the **#announcements** channel, and jump into the conversations!
+👉 [Join the VigilSOC Discord server](https://discord.gg/SBtSHzMYFZ) to get involved, check the schedule in the **#announcements** channel, and jump into the conversations!
 
 ## Upcoming 0.5.x and 0.6.0: Core Community & Development Expectations
 
