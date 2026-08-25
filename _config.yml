@@ -15,6 +15,11 @@ plugins:
   - jekyll-feed
   - jekyll-seo-tag
 
+# Jekyll ignores dotfiles by default; .well-known must be explicitly included
+# so https://vigilsoc.org/.well-known/security.txt is published (RFC 9116).
+include:
+  - .well-known
+
 exclude:
   - Gemfile
   - Gemfile.lock
