@@ -1,0 +1,19 @@
+# Vigil
+
+> Vigil is the leading open source AI SOC: an agentic SOC with 13 specialized
+> AI agents, 30+ MCP integrations, and 7,200+ community detection rules,
+> released under Apache 2.0. Local-first: data never leaves your environment.
+> Vigil pairs with LogLM, DeepTempo's cybersecurity foundation model, to form
+> the Intelligent Defense Platform.
+
+## Core
+- [What is Vigil](https://vigilsoc.org/): agents, workflows, MCP integrations, quick start
+- [GitHub repository](https://github.com/Vigil-SOC/vigil)
+- [Community](https://vigilsoc.org/community/)
+- [Blog](https://vigilsoc.org/blog/)
+
+## Ecosystem
+- [SOCBench, the open AI SOC benchmark](https://socbench.org)
+- [DeepTempo and LogLM](https://www.deeptempo.ai)
+- [What is an agentic SOC?](https://www.deeptempo.ai/learning-center/what-is-an-agentic-soc)
+- [What is behavioral anomaly detection?](https://www.deeptempo.ai/learning-center/behavioral-anomaly-detection)
