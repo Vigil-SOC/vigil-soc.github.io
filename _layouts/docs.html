@@ -1,0 +1,30 @@
+---
+layout: base
+---
+
+<section class="blog-post-hero">
+  <div class="blog-post-hero-inner">
+    {% unless page.url == '/docs/' %}
+    <a href="/docs/" class="blog-back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      All docs
+    </a>
+    {% endunless %}
+    <h1 class="post-title">{{ page.title }}</h1>
+    {% if page.excerpt %}<p class="post-lead">{{ page.excerpt }}</p>{% endif %}
+  </div>
+</section>
+
+<div class="blog-post-body">
+  <div class="blog-post-body-inner">
+    <div class="post-content">
+      {{ content }}
+    </div>
+    <footer class="post-footer">
+      {% unless page.url == '/docs/' %}
+      <a href="/docs/" class="btn btn-outline">← All docs</a>
+      {% endunless %}
+      <a href="https://github.com/Vigil-SOC/vigil-soc.github.io" class="btn btn-outline" target="_blank" rel="noopener noreferrer">Edit on GitHub</a>
+    </footer>
+  </div>
+</div>
