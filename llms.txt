@@ -8,6 +8,7 @@
 
 ## Core
 - [What is Vigil](https://vigilsoc.org/): agents, workflows, MCP integrations, quick start
+- [Documentation](https://vigilsoc.org/docs/): architecture, agents, deploy, contributing
 - [GitHub repository](https://github.com/Vigil-SOC/vigil)
 - [Community](https://vigilsoc.org/community/)
 - [Blog](https://vigilsoc.org/blog/)

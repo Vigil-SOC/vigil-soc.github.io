@@ -27,3 +27,9 @@ exclude:
   - vendor
   - CONTRIBUTING.md
   - "*.sh"
+
+defaults:
+  - scope:
+      path: "docs"
+    values:
+      layout: docs
