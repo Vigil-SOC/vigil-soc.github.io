@@ -12,7 +12,7 @@ Those of you that know about DeepTempo or about me realize I’m a deep learning
 
 In this blog I explain how we came to a new approach in building the updated harness within Vigil, the leading OpenSource AI SOC. Please provide any and all feedback. Thank you to our contributors and users who found time while hunting for nation state actors to educate me and our team on the intricacies of their role.
 
-## **What is a Threat Hunt anyway?**
+## What is a Threat Hunt anyway?
 
 Threat hunting is part art, and part science. At least amongst the users we interviewed, the expertise of the individual and their understanding of the attacker informs how they act. To be helpful and to enable automated and trusted operations, Vigil must both capture that understanding and must learn from experience.   
 
@@ -38,7 +38,7 @@ Once you understand the above, and build towards it,  you can start to far bette
 
 ![Diagram of the Vigil 0.5.0 threat hunt harness: a hunt spec seeds and human checkpoints gate a deterministic hunt controller that is the sole mutator of state and holds the termination predicate; the controller directs a single hunt lead, which reads a digest of the append-only hunt ledger and emits exactly one typed decision per turn from a closed set — INVESTIGATE, VALIDATE, CONCLUDE, PIVOT, DEEPEN, ABANDON — as a recommendation back to the controller; the lead dispatches specialist workers that may only append evidence to the ledger. The model recommends, the controller decides, and it refuses to conclude while any hypothesis is still active.](/assets/blog/2026-08-27-lessons-learned-building-a-harness-for-cyber-security/threat-hunt-harness.png){: style="width:min(860px, calc(100vw - 56px)); max-width:none; margin-left:50%; transform:translateX(-50%)"}
 
-## **The harness**
+## The harness
 
 TL;DR \- we stopped encoding scenarios as workflows. A ransomware workflow and an insider threat workflow and a beaconing workflow result in something very much like a playbook library, which is too close to the SOAR trap some of us encountered in building StackStorm. Because typical platforms are challenged to enumerate pivot trees, they lose their usefulness, are not updated, and they rot. Our approach is very different \- with Vigil: **the loop is fixed and scenario-independent, and scenarios are “just” more data.** A hunt spec declares the hypothesis seed, scope, techniques, data domains, budgets, and exit criteria.
 
@@ -54,7 +54,7 @@ And then the division of tasks that we have seen makes a difference : The model 
 
 The hunt lead can emit `CONCLUDE`. The controller checks a termination predicate and refuses while any hypothesis is still active. Three of the four ways a hunt can end leave the survivors marked inconclusive rather than disproven, because the hunt stopped looking, it did not clear them. And the report gets written on every path out, including an aborted one, so a hunt that ran out of money still tells you what it could not see.
 
-## **What that one decision cascades into**
+## What that one decision cascades into
 
 **The detail that triggers a pivot is never the one that looks important.** That is the trouble with summarization: it is very good at discarding exactly the thing you turned out to need. So every evidence record keeps a stable ID and a retrievable raw payload, and `EXPAND` costs nothing against the iteration budget. Workers tag salience at capture time, which is the right moment and still a guess, and a wrong guess matters more than it sounds, because the compressor acting on it never has an off day: it will bury that record consistently, every iteration, forever. So the controller keeps a rule-based floor that can raise salience and never lower it. Code may promote; only a human may demote. Every digest also resurfaces a few routine records verbatim, so a bad tag gets more than one chance at being noticed. And each one renders the strongest case against every live hypothesis. When there is none, it says so, because a hypothesis nothing argues with is not strong, it is unexamined.
 
@@ -64,7 +64,7 @@ The hunt lead can emit `CONCLUDE`. The controller checks a termination predicate
 
 **Every decision is replayable, and not just by us.** Sooner or later an analyst asks why the thing gave up on a host, and there is one good answer, which is to show them. So every decision is stored with what the model emitted, the digest it was looking at when it decided, the model ID, the prompt and schema version, and the seed that set what got resurfaced. Open a finished hunt and the whole chain is there, including every query attempted and the ones that failed. The failures earn their place: a failed call is recorded as a gap rather than quietly skipped, because "we could not check" is not "we checked and found nothing," and enough gaps mean the hypothesis can only come back inconclusive. None of this makes the model deterministic. It makes it legible afterward.
 
-## **The adversary writes part of your prompt**
+## The adversary writes part of your prompt
 
 One part of this is specific to security, and it strongly influenced our design.
 
@@ -82,7 +82,7 @@ The rule extends to insider threat, which made sense once our users explained it
 
 Vigil 0.5.0 ships the spine: the loop, the tool bridge, and a hunt running end to end with the three properties we cared about most: run, resume, and replay. Model-assisted entry is next, where a LogLM finding becomes the trigger, under the same rule as everything above: logs and LogLM-over-logs collapse into one source system.
 
-## **What we learned**
+## What we learned
 
 **The loop's exit condition is much more than a detail.** Almost every agent failure we investigated traced back to a loop with no authority to stop. An action vocabulary without a termination predicate may become an expensive random walk.
 
