@@ -1018,6 +1018,7 @@
       border-collapse: collapse;
       margin: 1.5em 0;
       font-size: .95rem;
+      overflow-x: auto;
     }
     .post-content th, .post-content td {
       padding: 10px 14px;

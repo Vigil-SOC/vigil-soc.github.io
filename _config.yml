@@ -14,6 +14,12 @@ kramdown:
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
+  - jekyll-sitemap
+
+# Jekyll ignores dotfiles by default; .well-known must be explicitly included
+# so https://vigilsoc.org/.well-known/security.txt is published (RFC 9116).
+include:
+  - .well-known
 
 exclude:
   - Gemfile
@@ -22,3 +28,9 @@ exclude:
   - vendor
   - CONTRIBUTING.md
   - "*.sh"
+
+defaults:
+  - scope:
+      path: "docs"
+    values:
+      layout: docs
