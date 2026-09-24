@@ -6,7 +6,7 @@
 # (preferred) or the security email below. Do NOT open public GitHub issues.
 
 Contact: https://github.com/Vigil-SOC/vigil/security/advisories/new
-Contact: mailto:security@vigilsoc.org
+Contact: mailto:security@deeptempo.ai
 Expires: 2027-07-22T00:00:00.000Z
 Policy: https://github.com/Vigil-SOC/vigil/blob/main/SECURITY.md
 Acknowledgments: https://github.com/Vigil-SOC/vigil/blob/main/SECURITY.md#acknowledgments--hall-of-fame
