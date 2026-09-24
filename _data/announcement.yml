@@ -1,0 +1,18 @@
+# Site-wide announcement bar, rendered above the nav on every page by
+# _includes/announcement-banner.html.
+#
+# To retire the banner: set `enabled: false`.
+# To run a new announcement: change `id` as well as the copy. Visitors who
+# dismissed the previous banner are remembered by `id`, so a new id makes the
+# new message show to everyone again.
+
+enabled: true
+id: "1-0-office-hours-preview"
+badge: "1.0 Preview"
+text: "Vigil 1.0 features human on the loop “autonomic” operations."
+link_text: "Register for office hours for a preview"
+url: "https://luma.com/vigilcommunity"
+dismissible: true
+# Optional: quoted ISO date, e.g. "2026-10-31". The bar hides itself client-side after this
+# date, even if nobody rebuilds the site. Leave blank to run indefinitely.
+expires: ""
