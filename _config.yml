@@ -33,3 +33,5 @@ defaults:
       path: "docs"
     values:
       layout: docs
+
+ - jekyll-sitemap
