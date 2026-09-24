@@ -1,0 +1,35 @@
+{%- assign ann = site.data.announcement -%}
+{%- if ann and ann.enabled -%}
+<div class="announce-bar" id="announce-bar" role="region" aria-label="Announcement"
+     data-announce-id="{{ ann.id | escape }}"{% if ann.expires and ann.expires != "" %} data-announce-expires="{{ ann.expires | escape }}"{% endif %}>
+  <div class="announce-inner">
+    {%- if ann.badge %}
+    <span class="announce-badge">{{ ann.badge | escape }}</span>
+    {%- endif %}
+    <p class="announce-text">
+      <span class="announce-copy">{{ ann.text | escape }}</span>
+      <a class="announce-link" href="{{ ann.url | escape }}" target="_blank" rel="noopener">{{ ann.link_text | escape }}<span class="announce-arrow" aria-hidden="true">&rarr;</span></a>
+    </p>
+  </div>
+  {%- if ann.dismissible %}
+  <button type="button" class="announce-close" aria-label="Dismiss announcement">
+    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3.5 3.5l9 9m0-9l-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
+  </button>
+  {%- endif %}
+</div>
+<script>
+  (function () {
+    var bar = document.getElementById('announce-bar');
+    if (!bar) return;
+    var key = 'vigil-announce-dismissed:' + bar.getAttribute('data-announce-id');
+    var expires = bar.getAttribute('data-announce-expires');
+    if (expires && new Date() > new Date(expires + 'T23:59:59')) { bar.remove(); return; }
+    try { if (localStorage.getItem(key)) { bar.remove(); return; } } catch (e) {}
+    var close = bar.querySelector('.announce-close');
+    if (close) close.addEventListener('click', function () {
+      bar.remove();
+      try { localStorage.setItem(key, '1'); } catch (e) {}
+    });
+  })();
+</script>
+{%- endif -%}

@@ -164,6 +164,66 @@
       .nav-github { margin-left: 0; }
     }
 
+    /* ─── Announcement bar ─────────────────────────────────────────── */
+    /* Sits above the sticky .nav and scrolls away with the page.
+       Content lives in _data/announcement.yml. */
+    .announce-bar {
+      position: relative;
+      background: var(--forest);
+      color: #eeede5;
+      font-family: var(--font-body);
+      font-size: .875rem; line-height: 1.45;
+      padding: 10px 52px;
+    }
+    .announce-inner {
+      max-width: 1080px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: center;
+      flex-wrap: wrap; gap: 6px 12px;
+      text-align: center;
+    }
+    .announce-badge {
+      flex-shrink: 0;
+      font-family: var(--font-mono);
+      font-size: 10.5px; font-weight: 600;
+      letter-spacing: .06em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 99px;
+      background: var(--forest-light); color: var(--forest-dark);
+    }
+    .announce-text { margin: 0; color: inherit; } /* overrides global p { color; margin } */
+    .announce-copy { margin-right: 8px; }
+    .announce-link {
+      color: #ffffff; font-weight: 600; white-space: nowrap;
+      text-decoration: underline; text-decoration-color: rgba(255,255,255,.45);
+      text-underline-offset: 3px;
+      transition: text-decoration-color .15s;
+    }
+    .announce-link:hover { text-decoration-color: #ffffff; }
+    .announce-link:focus-visible,
+    .announce-close:focus-visible { outline: 2px solid #ffffff; outline-offset: 2px; border-radius: 4px; }
+    .announce-arrow { display: inline-block; margin-left: 6px; transition: transform .15s; }
+    .announce-link:hover .announce-arrow { transform: translateX(3px); }
+    .announce-close {
+      position: absolute; top: 50%; right: 14px; transform: translateY(-50%);
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px; padding: 0;
+      border: 0; border-radius: 6px; cursor: pointer;
+      background: transparent; color: rgba(238,237,229,.75);
+      transition: background .15s, color .15s;
+    }
+    .announce-close:hover { background: rgba(255,255,255,.1); color: #ffffff; }
+    @media (max-width: 700px) {
+      .announce-bar { padding: 10px 44px 10px 16px; font-size: .8125rem; }
+      .announce-inner { display: block; text-align: left; }
+      .announce-badge { display: inline-block; margin-right: 8px; vertical-align: 1px; }
+      .announce-text { display: inline; }
+      .announce-link { white-space: normal; }
+      .announce-close { right: 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .announce-arrow, .announce-link { transition: none; }
+      .announce-link:hover .announce-arrow { transform: none; }
+    }
+
     /* ─── Hero ─────────────────────────────────────────────────────── */
     .hero {
       background: var(--charcoal);
