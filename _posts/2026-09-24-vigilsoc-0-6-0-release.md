@@ -10,6 +10,8 @@ excerpt: "VigilSOC 0.6.0 is available on GitHub — featuring frozen /api/v1 con
 
 VigilSOC version 0.6.0 is officially live on GitHub! This milestone marks a major step forward for VigilSOC: locking down frozen API contracts and MCP tool surfaces, resolving container deployment permissions for Kubernetes and Helm, introducing closed-loop threat hunting and shadow adjudication, and kicking off our formal path toward v1.0.0.
 
+![VigilSOC 0.6.0 Milestone Hero Banner with celebratory digital fireworks, API schemas, and Kubernetes cluster nodes](/assets/blog/2026-09-24-vigilsoc-0-6-0-release/hero-banner.jpg)
+
 Following our [0.5.0 release](https://vigilsoc.org/blog/2026/08/20/vigilsoc-0-5-0-release/), the community pushed hard to turn early architectural experiments into stable, production-grade contracts. Here is a breakdown of what has landed in 0.6.0, what it means for your deployments, and what is coming next.
 
 ## What's New in 0.6.0
@@ -30,6 +32,8 @@ Check out the complete changelog and code on our [GitHub Releases page](https://
 ## Helm Deployments: Fresh Container Images & Permission Fixes
 
 A key operational focus in this release was addressing friction in containerized and Kubernetes environments.
+
+![The Helm & Cyber Defense Shield Crucible representing container security and Helm deployment stability in Kubernetes](/assets/blog/2026-09-24-vigilsoc-0-6-0-release/helm-shield-stability.jpg)
 
 In the 0.5.0 release cycle, users deploying the Vigil Helm chart into Kubernetes clusters with strict security contexts encountered permission failures. In environments where pods ran with unprivileged user IDs or where the container root environment defaulted to `HOME=/`, daemon and backend workers could crash with `Permission denied` when attempting to initialize the state directory at `/.vigil`. Additionally, stale container generation artifacts in earlier automated builds left some of those fixes unapplied.
 
@@ -52,6 +56,8 @@ Special thanks to: **Sam Armstrong (`samarmstrong`)**, **Nestor (`nestor-deeptem
 
 To foster closer collaboration between maintainers, security engineers, and community contributors, we are officially kicking off **VigilSOC Community Office Hours**!
 
+![The VigilSOC operations team celebrating a live release in the cyber command center](/assets/blog/2026-09-24-vigilsoc-0-6-0-release/soc-control-room-celebration.jpg)
+
 These sessions are designed as open, collaborative working hours. We'll be:
 - Giving live sneak peeks of upcoming features and previewing autonomic operations.
 - Walking through building custom MCP servers and extending `SKILL.md` detection workflows.
@@ -65,6 +71,8 @@ These sessions are designed as open, collaborative working hours. We'll be:
 ## The Ramp to v1.0.0: Stability Guarantees & Autonomic Operations
 
 With 0.6.0 live, the engineering roadmap is locked onto our **v1.0.0 release milestone**.
+
+![Autonomous cyber sentinel overlooking a digital network city with a celebratory milestone beacon pointing toward v1.0.0](/assets/blog/2026-09-24-vigilsoc-0-6-0-release/ramp-to-1-0-sentinel.jpg)
 
 When we published our [Summer Update](https://vigilsoc.org/blog/2026/08/05/shipping-fast-breaking-less/), we noted that pre-1.0 development required moving fast and breaking contracts when upstream standards shifted. In 0.6.0, that posture transitions to predictability. As codified in our newly published [VERSIONING.md](https://github.com/Vigil-SOC/vigil/blob/main/VERSIONING.md), here is what the ramp to 1.0 guarantees:
 
