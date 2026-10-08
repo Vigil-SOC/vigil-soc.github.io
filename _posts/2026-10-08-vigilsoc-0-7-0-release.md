@@ -4,57 +4,48 @@ title: "VigilSOC 0.7.0 is Live: Sigma Lint & Replay, SIEM Federation, and Anothe
 date: 2026-10-08
 author: "John Van Lowe"
 category: "Engineering"
-tags: [release, engineering, agents, detections, federation, automation, roadmap]
-excerpt: "VigilSOC 0.7.0 is available on GitHub — bringing Sigma rule linting and replay, SIEM federation over Elastic/Wazuh and OpenSearch, per-install support bundles, and a string of correctness fixes to approvals, response, and audit logging, all in service of the ramp to v1.0.0."
+tags: [release, engineering, agents, detections, federation, automation, roadmap, community]
+excerpt: "VigilSOC 0.7.0 is live on GitHub — introducing Sigma rule linting and replay, expanded SIEM federation over Elastic/Wazuh and OpenSearch, critical audit and response correctness fixes, and a big shoutout to our human contributors."
 ---
 
-VigilSOC version 0.7.0 is officially live on GitHub! This release is smaller in headline scope than 0.6.0, and that's intentional — it spends its effort closing the gaps between "an analyst reviewed this" and "the platform can prove an analyst reviewed this." Detection rules get linted and replayed before they ship. Federated SIEM fetches that silently fail now say so. Approvals that aren't bound to a real person are refused outright. None of these are exciting on their own, but together they're exactly the kind of plumbing the ramp to 1.0 depends on.
+VigilSOC 0.7.0 is officially live on GitHub! While 0.6.0 established frozen API contracts, 0.7.0 focuses on runtime correctness and verifiable platform behavior: detection rules are validated against history before promotion, silent SIEM ingestion failures are recorded honestly, and response actions require authenticated human principals.
 
 ![Tech and agent themed VigilSOC 0.7.0 banner with a circuit grid background, neon green glow, and badges for Agents, Sigma Lint, Federation, and Secure](/assets/blog/2026-10-08-vigilsoc-0-7-0-release/hero-banner.jpg)
 
-Following our [0.6.0 release](https://vigilsoc.org/blog/2026/09/24/vigilsoc-0-6-0-release/), the community turned frozen contracts into frozen *behavior*: making sure the agents and federations built on top of those contracts fail loudly instead of quietly. Here's what landed in 0.7.0, what it changes for your deployment, and where it fits on the road to v1.0.0.
+Here is a concise breakdown of what shipped in 0.7.0, the key operational fixes, and a spotlight on the human community contributors who made it happen.
 
 ## What's New in 0.7.0
 
-Whether you're running your first VigilSOC instance or you're deep in custom agent development, there's something here for you:
+- **Sigma Rule Linting & Replay:** Lint candidate Sigma rules and replay them against historical telemetry directly in the Detections UI before promotion, catching malformed logic or broad matches early.
+- **Expanded SIEM Federation:** Ingest Wazuh indexer alerts through Elastic federation without Kibana, query OpenSearch natively alongside Splunk and Elastic, and configure isolated per-integration `ca_cert_path` trust stores.
+- **Granular Agent Controls:** Toggle individual agents on or off from the redesigned "Agents & workflows" table, complete with timeline date-range filtering and run replays.
+- **Cost Transparency & Model Routing:** Spend metrics now track exact pricing snapshot timestamps, and Bifrost seeds Gemini providers directly from `GEMINI_API_KEY`.
+- **Emulation Learning in Recall:** Adversary emulation traces automatically feed Recall episodic memory, ensuring lessons from red-team exercises enrich live investigations.
+- **Observability & Diagnostics:** Export structured JSON logs without an OpenTelemetry collector, snapshot container state on desktop app exits, and generate diagnostic bundles via `vigil-support.sh`.
 
-- **Sigma Rule Linting & Replay:** The Detections surface can now lint a candidate Sigma rule and replay it against historical data before it's promoted — so you catch a malformed field match or an over-broad condition before it ever pages someone. This is the fastest way to answer "will this rule actually fire the way I think it will?"
-- **SIEM Federation, Expanded:** VigilSOC can now ingest Wazuh indexer alerts through Elastic federation without requiring Kibana in the loop, and OpenSearch joins Elastic and Splunk as a first-class SIEM integration. Each integration can now set its own `ca_cert_path`, trusted only by that integration's own clients — useful if you're bridging SIEMs with different internal CAs.
-- **Agent Controls:** Agents gained list-level fields and can now be turned on or off individually from the web console, instead of all-or-nothing. The Agents tab itself was redesigned into a single table under a new "Agents & workflows" heading, with a **New workflow** button and timeline date-range filtering.
-- **Cost Visibility:** Every spend figure now records the rate and fetch time behind it, so when a cost number looks off, you can see exactly which pricing snapshot produced it instead of guessing.
-- **Bifrost Gemini Provider:** Bifrost now seeds a Gemini provider straight from `GEMINI_API_KEY`, no extra wiring required if that's the model you're routing to.
-- **Memory: Emulation Learning Episodes:** Compose traces — the records of simulated adversary emulation runs — are now lifted directly into Recall as learning episodes, so what the platform learned from an emulation exercise feeds the same episodic memory that informs live investigations.
-- **Structured Logging:** Logs can now be emitted as JSON without requiring OpenTelemetry, with `msg_template` and `exc_type` fields included — handy if your log pipeline expects structured JSON and you don't want to stand up a full OTEL collector just to get it.
-- **Support Bundles:** A new `vigil-support.sh` script collects configuration, health, and logs into a single per-install bundle — the first thing we're going to ask for the next time you open an issue.
-- **Desktop App:** The desktop app now keeps its own log and snapshots container logs before it quits, so a crash on exit doesn't take the evidence with it.
+Full release details and artifacts are on our [GitHub Releases page](https://github.com/Vigil-SOC/vigil/releases/tag/v0.7.0).
 
-Check out the complete changelog and code on our [GitHub Releases page](https://github.com/Vigil-SOC/vigil/releases/tag/v0.7.0).
+## Correctness & Operational Fixes
 
-## Correctness Fixes You Were Probably Affected By
+0.7.0 resolves several subtle audit, security, and runtime gaps:
 
-None of the items below are flagged as a single severity-ranked "critical" list in the release notes, but several close real correctness and audit gaps — the kind that don't show up until an investigation or an audit depends on them:
+- **Principal-Bound Approvals:** `approve_action` now rejects unauthenticated or orphaned requests, ensuring every automated or manual approval traces back to a verified human principal.
+- **Honest Federation Telemetry:** Failed queries across SIEMs, CrowdStrike, and Splunk are now explicitly recorded as failures instead of silent, empty successes.
+- **Truthful Response Actions:** Host isolation without active bindings or IP addresses now logs real failure states or keys by hostname rather than dropping silently.
+- **IP-Scoped Exclusions:** Alert suppression rules now respect IP boundaries without leaking false alerts.
+- **User-Attributed Audit Trails:** Configuration changes record the authenticated operator rather than a generic service account.
+- **Safe Migrations & Helm Enforcement:** Database migration logs redact connection strings, and Helm strictly enforces all 34 database migrations at deploy time.
+- **Bounded Storage Transactions:** Idle database sessions and statement timeouts are bounded to prevent long-running lock contention.
 
-1. **Approvals require a bound principal.** `approve_action` is now refused when no principal is bound to the request. An approval that can't be traced to a person is no longer treated as a valid approval.
-2. **Federation failures are recorded as failures.** Failed SIEM and CrowdStrike fetches — and Splunk polls where every query fails — used to look like empty-but-successful runs. Now they're recorded as failures, which is what lets you actually alert on federation health instead of silently losing coverage.
-3. **Response actions report their real state.** Host isolation that isn't actually wired up is now recorded as failed rather than assumed successful, and isolations without an IP are keyed on hostname instead of being dropped.
-4. **Alert exclusions respect IP scoping.** IP-based exclusions no longer page analysts about findings that were already excluded.
-5. **Config changes are audited as the signed-in user.** Settings changes now write the actual authenticated user into the audit trail, not a generic service identity.
-6. **Migration logs don't leak connection strings.** The `migrate` path now logs only the database host and name — not the full connection URL.
-7. **Helm enforces all 34 migrations.** The Helm chart now applies the full migration set and fails the deploy outright if one is missing from `sqlFiles`, instead of silently skipping it.
-8. **Storage sessions are bounded.** Idle-in-transaction sessions are now bounded, and the statement timeout is configurable — both of which matter if you've ever had a long-running query quietly hold a lock.
+## Community Spotlight: Human Contributors
 
-If you're running 0.6.0 in production, the federation and approval fixes in particular are worth prioritizing — they change what you can trust your dashboards to tell you.
+This release was driven by our open-source community. A huge thank-you to the human contributors behind the code, documentation, and operational fixes in 0.7.0:
 
-## A Few Operational Notes
+@samarmstrong, @G-r-ay, @CryptoJones, @ShmalexM, @joshuacox, @krmayankb, @nestor-deeptempo, @AmirF194, @mvanhorn, @epowell101, and @johnvanlowe.
 
-Nothing in 0.7.0 is called out as a breaking change, but a few things are worth knowing before you upgrade: the Helm chart and compose environment variable handling changed to support the fixes above, a couple of unused settings (`DAEMON_BATCH_SIZE` and the OpenAI default-provider variables) were removed since nothing was reading them, and the old Vigil-specific rate table was deleted in favor of pricing sourced from the gateway. If your deployment pins any of those variables explicitly, check the [full changelog](https://github.com/Vigil-SOC/vigil/compare/v0.6.0...v0.7.0) before you upgrade.
 
-## The Ramp to 1.0: Automating the Human Elements
+## The Road to 1.0
 
-Every release note above is really the same story told a different way: an investigation has a set of steps a human used to have to do by hand — approve an action, confirm a SIEM fetch actually returned data, validate that a detection rule behaves the way it reads, isolate a host and verify it took — and 0.7.0 moves another one of those steps from "trust the operator did it" to "the platform can show you it happened, correctly, every time."
+The core theme on the ramp to v1.0.0 is shifting from **human-in-every-loop** to **human-on-the-loop governance**. By enforcing principal-bound approvals, validating detection rules against history, and tracking federation health honestly, 0.7.0 replaces manual verification with platform guarantees.
 
-That's the real shape of the ramp to v1.0.0. We're not just freezing contracts and shipping features; we're systematically finding the points in an investigation where a human is still the only check, and replacing "a person watched this" with "the system verified this and can prove it." Sigma lint-and-replay means a rule's behavior is validated before a human ever has to eyeball it. Federation failure tracking means an analyst doesn't have to manually notice a quiet SIEM outage. Emulation learning episodes mean lessons from a red-team exercise get folded into agent memory automatically, instead of living in someone's head or a wiki page.
-
-There's still real work ahead before 1.0 — closed-loop triage and enrichment with human-on-the-loop governance, not human-in-every-loop, is the target — but 0.7.0 is a concrete step in that direction, not just a promise of one.
-
-Want to help close the next gap? Pick up a [good first issue](https://github.com/Vigil-SOC/vigil/issues), contribute a detection rule, or write up what you found running 0.7.0 in your own environment. Our [CONTRIBUTING.md](https://github.com/Vigil-SOC/vigil/blob/main/CONTRIBUTING.md) covers both the code repo and this blog — one post per PR, your own work, and bring receipts.
+Want to get involved? Grab a [good first issue](https://github.com/Vigil-SOC/vigil/issues), test 0.7.0 in your environment, or consult our [CONTRIBUTING.md](https://github.com/Vigil-SOC/vigil/blob/main/CONTRIBUTING.md) to contribute detection rules and integrations.
