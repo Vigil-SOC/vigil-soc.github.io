@@ -7,12 +7,12 @@
 # new message show to everyone again.
 
 enabled: true
-id: "1-0-office-hours-preview"
-badge: "1.0 Preview"
-text: "Vigil 1.0 features human on the loop “autonomic” operations."
-link_text: "Register for office hours for a preview"
-url: "https://luma.com/a31xoxr2?utm_source=vigilsoc.org"
+id: "agents-hunting-agents-2026-10-19"
+badge: "Workshop · Oct 19"
+text: "Agents hunting Agents: spot malicious AI agents with Vigil, hands-on in Menlo Park."
+link_text: "Register now"
+url: "https://luma.com/aicyber-59x4?utm_source=vigilsoc.org&utm_medium=top_bar&utm_campaign=agents_hunting_agents"
 dismissible: true
 # Optional: quoted ISO date, e.g. "2026-10-31". The bar hides itself client-side after this
 # date, even if nobody rebuilds the site. Leave blank to run indefinitely.
-expires: ""
+expires: "2026-10-20"
