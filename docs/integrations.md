@@ -36,19 +36,22 @@ Backend tools are automatically enabled for web UI users via the Claude Agent SD
 
 > **Note**: MCP servers are optional and primarily used for advanced integrations requiring external services (Splunk, VirusTotal, etc.). Web UI users get full functionality through the Agent SDK backend tools.
 
-| Category | Servers | Status |
-|----------|---------|--------|
-| Core | deeptempo-findings, approval, attack-layer, tempo-flow | Implemented |
-| Community | GitHub, PostgreSQL | Active |
-| Detection Engineering | Security-Detections-MCP | Implemented |
-| SIEM | Splunk, Elastic Security | Implemented |
-| Timeline | Timesketch | Implemented |
-| Threat Intel | VirusTotal, Shodan, AlienVault OTX, MISP, URL Analysis, IP Geolocation | Implemented |
-| EDR | CrowdStrike | Implemented |
-| Sandbox | Hybrid Analysis, Joe Sandbox, ANY.RUN, CAPE Sandbox | Implemented |
-| Ticketing | Jira | Implemented |
-| Communication | Slack | Implemented |
-| Data Pipeline | Cribl Stream | Implemented |
+Each connector in `mcp-config.json` is checked weekly against a real instance by the [live connector checks](/docs/github-workflows/#5-connectors-liveyml---live-connector-checks).
+{% endraw %}
+{% assign matrix = site.data.connector_matrix %}
+{% assign rows = matrix.connectors | sort: "server" %}
+{% assign passed = rows | where: "status", "pass" %}
+{% assign untested = rows | where_exp: "c", "c.status != 'pass'" | where_exp: "c", "c.status != 'fail'" %}
+{% assign failed = rows | where: "status", "fail" %}
+Checked on {{ matrix.ran_at | date: "%B %-d, %Y" }} at commit `{{ matrix.commit }}` ([run]({{ matrix.run }})).
+
+| Connector | Version | Live result |
+|-----------|---------|-------------|
+{% for c in passed %}| {{ c.server }} | {{ c.version }} | ✅ Passed |
+{% endfor %}{% for c in untested %}| {{ c.server }} | {{ c.version }} | — Not tested |
+{% endfor %}{% for c in failed %}| {{ c.server }} | {{ c.version }} | ❌ Failed |
+{% endfor %}{: .connector-matrix}
+{% raw %}
 
 ## Security-Detections-MCP
 
@@ -567,20 +570,4 @@ curl -X POST http://localhost:6987/api/integrations/vstrike/findings \
 pytest tests/integration/test_vstrike_ingest.py -v
 pytest tests/unit/test_vstrike_service.py -v
 ```
-
-## Stub Servers (Not Implemented)
-
-Available for future implementation:
-
-| Server | Category |
-|--------|----------|
-| AWS Security Hub | Cloud |
-| Azure Sentinel | Cloud |
-| GCP Security | Cloud |
-| Azure AD | Identity |
-| Okta | Identity |
-| Microsoft Defender | EDR |
-| SentinelOne | EDR |
-| Carbon Black | EDR |
-| PagerDuty | Communication |
 {% endraw %}

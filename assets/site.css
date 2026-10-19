@@ -1034,6 +1034,8 @@
       letter-spacing: .04em;
       color: var(--charcoal-muted);
     }
+    /* Long package versions wrap instead of widening the table on phones */
+    .post-content .connector-matrix td { overflow-wrap: anywhere; }
 
     /* Post footer */
     .post-footer {
