@@ -1,22 +1,22 @@
 {
-  "ran_at": "2026-10-15T21:59:16Z",
-  "commit": "ffa6a2b",
-  "run": "https://github.com/Vigil-SOC/vigil/actions/runs/38813605985",
+  "ran_at": "2026-10-19T16:57:36Z",
+  "commit": "d38c6e1",
+  "run": "https://github.com/Vigil-SOC/vigil/actions/runs/39289604191",
   "connectors": [
     {
       "server": "alienvault-otx",
       "status": "no live check",
-      "version": null
+      "version": "in-repo"
     },
     {
       "server": "anyrun",
       "status": "no live check",
-      "version": null
+      "version": "in-repo"
     },
     {
       "server": "atomic-red-team",
       "status": "no live check",
-      "version": null
+      "version": "in-repo"
     },
     {
       "server": "aws-security",
@@ -26,22 +26,22 @@
     {
       "server": "azure-ad",
       "status": "no live check",
-      "version": null
+      "version": "in-repo"
     },
     {
       "server": "azure-sentinel",
       "status": "no live check",
-      "version": null
+      "version": "hosted"
     },
     {
       "server": "cape-sandbox",
       "status": "no live check",
-      "version": null
+      "version": "in-repo"
     },
     {
       "server": "carbon-black",
       "status": "no live check",
-      "version": null
+      "version": "in-repo"
     },
     {
       "server": "cloudflare",
@@ -56,7 +56,7 @@
     {
       "server": "crowdstrike",
       "status": "no live check",
-      "version": null
+      "version": "falcon-mcp==0.19.0"
     },
     {
       "server": "elastic",
@@ -76,12 +76,12 @@
     {
       "server": "gcp-secops",
       "status": "no live check",
-      "version": null
+      "version": "google-secops-mcp==0.7.1"
     },
     {
       "server": "gcp-threat-intel",
       "status": "no live check",
-      "version": null
+      "version": "gti-mcp==0.1.3"
     },
     {
       "server": "github",
@@ -91,42 +91,42 @@
     {
       "server": "hybrid-analysis",
       "status": "no live check",
-      "version": null
+      "version": "in-repo"
     },
     {
       "server": "ip-geolocation",
       "status": "no live check",
-      "version": null
+      "version": "in-repo"
     },
     {
       "server": "jira",
       "status": "no live check",
-      "version": null
+      "version": "hosted"
     },
     {
       "server": "joe-sandbox",
       "status": "no live check",
-      "version": null
+      "version": "unpinned"
     },
     {
       "server": "loglm",
       "status": "no live check",
-      "version": null
+      "version": "hosted"
     },
     {
       "server": "microsoft-defender",
       "status": "no live check",
-      "version": null
+      "version": "in-repo"
     },
     {
       "server": "microsoft-teams",
       "status": "no live check",
-      "version": null
+      "version": "in-repo"
     },
     {
       "server": "misp",
       "status": "no live check",
-      "version": null
+      "version": "in-repo"
     },
     {
       "server": "okta",
@@ -146,7 +146,7 @@
     {
       "server": "palo-alto",
       "status": "no live check",
-      "version": null
+      "version": "in-repo"
     },
     {
       "server": "security-detections",
@@ -156,22 +156,22 @@
     {
       "server": "sentinelone",
       "status": "no live check",
-      "version": null
+      "version": "purple-mcp.git@v0.7.0"
     },
     {
       "server": "shodan",
-      "status": "fail",
-      "version": "mcp-shodan@1.0.22"
+      "status": "pass",
+      "version": "mcp-shodan@1.0.34"
     },
     {
       "server": "slack",
       "status": "no live check",
-      "version": null
+      "version": "in-repo"
     },
     {
       "server": "splunk",
       "status": "no live check",
-      "version": null
+      "version": "hosted"
     },
     {
       "server": "splunk-selfhosted",
@@ -181,7 +181,7 @@
     {
       "server": "url-analysis",
       "status": "no live check",
-      "version": null
+      "version": "in-repo"
     },
     {
       "server": "virustotal",
@@ -191,7 +191,7 @@
     {
       "server": "vstrike",
       "status": "no live check",
-      "version": null
+      "version": "in-repo"
     }
   ]
 }
