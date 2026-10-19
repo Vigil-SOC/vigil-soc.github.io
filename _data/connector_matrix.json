@@ -1,0 +1,197 @@
+{
+  "ran_at": "2026-10-15T21:59:16Z",
+  "commit": "ffa6a2b",
+  "run": "https://github.com/Vigil-SOC/vigil/actions/runs/38813605985",
+  "connectors": [
+    {
+      "server": "alienvault-otx",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "anyrun",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "atomic-red-team",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "aws-security",
+      "status": "not-configured",
+      "version": "awslabs.well-architected-security-mcp-server==0.2.0"
+    },
+    {
+      "server": "azure-ad",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "azure-sentinel",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "cape-sandbox",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "carbon-black",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "cloudflare",
+      "status": "pass",
+      "version": "in-repo"
+    },
+    {
+      "server": "cribl-stream",
+      "status": "pass",
+      "version": "cribl-mcp@0.1.12"
+    },
+    {
+      "server": "crowdstrike",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "elastic",
+      "status": "pass",
+      "version": "in-repo"
+    },
+    {
+      "server": "firecrawl",
+      "status": "pass",
+      "version": "firecrawl-mcp@3.24.0"
+    },
+    {
+      "server": "gcp-scc",
+      "status": "not-configured",
+      "version": "scc-mcp==0.1.1"
+    },
+    {
+      "server": "gcp-secops",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "gcp-threat-intel",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "github",
+      "status": "pass",
+      "version": "server-github@2025.4.8"
+    },
+    {
+      "server": "hybrid-analysis",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "ip-geolocation",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "jira",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "joe-sandbox",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "loglm",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "microsoft-defender",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "microsoft-teams",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "misp",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "okta",
+      "status": "pass",
+      "version": "okta-mcp-server.git@02.0-beta"
+    },
+    {
+      "server": "opensearch",
+      "status": "pass",
+      "version": "in-repo"
+    },
+    {
+      "server": "pagerduty",
+      "status": "not-configured",
+      "version": "pagerduty-mcp==1.1.0"
+    },
+    {
+      "server": "palo-alto",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "security-detections",
+      "status": "pass",
+      "version": "security-detections-mcp@3.3.0"
+    },
+    {
+      "server": "sentinelone",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "shodan",
+      "status": "fail",
+      "version": "mcp-shodan@1.0.22"
+    },
+    {
+      "server": "slack",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "splunk",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "splunk-selfhosted",
+      "status": "pass",
+      "version": "in-repo"
+    },
+    {
+      "server": "url-analysis",
+      "status": "no live check",
+      "version": null
+    },
+    {
+      "server": "virustotal",
+      "status": "not-configured",
+      "version": "mcp-virustotal@1.0.25"
+    },
+    {
+      "server": "vstrike",
+      "status": "no live check",
+      "version": null
+    }
+  ]
+}

@@ -48,6 +48,11 @@ The workflows are currently configured for **Continuous Integration** only - the
 - **Purpose**: Comprehensive testing and security audits
 - **Deployment**: None
 
+### 5. `connectors-live.yml` - Live Connector Checks
+- **Triggers**: Mondays at 6 AM UTC, manual dispatch
+- **Purpose**: Run each connector in `mcp-config.json` that can be run for free against a real instance — self-hosted backends in Docker, keyless servers, and free vendor tiers — and merge the results into the connector matrix (job summary and `connector-matrix` artifact). Vendor-tier probes read `LIVE_*` repository secrets (e.g. `LIVE_SHODAN_API_KEY`, `LIVE_OKTA_API_TOKEN`); a probe whose secret is unset reports "not configured". `tests/live/ACCOUNTS.md` lists the accounts and secret names.
+- **Deployment**: Runs on `main` publish the matrix to `_data/connector_matrix.json` in this site, which renders the status table on the [Integrations](/docs/integrations/) page. Runs on other branches publish nothing, nor does a run where any job died before writing its report.
+
 ## No Secrets Required!
 
 Since deployment is disabled, you **don't need to configure**:
