@@ -67,8 +67,8 @@ Let federated Vigil instances safely query and share anonymized detection teleme
 git clone --recurse-submodules https://github.com/Vigil-SOC/vigil.git -b v1.0.0
 cd vigil
 
-# Launch the interactive web harness
-./start_web.sh
+# Launch Vigil
+./start.sh
 ```
 
 - **GitHub:** [Vigil-SOC/vigil](https://github.com/Vigil-SOC/vigil)
