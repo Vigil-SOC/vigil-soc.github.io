@@ -1,7 +1,7 @@
 # Vigil
 
-> Vigil is the leading open source AI SOC: an agentic SOC with 13 specialized
-> AI agents, 30+ MCP integrations, and 7,200+ community detection rules,
+> Vigil is the leading open source AI SOC: an agentic SOC with specialized
+> AI agents, extensible MCP integrations, and 7,200+ community detection rules,
 > released under Apache 2.0. Local-first: data never leaves your environment.
 > Vigil pairs with LogLM, DeepTempo's cybersecurity foundation model, to form
 > the Intelligent Defense Platform.

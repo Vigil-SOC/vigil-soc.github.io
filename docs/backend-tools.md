@@ -33,7 +33,7 @@ Database / Detection Rules / Services
 
 ## Available Tools
 
-### Security Detection Tools (5)
+### Security Detection Tools
 
 Access to 7,200+ detection rules across Sigma, Splunk, Elastic, and KQL formats:
 
@@ -43,7 +43,7 @@ Access to 7,200+ detection rules across Sigma, Splunk, Elastic, and KQL formats:
 - **get_coverage_stats** - Get overall coverage statistics
 - **get_detection_count** - Get detection counts by source format
 
-### Finding & Case Tools (11)
+### Finding & Case Tools
 
 Interact with security findings and cases:
 
@@ -59,14 +59,14 @@ Interact with security findings and cases:
 - **update_case** - Update case status, priority, assignee, and metadata
 - **add_resolution_step** - Document a resolution step with description, action, and result
 
-### MITRE ATT&CK Tools (2)
+### MITRE ATT&CK Tools
 
 Generate and analyze ATT&CK Navigator layers:
 
 - **get_attack_layer** - Generate ATT&CK Navigator layer JSON
 - **get_technique_rollup** - Get technique statistics from findings
 
-### Approval Workflow Tools (5)
+### Approval Workflow Tools
 
 Manage autonomous response actions:
 
@@ -150,11 +150,11 @@ Tool schemas are defined in `core/llm/tool_schemas.py`:
 ```python
 from core.llm.tool_schemas import ALL_TOOLS
 
-# Contains 23 tools total:
-# - 5 security detection tools
-# - 11 findings/case tools
-# - 2 MITRE ATT&CK tools
-# - 5 approval tools
+# Contains core backend tools:
+# - security detection tools
+# - findings/case tools
+# - MITRE ATT&CK tools
+# - approval tools
 ```
 
 ### Tool Routing
@@ -205,7 +205,7 @@ python tests/test_integration_backend_tools.py
 
 ### Expected Results
 
-- All 23 tools should load successfully
+- All backend tools should load successfully
 - Coverage analysis should work with 7,200+ rules
 - Finding/case queries should work with database
 - Approval workflow should work with pending actions
@@ -219,7 +219,7 @@ python tests/test_integration_backend_tools.py
 | **Latency** | Lower (Agent SDK) | Higher (protocol overhead) |
 | **Configuration** | Simple (env vars) | Complex (MCP config) |
 | **Multi-user** | ✅ Production ready | ❌ Desktop only |
-| **Tool Count** | 23 core tools | 100+ (including external) |
+| **Tool Count** | Core backend tools | Extended tools (via MCP) |
 | **Autonomy** | ✅ Autonomous execution | Manual tool use |
 
 ## Migration from MCP

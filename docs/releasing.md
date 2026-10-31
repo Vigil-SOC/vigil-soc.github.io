@@ -11,14 +11,12 @@ How Vigil is versioned and released.
 
 Vigil follows [Semantic Versioning](https://semver.org/).
 
-- **`0.x.y` (current)** — Pre-stable. `feat:` commits bump the minor
-  (`0.1.0` → `0.2.0`) and may include breaking changes to agent prompts,
-  workflow schemas, MCP integration interfaces, environment variables, or
-  API shapes. `fix:` commits bump the patch (`0.1.0` → `0.1.1`) and are
-  always backward-compatible.
-- **`1.0.0` and later** — Stable. Breaking changes require a major bump.
-  Vigil ships `1.0.0` once the agent and workflow schemas are considered
-  stable enough to commit to.
+- **`1.x.y` (current)** — Stable. Breaking changes require a major bump
+  (e.g. `2.0.0`). Minor releases (`1.1.0`) add backward-compatible functionality,
+  and patch releases (`1.0.1`) provide backward-compatible bug fixes.
+- **`0.x.y` (historical)** — Pre-stable releases prior to `1.0.0` General
+  Availability. Minor releases served as feature increments with possible
+  schema adjustments, while patch releases fixed bugs.
 
 ## What Gets Versioned
 
@@ -52,10 +50,9 @@ automated.
    title becomes the commit — maintainers should adjust PR titles to
    match the convention before squashing):
 
-   - `fix: ...` → patch bump (`0.1.0` → `0.1.1`)
-   - `feat: ...` → minor bump (`0.1.0` → `0.2.0`)
-   - `feat!: ...` or commits with `BREAKING CHANGE:` in the body → minor
-     bump while in `0.x`, major bump from `1.0.0` onward
+   - `fix: ...` → patch bump (`1.0.0` → `1.0.1`)
+   - `feat: ...` → minor bump (`1.0.0` → `1.1.0`)
+   - `feat!: ...` or commits with `BREAKING CHANGE:` in the body → major bump (`1.0.0` → `2.0.0`)
    - `docs:`, `chore:`, `refactor:`, `test:`, `perf:` appear in the
      changelog but don't trigger a bump on their own
    - Commits with no recognized prefix go under "Other" and don't
@@ -86,8 +83,8 @@ an empty commit to `main` with a `Release-As:` trailer:
 
 ```bash
 git commit --allow-empty \
-  -m "chore: release 0.1.2" \
-  -m "Release-As: 0.1.2"
+  -m "chore: release 1.0.1" \
+  -m "Release-As: 1.0.1"
 git push origin main
 ```
 
@@ -157,7 +154,7 @@ the manifest is not bumped, the next automated run reads its stale
 value, thinks the manual release never happened, and opens a release PR
 that overwrites it.
 
-1. Open a PR bumping the version to the new release (e.g. `0.2.0`) in
+1. Open a PR bumping the version to the new release (e.g. `1.0.1`) in
    all of the following:
    - `VERSION`
    - `infra/helm/vigil/Chart.yaml` `appVersion`
@@ -173,8 +170,8 @@ that overwrites it.
 3. Tag and push:
    ```bash
    git checkout main && git pull
-   git tag -s v0.2.0 -m "Release v0.2.0"
-   git push origin v0.2.0
+   git tag -s v1.0.1 -m "Release v1.0.1"
+   git push origin v1.0.1
    ```
 4. The tag push triggers `release.yml` (build, scan, deploy).
 5. **Manually create the GitHub Release** at
@@ -187,9 +184,8 @@ that overwrites it.
 
 Tracked separately, not part of the current release flow:
 
-- **Hotfix branches** — once `1.0+` is out and we need to ship fixes for
-  older majors, document a `release/X.Y` branch procedure. Not relevant
-  while in `0.x` (just ship a patch from `main`).
+- **Hotfix branches** — now that `1.0.0+` is GA and we may need to ship fixes for
+  older majors, document a `release/X.Y` branch procedure.
 - **Re-deploy an old tag** — add a `workflow_dispatch` trigger with a
   `tag` input to `release.yml`, so a previously-released version can be
   rebuilt without moving the tag.

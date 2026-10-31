@@ -5,7 +5,7 @@ permalink: /docs/github-workflows/
 ---
 
 {% raw %}
-This directory contains the CI/CD workflows for AI-OpenSOC.
+This directory contains the CI/CD workflows for Vigil.
 
 ## Current Configuration: CI Only (Testing + Building)
 

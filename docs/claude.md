@@ -11,21 +11,20 @@ This file provides guidance for AI assistants (Claude Code and similar tools) wo
 
 ## Project Overview
 
-**Vigil** is an open-source, AI-native Security Operations Center (SOC) platform. It orchestrates 13 specialized AI agents via Claude to perform triage, investigation, threat hunting, forensics, and automated response across 40 security integrations.
+**Vigil** is an open-source, AI-native Security Operations Center (SOC) platform. It orchestrates specialized AI agents via Claude/Bifrost to perform triage, investigation, threat hunting, forensics, and automated response across extensible security integrations.
 
 **Core pillars:**
-- **Agents** — 13 agents defined in `AGENT_CONFIGS`, which is the authoritative
-  list: triage, investigator, threat_hunter, correlator, responder, reporter,
+- **Agents** — Specialized agents defined in `AGENT_CONFIGS`, which is the authoritative
+  list (including triage, investigator, threat_hunter, correlator, responder, reporter,
   mitre_analyst, forensics, threat_intel, compliance, malware_analyst,
-  network_analyst, auto_responder. (The README says "12" — it omits
-  `auto_responder`.)
+  network_analyst, auto_responder).
 - **Workflows** — Multi-agent orchestrated playbooks (Incident Response, Full
-  Investigation, Threat Hunt, Forensic Analysis, Cloud Incident). Four are
-  **compose** playbooks and walk their `phases:` in order. `threat-hunt` declares
+  Investigation, Threat Hunt, Forensic Analysis, Cloud Incident). Standard compose
+  playbooks walk their `phases:` in order. `threat-hunt` declares
   `run_kind: hunt` and runs the **hypothesis loop** instead — a Hunt Lead picks
   each move from what the evidence did to each belief, so its `phases:` block is
   a dispatch roster rather than an order.
-- **Integrations** — 40 MCP servers in `mcp-config.json` (Splunk, CrowdStrike, VirusTotal, Shodan, Timesketch, Jira, Slack, etc.). Count only dict-valued keys: the `mcpServers` object also holds 7 `_comment_*` string keys used as section separators.
+- **Integrations** — Extensible MCP servers in `mcp-config.json` (Splunk, CrowdStrike, VirusTotal, Shodan, Timesketch, Jira, Slack, etc.). Count only dict-valued keys: the `mcpServers` object also holds `_comment_*` string keys used as section separators.
 
 **Ports:**
 - Backend API: `http://localhost:6987`

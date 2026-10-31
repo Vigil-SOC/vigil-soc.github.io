@@ -254,8 +254,8 @@ trivy image --severity CRITICAL,HIGH ghcr.io/user/image:tag
 > no automated deployment runs — neither staging nor production. The
 > `release.yml` workflow only builds and publishes images. The commands
 > below describe the *manual* deploy path via `scripts/deploy_to_vm.sh`
-> (and the intended automated wiring for when deployment is turned on,
-> post-1.0). The script's default `IMAGE_NAME` is stale — override it,
+> (and the intended automated wiring for automated deployment).
+> The script's default `IMAGE_NAME` is stale — override it,
 > e.g. `IMAGE_NAME=vigil-soc/vigil`, so it pulls the published images.
 
 **Staging** (intended: automatic on main):

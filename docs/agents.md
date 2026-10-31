@@ -5,21 +5,21 @@ permalink: /docs/agents/
 ---
 
 {% raw %}
-13 specialized AI agents for different security operations tasks.
+Specialized AI agents for different security operations tasks.
 
 ## Tool Access
 
 All agents have access to tools through two integration methods:
 
 ### Agent SDK (Recommended - Web UI)
-- **19 Backend Tools** via Claude API function calling
+- **Backend Tools** via API function calling
 - Security detections, case management, approvals, MITRE ATT&CK
 - **Zero desktop dependency** - Works entirely through the API
 - Production-ready for multi-user deployments
 - Enabled by default in web UI
 
 ### MCP Tools (Optional - Advanced Use)
-- **100+ Extended Tools** for specialized integrations
+- **Extended MCP Tools** for specialized integrations
 - Requires additional MCP server configuration
 - Best for advanced local workflows or specialized integrations
 
@@ -204,18 +204,16 @@ For advanced workflows requiring external integrations (Splunk, VirusTotal, Shod
 
 ### Detection Engineering Tools (Security-Detections-MCP)
 
-All agents have access to 71+ new detection engineering tools:
+All agents have access to specialized detection engineering tools:
 
-| Category | Available To | Tools Count |
-|----------|--------------|-------------|
-| Coverage Analysis | MITRE Analyst, Investigator, Responder | 6 |
-| Detection Search | All Agents | 12 |
-| Pattern Intelligence | Threat Hunter, MITRE Analyst | 15 |
-| Template Generation | MITRE Analyst, Responder | 8 |
-| Tribal Knowledge | All Agents | 20 |
-| Analytics & Reporting | MITRE Analyst, Reporter | 10 |
-
-**Total Tools**: 71 detection engineering tools + 27 existing integrations = **98+ tools available**
+| Category | Available To | Focus |
+|----------|--------------|-------|
+| Coverage Analysis | MITRE Analyst, Investigator, Responder | Technique mapping & gap identification |
+| Detection Search | All Agents | Cross-platform rule search |
+| Pattern Intelligence | Threat Hunter, MITRE Analyst | Detection pattern analysis |
+| Template Generation | MITRE Analyst, Responder | Rule generation and scaffolding |
+| Tribal Knowledge | All Agents | Detection notes and operational context |
+| Analytics & Reporting | MITRE Analyst, Reporter | Metrics, coverage, and reports |
 
 See [DETECTION_ENGINEERING.md](/docs/detection-engineering/) for detailed tool descriptions and workflows.
 

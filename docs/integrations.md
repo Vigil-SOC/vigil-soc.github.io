@@ -9,16 +9,16 @@ Configure integrations via **Settings > Integrations** in the web UI.
 
 ## Backend Tools via Agent SDK (Recommended)
 
-**NEW**: Backend tool integration via Claude Agent SDK eliminates desktop dependency.
+Backend tool integration via Claude Agent SDK eliminates desktop dependency.
 
-### Available Tools (19)
+### Available Backend Tools
 
-| Category | Count | Tools |
-|----------|-------|-------|
-| **Security Detections** | 5 | Coverage analysis, detection search, gap identification |
-| **Findings & Cases** | 7 | List/get findings, case management, similarity search |
-| **MITRE ATT&CK** | 2 | Attack layer generation, technique rollup |
-| **Approval Workflow** | 5 | Pending approvals, approve/reject actions, statistics |
+| Category | Tools |
+|----------|-------|
+| **Security Detections** | Coverage analysis, detection search, gap identification |
+| **Findings & Cases** | List/get findings, case management, similarity search |
+| **MITRE ATT&CK** | Attack layer generation, technique rollup |
+| **Approval Workflow** | Pending approvals, approve/reject actions, statistics |
 
 ### Benefits
 
@@ -61,8 +61,8 @@ Detection engineering with 7,200+ rules across Sigma, Splunk ESCU, Elastic, and 
 
 Security-Detections-MCP provides:
 - **7,200+ Detection Rules** - Comprehensive detection rule database
-- **71+ Tools** - Coverage analysis, gap identification, template generation
-- **11 Expert Prompts** - Guided detection engineering workflows
+- **Detection Tools** - Coverage analysis, gap identification, template generation
+- **Expert Prompts** - Guided detection engineering workflows
 - **Tribal Knowledge** - Document and retrieve detection decisions
 - **Pattern Intelligence** - Learn from existing detection rules
 
@@ -82,18 +82,18 @@ To update repositories:
 
 ### Key Tool Categories
 
-| Category | Tools | Description |
+| Category | Focus | Description |
 |----------|-------|-------------|
-| Coverage Analysis | 6 tools | Quantify detection coverage by MITRE technique |
-| Detection Search | 12 tools | Find relevant detection rules |
-| Pattern Intelligence | 15 tools | Learn from existing detection patterns |
-| Template Generation | 8 tools | AI-assisted detection rule creation |
-| Tribal Knowledge | 20 tools | Document and retrieve detection decisions |
-| Analytics & Reporting | 10 tools | Metrics and gap analysis reports |
+| Coverage Analysis | Techniques & gaps | Quantify detection coverage by MITRE technique |
+| Detection Search | Cross-source query | Find relevant detection rules |
+| Pattern Intelligence | Rule learning | Learn from existing detection patterns |
+| Template Generation | Creation & conversion | AI-assisted detection rule creation |
+| Tribal Knowledge | Institutional memory | Document and retrieve detection decisions |
+| Analytics & Reporting | Metrics & posture | Metrics and gap analysis reports |
 
 ### Expert Workflow Prompts
 
-11 guided workflows for detection engineering:
+Guided workflows for detection engineering:
 - `apt-threat-emulation` - Purple team exercises for APT groups
 - `coverage-analysis` - Comprehensive coverage assessment
 - `detection-tuning` - Optimize existing detections

@@ -63,7 +63,7 @@ Vigil uses **backend tool integration via Claude Agent SDK**. No desktop applica
 ### Backend
 - FastAPI (Python 3.10+)
 - Claude API integration
-- Backend tools (23 tools)
+- Backend tools
 - Port: 6987
 
 ### Database
@@ -78,7 +78,7 @@ Vigil uses **backend tool integration via Claude Agent SDK**. No desktop applica
 
 ## Tool Categories
 
-### 1. Security Detection Tools (5)
+### 1. Security Detection Tools
 Access to detection rule database:
 - `analyze_coverage` - Coverage by MITRE technique
 - `search_detections` - Keyword search across rules
@@ -86,7 +86,7 @@ Access to detection rule database:
 - `get_coverage_stats` - Statistics
 - `get_detection_count` - Counts by source
 
-### 2. Finding & Case Tools (10)
+### 2. Finding & Case Tools
 SOC investigation workflow:
 - `list_findings` - Query findings
 - `search_findings` - Keyword search across findings
@@ -100,20 +100,18 @@ SOC investigation workflow:
 - `update_case` - Update case status and metadata
 - `add_resolution_step` - Document resolution steps
 
-### 3. MITRE ATT&CK Tools (2)
+### 3. MITRE ATT&CK Tools
 Technique mapping and visualization:
 - `get_attack_layer` - Generate Navigator layer
 - `get_technique_rollup` - Technique statistics
 
-### 4. Approval Tools (5)
+### 4. Approval Tools
 Autonomous response workflow:
 - `list_pending_approvals` - Pending actions
 - `get_approval_action` - Action details
 - `approve_action` - Approve action
 - `reject_action` - Reject action
 - `get_approval_stats` - Statistics
-
-**Total: 23 backend tools**
 
 ## Request Flow
 
