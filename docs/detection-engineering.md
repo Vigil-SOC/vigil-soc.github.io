@@ -11,7 +11,7 @@ Integration of security detection rules provides 7,200+ detection rules and AI-p
 
 Detection engineering features:
 - **7,200+ Detection Rules** across Sigma, Splunk ESCU, Elastic, and KQL formats
-- **5 Core Tools** for coverage analysis, gap identification, and detection search
+- **Core Tools** for coverage analysis, gap identification, and detection search
 - **Agent SDK Integration** - Works via Claude API function calling with no additional setup
 - **Web UI Compatible** - All detection tools accessible via browser
 - **MITRE ATT&CK Integration** - Map detections to techniques
@@ -21,12 +21,12 @@ Detection engineering features:
 **Web UI (Default)**: Uses backend tools via Claude Agent SDK
 - ✅ No additional setup required
 - ✅ Production-ready deployment
-- ✅ 5 core detection tools
+- ✅ Core detection tools
 - ✅ Direct access to 7,200+ rules
 - ✅ Works through Claude API function calling
 
 **MCP Server (Advanced)**: Optional for extended detection engineering workflows
-- Additional tools (71+) for specialized workflows
+- Extended tools for specialized workflows
 - Tribal knowledge features
 - Expert workflow prompts
 - Requires MCP server configuration
@@ -66,7 +66,7 @@ This verifies:
 
 ## Tool Categories
 
-### 1. Coverage Analysis (6 tools)
+### 1. Coverage Analysis
 
 Quantify your detection coverage across MITRE ATT&CK techniques:
 
@@ -88,7 +88,7 @@ Quantify your detection coverage across MITRE ATT&CK techniques:
 5. Prioritize T1486 for new detection development
 ```
 
-### 2. Detection Search (12 tools)
+### 2. Detection Search
 
 Find relevant detection rules:
 
@@ -111,7 +111,7 @@ Find relevant detection rules:
 4. get_related_detections() to discover variants
 ```
 
-### 3. Pattern Intelligence (15 tools)
+### 3. Pattern Intelligence
 
 Learn from existing detection patterns:
 
@@ -134,7 +134,7 @@ Learn from existing detection patterns:
 5. Use patterns to inform new detection
 ```
 
-### 4. Template Generation (8 tools)
+### 4. Template Generation
 
 AI-assisted detection rule creation:
 
@@ -159,7 +159,7 @@ AI-assisted detection rule creation:
 6. Deploy via approval workflow
 ```
 
-### 5. Tribal Knowledge (20 tools)
+### 5. Tribal Knowledge
 
 Document and retrieve detection engineering decisions:
 
@@ -189,7 +189,7 @@ Document and retrieve detection engineering decisions:
    → Understand why T1486 was prioritized
 ```
 
-### 6. Analytics & Reporting (10 tools)
+### 6. Analytics & Reporting
 
 Metrics and reporting:
 
@@ -341,7 +341,7 @@ Recommends new detections to prevent recurrence:
 
 ### All Agents
 
-All 13 agents can:
+All agents can:
 - Search detection rules
 - Query tribal knowledge
 - Validate coverage

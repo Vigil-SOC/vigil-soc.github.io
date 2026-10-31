@@ -7,12 +7,12 @@
 # new message show to everyone again.
 
 enabled: true
-id: "agents-hunting-agents-2026-10-19"
-badge: "Workshop · Oct 19"
-text: "Agents hunting Agents: spot malicious AI agents with Vigil, hands-on in Menlo Park."
-link_text: "Register now"
-url: "https://luma.com/aicyber-59x4?utm_source=vigilsoc.org&utm_medium=top_bar&utm_campaign=agents_hunting_agents"
+id: "vigilsoc-1-0-0-ga"
+badge: "Release · 1.0.0"
+text: "VigilSOC 1.0.0 is live: General Availability for the open source AI SOC."
+link_text: "Read announcement"
+url: "/blog/2026/10/30/vigilsoc-1-0-0-release/"
 dismissible: true
 # Optional: quoted ISO date, e.g. "2026-10-31". The bar hides itself client-side after this
 # date, even if nobody rebuilds the site. Leave blank to run indefinitely.
-expires: "2026-10-20"
+expires: ""
