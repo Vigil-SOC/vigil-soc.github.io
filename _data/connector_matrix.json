@@ -1,7 +1,7 @@
 {
-  "ran_at": "2026-10-26T11:43:43Z",
-  "commit": "e90132a",
-  "run": "https://github.com/Vigil-SOC/vigil/actions/runs/40316862161",
+  "ran_at": "2026-11-02T14:01:17Z",
+  "commit": "61db730",
+  "run": "https://github.com/Vigil-SOC/vigil/actions/runs/41457572674",
   "connectors": [
     {
       "server": "alienvault-otx",
@@ -66,7 +66,7 @@
     {
       "server": "firecrawl",
       "status": "pass",
-      "version": "firecrawl-mcp@3.30.3"
+      "version": "firecrawl-mcp@3.36.0"
     },
     {
       "server": "gcp-scc",
