@@ -8,6 +8,8 @@ tags: [customization, skills, workflows, agents, detection, configuration, softw
 excerpt: "Vigil 1.0 is out and the community is running it in more ways than we expected. Here is how to customize it: content, configuration, building on the core, and handing a well-specified need to the Factory."
 ---
 
+![Making Vigil Yours: Customizing the AI SOC](/assets/blog/2026-11-03-making-vigil-yours/making-vigil-yours.jpg)
+
 Vigil reached 1.0 this week. Recently the project has drawn attention for a surge in clones and users.
 
 We have learned a lot from the community: conversations on [Discord](https://discord.gg/SBtSHzMYFZ), [office hours](https://luma.com/vigilcommunity), the issues people open, and even posts on X and LinkedIn. Defenders are running Vigil in more ways than expected, and their feedback is steering the project from a system used mainly for investigation and threat hunting toward the broader work of a cyber fusion center. You might even call Vigil the first open source System of Learning for cyber.
