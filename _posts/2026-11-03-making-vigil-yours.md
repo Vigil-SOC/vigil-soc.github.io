@@ -23,6 +23,8 @@ In particular, this blog covers:
 - **Core capabilities:** the loop, the ledger, the memory and the record, which you build on rather than around.
 - **The Factory:** how a need you can specify becomes verified, reviewed code without waiting on a maintainer (assuming the Factory approves your approach, of course!).
 
+![Making Vigil Yours: Customizing the AI SOC](/assets/blog/2026-11-03-making-vigil-yours/making-vigil-yours.jpg)
+
 ## Content
 
 Vigil accesses and updates the know-how used in cyber operations as files under change control, typically stored in GitHub, GitLab or similar.
