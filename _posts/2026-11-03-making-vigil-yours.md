@@ -2,7 +2,7 @@
 layout: post
 title: "Making Vigil Yours"
 date: 2026-11-03
-author: "Vigil SOC Team"
+author: "Mayank Kumar"
 category: "Engineering"
 tags: [customization, skills, workflows, agents, detection, configuration, software-factory, community]
 excerpt: "Vigil 1.0 is out and the community is running it in more ways than we expected. Here is how to customize it: content, configuration, building on the core, and handing a well-specified need to the Factory."
