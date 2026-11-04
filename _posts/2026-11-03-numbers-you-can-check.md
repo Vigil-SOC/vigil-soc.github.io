@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Numbers You Can Check"
-date: 2026-11-03 16:30:00 -0800
+date: 2026-11-03 12:00:00 -0800
 author: "Evan Powell"
 category: "Community"
 tags: [metrics, transparency, github, open-source, community]
