@@ -1,7 +1,7 @@
 {
-  "ran_at": "2026-11-02T14:01:17Z",
-  "commit": "61db730",
-  "run": "https://github.com/Vigil-SOC/vigil/actions/runs/41457572674",
+  "ran_at": "2026-11-09T14:33:28Z",
+  "commit": "fee7fd9",
+  "run": "https://github.com/Vigil-SOC/vigil/actions/runs/42635281066",
   "connectors": [
     {
       "server": "alienvault-otx",
@@ -66,7 +66,7 @@
     {
       "server": "firecrawl",
       "status": "pass",
-      "version": "firecrawl-mcp@3.36.0"
+      "version": "firecrawl-mcp@3.37.0"
     },
     {
       "server": "gcp-scc",
@@ -134,6 +134,11 @@
       "version": "okta-mcp-server.git@02.0-beta"
     },
     {
+      "server": "opencti",
+      "status": "no live check",
+      "version": "in-repo"
+    },
+    {
       "server": "opensearch",
       "status": "pass",
       "version": "in-repo"
@@ -151,7 +156,7 @@
     {
       "server": "security-detections",
       "status": "pass",
-      "version": "security-detections-mcp@3.3.0"
+      "version": "security-detections-mcp@3.3.4"
     },
     {
       "server": "sentinelone",
@@ -161,7 +166,7 @@
     {
       "server": "shodan",
       "status": "pass",
-      "version": "mcp-shodan@1.0.34"
+      "version": "mcp-shodan@1.0.37"
     },
     {
       "server": "slack",
@@ -186,10 +191,15 @@
     {
       "server": "virustotal",
       "status": "not-configured",
-      "version": "mcp-virustotal@1.0.35"
+      "version": "mcp-virustotal@1.0.38"
     },
     {
       "server": "vstrike",
+      "status": "no live check",
+      "version": "in-repo"
+    },
+    {
+      "server": "wazuh",
       "status": "no live check",
       "version": "in-repo"
     }
