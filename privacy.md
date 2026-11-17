@@ -5,11 +5,10 @@ permalink: /privacy/
 excerpt: "Vigil runs on your infrastructure and the Vigil project operates no hosted service. This page says what each part of the project handles and where it goes."
 ---
 
-**Effective date:** [2026-11-15]
+**Effective date:** 2026-11-15
 
 **Applies to:** the Vigil software, the Vigil SOC plugin for Claude Code, and the website vigilsoc.org.
 
-> Bracketed items are for the project owner to confirm before this page goes live.
 
 ## The short version
 
@@ -70,7 +69,7 @@ The plugin sends nothing to the Vigil project, to DeepTempo, or to vigilsoc.org.
 
 ## 5. The website vigilsoc.org
 
-vigilsoc.org is a documentation and community site. It has no user accounts and no forms that collect personal data. [Confirm: the site uses no analytics or tracking cookies. If it does, name the provider and what it collects.] The hosting provider [name the provider] may keep standard server logs, including IP addresses and user agents, for security and operational purposes under its own retention policy.
+vigilsoc.org is a documentation and community site hosted on GitHub Pages. It has no user accounts, no forms that collect personal data, and no analytics or tracking cookies. GitHub, as the hosting provider, may keep standard server logs, including IP addresses and user agents, for security and operational purposes under GitHub's own privacy statement. Pages load fonts from Google Fonts and the home page loads GitHub's button script, so those providers receive the same request data when a page is opened.
 
 ## 6. Data we do receive
 

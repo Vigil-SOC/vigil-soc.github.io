@@ -5,14 +5,14 @@ permalink: /terms/
 excerpt: "The Apache License 2.0 governs the software. These terms add what the license does not say about your own instance, your credentials, and authorized use."
 ---
 
-**Effective date:** [2026-11-16]
+**Effective date:** 2026-11-16
 
 **Applies to:** the Vigil software, the Vigil SOC plugin for Claude Code, and the website vigilsoc.org.
 
 
 ## 1. What these terms are
 
-Vigil is open source software published by the Vigil project, maintained by DeepTempo.ai and project supports ("we", "us"). The software and the Vigil SOC plugin for Claude Code (together, "the Software") are licensed under the Apache License, Version 2.0 (<https://www.apache.org/licenses/LICENSE-2.0>). The license governs your rights to use, copy, modify, and distribute the Software. These terms add only what the license does not say: how the plugin relates to your own systems, what you are responsible for, and how to reach us. If these terms and the Apache License conflict, the license controls for the Software's source code.
+Vigil is open source software published by the Vigil project, maintained by DeepTempo.AI and project supporters ("we", "us"). The software and the Vigil SOC plugin for Claude Code (together, "the Software") are licensed under the Apache License, Version 2.0 (<https://www.apache.org/licenses/LICENSE-2.0>). The license governs your rights to use, copy, modify, and distribute the Software. These terms add only what the license does not say: how the plugin relates to your own systems, what you are responsible for, and how to reach us. If these terms and the Apache License conflict, the license controls for the Software's source code.
 
 By installing or using the Software or using vigilsoc.org, you agree to these terms.
 
@@ -42,7 +42,7 @@ You may not use the Software or the plugin to:
 
 ## 5. Open source, contributions, and trademarks
 
-The Software's source code is available at <https://github.com/Vigil-SOC/vigil>. Contributions are accepted under the Developer Certificate of Origin described in the repository and are licensed under the Apache License 2.0. "Vigil" and the Vigil mark are used to identify this project; the Apache License does not grant trademark rights, and you may not use the name or mark in a way that suggests we endorse a modified version or a service you operate. [Confirm: any registered trademark status.]
+The Software's source code is available at <https://github.com/Vigil-SOC/vigil>. Contributions are accepted under the Developer Certificate of Origin described in the repository and are licensed under the Apache License 2.0. "Vigil" and the Vigil mark are used to identify this project; the Apache License does not grant trademark rights, and you may not use the name or mark in a way that suggests we endorse a modified version or a service you operate.
 
 ## 6. Disclaimer of warranty
 
