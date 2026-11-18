@@ -5,7 +5,7 @@ permalink: /docs/
 excerpt: Guides for running, deploying, and extending Vigil. These pages were moved out of the product repo so the site can own them.
 ---
 
-Product and operator docs live here. The [Vigil](https://github.com/Vigil-SOC/vigil) repository keeps only the root README, domain vocabulary (`CONTEXT.md`), GitHub/release files, and markdown that the product loads at runtime (workflow definitions, agent skills, templates).
+Product and operator docs live here. The [Vigil](https://github.com/Vigil-SOC/vigil) repository keeps the root README, domain vocabulary (`CONTEXT.md`), GitHub/release files, and markdown that the product loads at runtime (workflow definitions, agent skills, templates); it also carries its own `docs/` tree for operator topics not covered on this site.
 
 ## Product
 
@@ -51,7 +51,7 @@ Product and operator docs live here. The [Vigil](https://github.com/Vigil-SOC/vi
 - [Vendor slices](/docs/vendor-slices/)
 - [Splunk testing](/docs/splunk-testing/)
 - [Postgres to Splunk export](/docs/postgres-to-splunk/)
-- [Default credentials init](/docs/init-credentials/)
+- [First admin bootstrap](/docs/first-admin-bootstrap/)
 
 ## Integrations
 

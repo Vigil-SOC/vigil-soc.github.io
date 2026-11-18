@@ -6,7 +6,15 @@
 # Commit this file (it contains only the public half of the key, which is
 # fine to share). Never commit the private half.
 #
-# See https://github.com/getsops/sops#23usage for the full schema.
+# Note: this file only routes encryption — it carries no secret keys. A
+# Vigil Secret manifest you encrypt with it must contain the full key set
+# the chart requires in an existingSecret: ANTHROPIC_API_KEY,
+# POSTGRES_PASSWORD, POSTGRES_APP_PASSWORD and POSTGRES_AGENT_PASSWORD
+# (the three Postgres passwords must all differ), JWT_SECRET_KEY,
+# AGENT_INTERNAL_TOKEN, MCP_RUNNER_TOKEN and SHELL_TOKEN. See
+# docs/examples/sealed-secret.yaml for the complete list.
+#
+# See https://github.com/getsops/sops#23-usage for the full schema.
 ---
 creation_rules:
   # Encrypt everything under secrets/ with the team age public key.
@@ -15,11 +23,13 @@ creation_rules:
     age: >-
       age1your-public-key-here-generated-with-age-keygen
 
-  # Encrypt helm values files that end in -secrets.yaml
+  # Encrypt helm values files that end in -secrets.yaml. Unlike the rule
+  # above, this rule has no encrypted_regex: every value in the file is
+  # encrypted, which is intentional for Helm values files.
   - path_regex: infra/helm/.*-secrets\.ya?ml$
     age: >-
       age1your-public-key-here-generated-with-age-keygen
 
   # Alternative: AWS KMS
-  # - path_regex: secrets/.*\.yaml$
+  # - path_regex: secrets/.*\.ya?ml$
   #   kms: 'arn:aws:kms:us-east-1:123456789012:alias/vigil-sops'

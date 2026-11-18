@@ -6,8 +6,10 @@ permalink: /docs/helm/
 
 {% raw %}
 Vigil ships with a Helm chart under [`infra/helm/vigil/`](https://github.com/Vigil-SOC/vigil/blob/main/infra/helm/vigil) that
-installs the backend, autonomous daemon, LLM worker, Postgres, and Redis as
-a single release.
+installs the backend, autonomous daemon, LLM worker, agent worker,
+agent serve, MCP runner, agent shell, Bifrost gateway, Postgres, and
+Redis as a single release. Medic is also in the chart but is off by
+default (`medic.enabled: false`).
 
 This is the MVP chart — it covers the common single-cluster deployment.
 See the "Out of scope" section at the bottom for what it deliberately does
@@ -15,11 +17,13 @@ not do yet.
 
 ## Prerequisites
 
-- Kubernetes 1.25+
-- Helm 3.12+
+- Kubernetes 1.25+ (the chart declares `kubeVersion: '>=1.25.0-0'`)
+- Helm 3 (the chart sets no minimum Helm version; CI pins Helm v3.15.2)
 - A working container registry pull path. Release images are published to
-  `ghcr.io/vigil-soc/vigil-backend` and `ghcr.io/vigil-soc/vigil-daemon` by
-  the `release.yml` workflow on every `v*.*.*` tag.
+  `ghcr.io/vigil-soc/vigil-backend`, `ghcr.io/vigil-soc/vigil-daemon`,
+  `ghcr.io/vigil-soc/vigil-agent`, and
+  `ghcr.io/vigil-soc/vigil-mcp-runner` by the `release.yml` workflow on
+  `vX.Y.Z` tags pushed by release-please.
 - An Anthropic API key
 
 For local testing, [kind](https://kind.sigs.k8s.io/) or
@@ -27,29 +31,49 @@ For local testing, [kind](https://kind.sigs.k8s.io/) or
 
 ## Quick install
 
+Every install must set the upgrade acknowledgement values (see
+"How schema upgrades work" below) as well as the required secrets.
+Do **not** use `--wait`: app pods fail their schema check until the
+post-install upgrade Job finishes, and Helm waits for pods to become
+Ready before it runs post-install hooks — so `--wait` deadlocks the
+install.
+
 ```bash
 # Production-ish install with in-chart Postgres + Redis
 helm install vigil ./infra/helm/vigil \
   --namespace vigil --create-namespace \
   --set secrets.anthropicApiKey="$ANTHROPIC_API_KEY" \
   --set secrets.postgresPassword="$(openssl rand -hex 24)" \
+  --set secrets.vigilAppPassword="$(openssl rand -hex 24)" \
   --set secrets.jwtSecretKey="$(python -c 'import secrets; print(secrets.token_urlsafe(64))')" \
-  --wait --timeout 10m
+  --set upgrade.acknowledgeVersion=1.1.2 \
+  --set upgrade.acknowledgeReason="initial install" \
+  --timeout 10m
 ```
+
+`secrets.vigilAppPassword` is required whenever the chart renders the
+Secret itself, and it must differ from `secrets.postgresPassword` —
+app workloads log in as `vigil_app` and must not be able to authenticate
+as the database owner.
 
 ```bash
 # Development install — auth bypassed, smaller resource requests
 helm install vigil ./infra/helm/vigil \
   -f ./infra/helm/vigil/values-dev.yaml \
   --namespace vigil --create-namespace \
-  --set secrets.anthropicApiKey="$ANTHROPIC_API_KEY"
+  --set secrets.anthropicApiKey="$ANTHROPIC_API_KEY" \
+  --set upgrade.acknowledgeVersion=1.1.2 \
+  --set upgrade.acknowledgeReason="dev install"
 ```
+
+(The dev values file supplies development passwords for the Postgres
+roles; the acknowledgement values are still required.)
 
 ## Verifying the install
 
 ```bash
 kubectl get pods -n vigil
-kubectl get jobs -n vigil -l app.kubernetes.io/component=db-init
+kubectl get jobs -n vigil
 
 # End-to-end smoke test
 helm test vigil -n vigil
@@ -61,12 +85,17 @@ curl http://localhost:6987/api/health
 
 ## Secrets
 
-Two options for secrets:
+The chart supports three native options for secrets, plus external
+tooling that feeds option 2:
 
 ### 1. Plain values (simplest)
 
-Set `secrets.*` in values.yaml or via `--set`. The chart renders a `Secret`
-object named `<release>-secrets` containing the values you pass.
+Set `secrets.*` in values.yaml or via `--set`. The chart renders a
+`Secret` object containing the values you pass. Its name is
+`<fullname>-secrets`, where `<fullname>` is the release name alone if
+the release name contains `vigil`, and `<release>-vigil` otherwise —
+so a release named `vigil` gets `vigil-secrets`, while a release named
+`prod` gets `prod-vigil-secrets`.
 
 **Do not commit these values.** Use `--set-file`, an external `values.yaml`
 that's `.gitignore`d, or (better) option 2 below.
@@ -85,11 +114,28 @@ secrets:
 The Secret must provide keys matching env var names. At minimum:
 
 - `ANTHROPIC_API_KEY`
-- `POSTGRES_PASSWORD`
+- `POSTGRES_PASSWORD` (the database owner password; used by Postgres
+  and the upgrade Jobs only — app pods do not receive it)
+- `POSTGRES_APP_PASSWORD` (the `vigil_app` password app pods log in with)
+- `POSTGRES_AGENT_PASSWORD` (the `vigil_agent` password used by
+  agent-serve and agent-worker)
 - `JWT_SECRET_KEY` (when `DEV_MODE=false`)
 
+Where those components are used, the Secret must also carry
+`MCP_RUNNER_TOKEN` (MCP runner) and `SHELL_TOKEN` (agent shell).
+
 Plus whichever integrations you use (`SPLUNK_PASSWORD`, `SLACK_BOT_TOKEN`,
-`CROWDSTRIKE_CLIENT_ID`, `CROWDSTRIKE_CLIENT_SECRET`, etc.).
+`CROWDSTRIKE_CLIENT_ID`, `FALCON_CLIENT_SECRET`, etc.). Note the rendered
+key names: the CrowdStrike client secret is stored as
+`FALCON_CLIENT_SECRET`, not `CROWDSTRIKE_CLIENT_SECRET`.
+
+### 3. ExternalSecret (ExternalSecrets Operator)
+
+Set `secrets.externalSecret.enabled: true` and configure
+`secrets.externalSecret.secretStoreRef`, `.data`, or `.dataFrom`. The
+chart renders an `ExternalSecret` that materializes the Secret from an
+external store, and skips rendering the plain Secret — the same skip
+that applies when `existingSecret` is set.
 
 ## External Postgres / Redis
 
@@ -101,17 +147,25 @@ postgresql:
   external:
     host: db.prod.example.com
     port: 5432
-    database: vigil
-    username: vigil
+    database: deeptempo_soc
+    username: deeptempo
     existingSecret: vigil-db-credentials
     existingSecretKey: password
-    sslRequired: true
 
 redis:
   enabled: false
   external:
     url: "rediss://:password@redis.prod.example.com:6379/0"
 ```
+
+The chart's own defaults for the external database and username are
+`deeptempo_soc` / `deeptempo`. App pods always log in as `vigil_app`
+regardless of the configured username.
+
+There is no `postgresql.external.sslRequired` setting — the chart
+injects discrete `POSTGRES_*` variables, not a DSN, and no template
+consumes that key. To require SSL, set `POSTGRES_SSL_MODE=require`
+via `extraConfig` / `extraEnv`.
 
 ## Ingress + TLS
 
@@ -141,37 +195,62 @@ state — work queues, agent tracking — that is not safe to share across
 replicas. On rolling updates, the `OrderedReady` + partition strategy ensures
 the new pod fully replaces the old one before anything else happens.
 
-If you need horizontal daemon scaling, that's a larger architectural change
-and is tracked as a separate follow-up to issue #85.
+If you need horizontal daemon scaling, that's a larger architectural
+change; the chart deliberately does not expose daemon replicas.
 
-## How the db-init Job works
+## How schema upgrades work
 
-On every `helm install` / `helm upgrade`, a Kubernetes Job:
+`python -m core.upgrade`, run from the backend image as the database
+owner, is the only schema writer. App pods never write schema — they
+only check that the database's `alembic_version` is at their head, and
+fail that check until it is.
 
-1. Waits for Postgres to become reachable
-2. Creates a `_vigil_schema_versions` marker table
-3. Applies each SQL file in `.Values.dbInit.sqlFiles` order, skipping ones
-   already recorded in the marker table
-4. Terminates (TTL = 600s)
+With `upgrade.enabled: true` (the default), the chart runs hook Jobs:
 
-The SQL files themselves are copies of `infra/database/init/*.sql`, bundled under
-`infra/helm/vigil/files/database-init/` because Helm can only read from inside the
-chart directory. The `helm-chart.yml` CI workflow fails the build if these
-copies drift from the source.
+- `install` (post-install, weight 0): takes an empty database to head.
+- `check` (pre-upgrade, weight -10): runs `--check` after verifying the
+  upgrade acknowledgement. It never scales anything. If it refuses,
+  Helm stops before applying any manifest and the previous release
+  keeps serving.
+- `apply` (pre-upgrade, weight 0): scales every Deployment and
+  StatefulSet of the release except Postgres and Redis to 0, waits for
+  the pods to go, ends leftover `vigil_app` sessions, and applies the
+  upgrade.
 
-To add a new init SQL file:
+Helm takes no Vigil backup. The acknowledgement stands in for the
+restore point, so both values are required on install and on every
+upgrade:
 
-```bash
-cp infra/database/init/NEW.sql infra/helm/vigil/files/database-init/
-# Then edit infra/helm/vigil/values.yaml and add "NEW.sql" to dbInit.sqlFiles in
-# the correct execution order.
-```
+- `upgrade.acknowledgeVersion` — must equal the chart `appVersion`
+  (a value left over from an earlier upgrade refuses, as does an
+  empty one).
+- `upgrade.acknowledgeReason` — why you are upgrading without a Vigil
+  restore point, e.g. "nightly RDS snapshot 2026-10-22". Recorded in
+  the upgrade history.
+
+Set `upgrade.enabled: false` to render none of this — but then you
+must run `python -m core.upgrade` as the owner yourself before app
+pods can start.
 
 ## Upgrades
 
 ```bash
-helm upgrade vigil ./infra/helm/vigil -n vigil --reuse-values --wait
+helm upgrade vigil ./infra/helm/vigil -n vigil --reuse-values \
+  --set upgrade.acknowledgeVersion=1.1.2 \
+  --set upgrade.acknowledgeReason="nightly RDS snapshot" \
+  --timeout 15m
 ```
+
+Plan a maintenance window. Once the `apply` Job has stopped the
+release, it is down until Helm has rolled out the new pods, and source
+events are not queued meanwhile. Set `--timeout` to cover the stop and
+rollout (Helm's default is 5m). Do not use `--wait` for the same reason
+as on install.
+
+If the upgrade fails before a revision ran, the recorded scales come
+back and the previous release serves again. If it fails after a
+revision ran, workloads stay at 0: restore your own database backup
+and run `helm rollback`.
 
 The chart's default image tag resolves to `Chart.AppVersion`, which
 release-please bumps in lockstep with the chart `version` on every
@@ -181,7 +260,9 @@ different tag than the chart's `appVersion` (for example, to deploy a
 `:latest` build for testing):
 
 ```bash
-helm upgrade vigil ./infra/helm/vigil -n vigil --reuse-values --wait \
+helm upgrade vigil ./infra/helm/vigil -n vigil --reuse-values \
+  --set upgrade.acknowledgeVersion=1.1.2 \
+  --set upgrade.acknowledgeReason="nightly RDS snapshot" \
   --set backend.image.tag=latest \
   --set daemon.image.tag=latest
 ```
@@ -190,46 +271,35 @@ Pod checksums on the ConfigMap + Secret force pod restarts when config
 changes, so `helm upgrade --set config.X=Y --reuse-values` will do the right
 thing.
 
-> ⚠️ **First upgrade when `dbInit.sqlFiles` has changed** — `helm
-> upgrade --reuse-values` reuses the *previous release's* coalesced
-> values, which means a longer `dbInit.sqlFiles` list in the new chart
-> is silently overwritten by the previous (shorter) one. Any new SQL
-> files in the bump won't run, and code that touches their tables
-> crashes at runtime. On the first upgrade after a chart bump that
-> added init SQL, use one of:
->
-> ```bash
-> # Helm 3.14+ — reset to new defaults, then layer user overrides on top
-> helm upgrade vigil ./infra/helm/vigil -n vigil --reset-then-reuse-values --wait
->
-> # Or pass an explicit values file so the new defaults aren't lost
-> helm upgrade vigil ./infra/helm/vigil -n vigil -f my-values.yaml --wait
-> ```
->
-> Subsequent upgrades that don't touch `dbInit.sqlFiles` can go back to
-> plain `--reuse-values`.
-
 ## Uninstall
 
 ```bash
 helm uninstall vigil -n vigil
-kubectl delete pvc -n vigil -l app.kubernetes.io/instance=vigil  # optional: drop data
+kubectl get pvc -n vigil   # StatefulSet volume claims carry no instance label — list them first
+kubectl delete pvc -n vigil <claim-names-from-the-listing>  # optional: drop data
 kubectl delete namespace vigil
 ```
 
 PVCs are **not** auto-deleted with the release — that's a safety measure
-against accidental data loss.
+against accidental data loss. The StatefulSets' `volumeClaimTemplates`
+carry no labels, so a label selector such as
+`app.kubernetes.io/instance=vigil` matches nothing; delete claims by
+the explicit names shown by `kubectl get pvc`.
 
 ## NetworkPolicies
 
 Flip `networkPolicies.enabled=true` to lock down inter-pod traffic. The chart
 emits a default-deny policy plus per-component allow rules:
 
-- Postgres / Redis: accept only from backend, daemon, llm-worker, and the
-  db-init Job
+- Postgres: accepts only from backend, daemon, llm-worker, agent-worker,
+  and agent-serve
+- Redis: accepts only from backend, daemon, llm-worker, and agent-worker
+- The upgrade Jobs get their own hook NetworkPolicy in the upgrade
+  template, separate from the per-component policies above
 - Daemon webhook (port 8081): restricted to CIDRs listed in
-  `networkPolicies.daemon.webhookAllowFrom` — empty list means
-  cluster-internal only
+  `networkPolicies.daemon.webhookAllowFrom` — an empty list omits the
+  CIDR rule entirely, leaving only the same-namespace pods rule
+  (`podSelector: {}`)
 - Backend: accepts traffic from the ingress controller's namespace (by
   label selector) + cluster-internal
 
@@ -259,8 +329,9 @@ observability:
       release: kube-prometheus-stack  # match your Prometheus instance's selector
 ```
 
-The daemon's `/metrics` endpoint only serves traffic when
-`config.VIGIL_OTEL_ENABLED=true` — flip both together.
+The daemon's `/metrics` endpoint on port 9090 only serves traffic when
+`DAEMON_METRICS_ENABLED` is on — it defaults to `"true"` in the chart's
+config, so the endpoint serves unless you turn it off.
 
 ### In-chart OTEL Collector
 
@@ -286,12 +357,14 @@ otelCollector:
       pipelines:
         traces:
           exporters: [otlphttp/jaeger]
-
-config:
-  VIGIL_OTEL_ENABLED: "true"
-  # Auto-rewritten to http://<release>-opentelemetry-collector:4317 when
-  # otelCollector.enabled=true, but you can override if needed.
 ```
+
+Telemetry is enabled by setting a non-empty
+`OTEL_EXPORTER_OTLP_ENDPOINT` — empty exports nothing. When
+`otelCollector.enabled=true`, the chart rewrites
+`OTEL_EXPORTER_OTLP_ENDPOINT` to
+`http://<release>-opentelemetry-collector:4317` in the rendered
+ConfigMap, but you can override if needed.
 
 ## Autoscaling the LLM worker
 
@@ -327,9 +400,13 @@ llmWorker:
       listLength: "5"   # 1 replica per 5 queued items
 ```
 
-Works with all three Redis backends (in-chart, Bitnami subchart, external).
-When the Bitnami subchart is active, the chart also emits a KEDA
-`TriggerAuthentication` referencing the Bitnami-generated Secret.
+For an external Redis, set `llmWorker.autoscaling.keda.redisAddress`
+explicitly (host:port form, without scheme or password): the KEDA
+scaler takes its address only from that value when neither the in-chart
+Redis nor the Bitnami subchart is active, and does not parse
+`redis.external.url`. When Redis auth is in play — the Bitnami subchart
+or the in-chart Redis — the chart also emits a KEDA
+`TriggerAuthentication` referencing the corresponding Secret.
 
 ## Choosing a Postgres/Redis backend
 
@@ -341,8 +418,8 @@ Three modes, mutually exclusive:
 | Bitnami subchart | production, want HA / metrics exporters / replicas | `postgresql.bitnami.enabled=true` + `redis.bitnami.enabled=true` |
 | External | managed DB (RDS, Aurora, ElastiCache, etc.) | `postgresql.enabled=false` + `postgresql.external.*` |
 
-Bitnami is opt-in because it adds ~2MB of subchart assets and requires
-`helm dependency update`. Run once after cloning:
+Bitnami is opt-in because it requires `helm dependency update` (the
+subcharts are not vendored in the chart). Run once after cloning:
 
 ```bash
 helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -379,7 +456,7 @@ Off by default; flip on for demo clusters or local testing only:
 
 ```yaml
 splunk:
-  enabled: true    # ClusterIP Service on 8000 (web), 8088 (HEC), 8089 (mgmt)
+  enabled: true    # ClusterIP Service on 8000 (web), 8088 (HEC), 8089 (mgmt), 9997 (forwarder)
   persistence:
     size: 50Gi
 
@@ -394,8 +471,8 @@ NOTES.txt warns if either is enabled alongside `config.DEV_MODE=false`.
 
 See [HELM-SECRETS.md](/docs/helm-secrets/) for end-to-end workflows covering
 [Bitnami SealedSecrets](https://github.com/bitnami-labs/sealed-secrets) and
-[Mozilla SOPS](https://github.com/getsops/sops), plus a comparison of all
-four supported secret-management patterns.
+[Mozilla SOPS](https://github.com/getsops/sops), plus a comparison of the
+supported secret-management patterns.
 
 ## Out of scope (today)
 
@@ -407,10 +484,12 @@ Not yet implemented; contributions welcome:
 
 ## Troubleshooting
 
-**`db-init` Job fails with "role does not exist"** — the in-chart Postgres
-StatefulSet hadn't finished initializing yet. The Job retries (`backoffLimit:
-3`); if it still fails, check `kubectl logs -n vigil job/vigil-db-init` and
-the Postgres pod logs.
+**Upgrade Job refuses to run** — check the acknowledgement values:
+`upgrade.acknowledgeVersion` must equal the chart `appVersion` and
+`upgrade.acknowledgeReason` must be non-empty, on install and on every
+upgrade. If an upgrade failed after a revision ran, workloads stay
+scaled to 0 — restore your own database backup and run
+`helm rollback`.
 
 **Daemon pod keeps restarting** — probe the `/health` endpoint directly:
 `kubectl exec -n vigil vigil-daemon-0 -- curl http://localhost:9091/health`.

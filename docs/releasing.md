@@ -23,19 +23,25 @@ Vigil follows [Semantic Versioning](https://semver.org/).
 | File                          | Field                              | Managed by release-please     |
 |-------------------------------|------------------------------------|-------------------------------|
 | `VERSION`                     | (whole file)                       | yes                           |
+| `scripts/vigil-support/VERSION` | (whole file)                     | yes                           |
 | `infra/helm/vigil/Chart.yaml`       | `appVersion`                       | yes                           |
 | `infra/helm/vigil/Chart.yaml`       | `version`                          | yes (lockstep with appVersion)|
 | `clients/web/package.json`       | `version`                          | yes                           |
 | `clients/web/package-lock.json`  | `version` (root + `packages['']`)  | yes                           |
+| `clients/desktop/package.json`   | `version`                          | yes                           |
+| `clients/desktop/package-lock.json` | `version` (root + `packages['']`) | yes                        |
+| `clients/claude-code/.claude-plugin/plugin.json` | `version`           | yes                           |
 
 See "Chart version vs appVersion" below for why both chart fields are
 bumped together.
 
 The Python backend reads `VERSION` directly at import time (see
-`core/version.py`), so the FastAPI app version, the
-`core.version.__version__` attribute, and the `/health` endpoint's `version`
-field all stay in sync with `VERSION` automatically. No release-please
-configuration is needed for the backend.
+`core/version.py`), so the `core.version.__version__` attribute and the
+`version` field reported by the health and root endpoints (including
+`/api/health` and `/api/health/ready`) stay in sync with `VERSION`
+automatically. No release-please configuration is needed for the backend.
+The FastAPI app's own `version` is separate: it is the frozen
+API-contract version `"1"`, not the application version.
 
 ## How a Release Happens
 
@@ -44,42 +50,50 @@ Maintainers do not hand-bump versions or hand-tag releases — both are
 automated.
 
 1. Every push to `main` runs `.github/workflows/release-please.yml`.
-2. release-please reads commits since the last tag and decides the next
-   version from [Conventional Commit](https://www.conventionalcommits.org/)
-   prefixes in commit messages on `main` (for squash-merged PRs, the PR
-   title becomes the commit — maintainers should adjust PR titles to
-   match the convention before squashing):
-
-   - `fix: ...` → patch bump (`1.0.0` → `1.0.1`)
-   - `feat: ...` → minor bump (`1.0.0` → `1.1.0`)
-   - `feat!: ...` or commits with `BREAKING CHANGE:` in the body → major bump (`1.0.0` → `2.0.0`)
-   - `docs:`, `chore:`, `refactor:`, `test:`, `perf:` appear in the
-     changelog but don't trigger a bump on their own
-   - Commits with no recognized prefix go under "Other" and don't
-     contribute to version selection
-3. It opens (or updates) a single **release PR** titled
-   `chore(main): release X.Y.Z`. The PR bumps `VERSION`,
-   `Chart.yaml` `appVersion` and `version`, `clients/web/package.json`
-   `version`, `clients/web/package-lock.json` (both `$.version` and
-   `$.packages[''].version`), and updates `CHANGELOG.md`.
-4. The release PR stays open and accumulates more commits as they merge.
+2. Every release is a patch by default. The release-please config
+   (`.github/release-please-config.json`) sets
+   `"versioning": "always-bump-patch"`, so commit prefixes do not
+   decide the bump. To ensure a release PR is opened or updated even
+   when merged PR titles carry no conventional prefix, the workflow
+   itself adds an empty commit to `main` — `chore: release X.Y.Z` with
+   a `Release-As: X.Y.Z` trailer — computing the next patch version
+   from `.github/.release-please-manifest.json`. It skips this step
+   only when the head commit is already a release commit or a release
+   PR labelled `autorelease: pending` is already open.
+3. For a minor or major release, a maintainer runs the workflow
+   manually via `workflow_dispatch` and selects the `bump` input
+   (`patch`, `minor`, or `major`; default `patch`). Minor and major
+   bumps come from that manual dispatch, not from landing a `feat:` or
+   `feat!:` commit.
+4. release-please opens (or updates) a single **release PR** titled
+   `chore(main): release X.Y.Z`. The PR bumps every file listed under
+   "What Gets Versioned" above and updates `CHANGELOG.md`. Because the
+   config sets `"changelog-type": "github"`, the changelog is a flat
+   "What's Changed" list of PR titles and authors, with no per-type
+   sections and no "Other" section.
+5. The release PR stays open and accumulates more commits as they merge.
    This is the grouping mechanism — every commit since the last release
    lives in one PR until you ship.
-5. When ready, a maintainer merges the
+6. When ready, a maintainer merges the
    release PR. The merge causes release-please to push tag `vX.Y.Z` and
    create a GitHub Release.
-6. The tag push triggers `.github/workflows/release.yml`, which builds
+7. The tag push triggers `.github/workflows/release.yml`, which builds
    and publishes artifacts.
 
-The only human decision per release is **when to merge the release PR**.
+Human decisions per release are **when to merge the release PR** and,
+for a minor or major release, **running the workflow manually and
+selecting that bump**.
 
 ## Forcing a specific version
 
-release-please normally picks the next version from Conventional Commit
-prefixes — highest bump wins (`feat:` → minor, `fix:` → patch, etc.).
-Sometimes you need to override that: to unstick a stalled release PR,
-to reserve a milestone version, or to skip a number on purpose. Push
-an empty commit to `main` with a `Release-As:` trailer:
+Forcing a version is no longer an exotic override: on ordinary pushes
+the workflow itself auto-generates a `Release-As:` commit for the next
+patch version (see "How a Release Happens" above), and minor/major
+bumps are selected via the workflow's `workflow_dispatch` `bump`
+input. A hand-written `Release-As:` trailer is still the way to force
+a specific version outside that scheme — to unstick a stalled release
+PR, to reserve a milestone version, or to skip a number on purpose.
+Push an empty commit to `main` with a `Release-As:` trailer:
 
 ```bash
 git commit --allow-empty \
@@ -89,20 +103,9 @@ git push origin main
 ```
 
 The next release-please run reads the trailer and forces the release
-PR to use that exact version, regardless of what the Conventional
-Commits in the window would otherwise compute. The override is
-one-shot — subsequent merged commits go back to normal accounting.
-
-A common reason to reach for this: `ct lint` is blocking the release
-PR because the chart `version` field "didn't bump" — release-please
-computed the same patch number that's already on disk (e.g. after a
-manual chart-version bump in an earlier PR). Forcing the next patch
-gives the chart-testing job a real diff to validate and unblocks the
-release.
-
-The opposite trailer also exists: `Release-As: skip` tells
-release-please to ignore the commit entirely — useful for `chore:` or
-similar commits you don't want appearing in any release's changelog.
+PR to use that exact version, regardless of the patch version the
+workflow would otherwise compute. The override is one-shot —
+subsequent merged commits go back to normal accounting.
 
 ## Chart Version vs appVersion
 
@@ -157,11 +160,16 @@ that overwrites it.
 1. Open a PR bumping the version to the new release (e.g. `1.0.1`) in
    all of the following:
    - `VERSION`
+   - `scripts/vigil-support/VERSION`
    - `infra/helm/vigil/Chart.yaml` `appVersion`
    - `infra/helm/vigil/Chart.yaml` `version` (lockstep with `appVersion`)
    - `clients/web/package.json` `version`
    - `clients/web/package-lock.json` — both `$.version` and
      `$.packages[''].version`
+   - `clients/desktop/package.json` `version`
+   - `clients/desktop/package-lock.json` — both `$.version` and
+     `$.packages[''].version`
+   - `clients/claude-code/.claude-plugin/plugin.json` `version`
    - `.github/.release-please-manifest.json` — set the `"."` entry to
      the new version
    - `CHANGELOG.md` — prepend a section with the new version, date, and
@@ -173,7 +181,8 @@ that overwrites it.
    git tag -s v1.0.1 -m "Release v1.0.1"
    git push origin v1.0.1
    ```
-4. The tag push triggers `release.yml` (build, scan, deploy).
+4. The tag push triggers `release.yml` (build and publish the four
+   GHCR images, smoke-test, update the Release notes).
 5. **Manually create the GitHub Release** at
    [github.com/Vigil-SOC/vigil/releases/new](https://github.com/Vigil-SOC/vigil/releases/new),
    selecting the tag you just pushed. release-please normally creates

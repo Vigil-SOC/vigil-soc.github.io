@@ -5,7 +5,7 @@ permalink: /docs/testing/
 ---
 
 {% raw %}
-Complete guide to testing the Vigil platform.
+Guide to the test suites that exist in the Vigil repository at 1.1.2.
 
 ## Table of Contents
 
@@ -14,24 +14,39 @@ Complete guide to testing the Vigil platform.
 - [Running Tests](#running-tests)
 - [Writing Tests](#writing-tests)
 - [Substituting Services](#substituting-services)
-- [Coverage Requirements](#coverage-requirements)
+- [Coverage](#coverage)
 - [Best Practices](#best-practices)
 
 ---
 
 ## Overview
 
-The Vigil testing strategy includes:
+There is no `tests/unit/` or `tests/integration/` tree in the repository, and
+the web UI has no test suite. The suites that exist are all under `tests/`
+and are mostly live or evaluation suites that exercise a real stack:
 
-- **Unit Tests**: Test individual functions and classes in isolation
-- **Integration Tests**: Test API endpoints with database and mocked external services
-- **End-to-End Tests**: Test complete user workflows (future)
-- **Performance Tests**: Benchmark critical operations
+- **Live connector tests** (`tests/live/`): each connector run against a real
+  instance. Opt-in — the tree is skipped unless `VIGIL_LIVE_CONNECTORS=1`.
+- **Medic Compose tests** (`tests/medic_compose/`): live tests of the Medic
+  Compose stack (start path, enable, key groups, last-seen, full compose).
+- **Medic evaluation tests** (`tests/medic_eval/`): fault-injection and
+  evaluation cells, including the `tests/medic_eval/inject/` cell suites,
+  run against a Compose evaluation stack.
+
+The agent service (`services/agent/`) keeps test fixtures and replay data
+under `services/agent/tests/` (fixtures and support files, not a separate
+documented runner on this page).
+
+There is no end-to-end suite for the web UI and no performance test suite in
+`tests/`; neither is part of the current testing strategy.
 
 ### Test Frameworks
 
-**Backend**: pytest with coverage, async support, and mocking
-**Frontend**: Vitest with React Testing Library
+**Backend**: pytest, configured by `tests/pytest.ini`, with the shared
+fixtures in `tests/conftest.py`.
+**Frontend**: `clients/web` has no test framework, no test scripts and no
+test files at 1.1.2 — its `package.json` scripts are only `dev`, `build`,
+`lint`, `preview` and `generate:api`.
 
 ---
 
@@ -43,28 +58,23 @@ The Vigil testing strategy includes:
 # Install dependencies
 pip install -r requirements.txt
 
-# Test dependencies include:
+# The test dependencies in requirements.txt are:
 # - pytest (test framework)
 # - pytest-asyncio (async test support)
 # - pytest-cov (coverage reporting)
-# - pytest-mock (mocking)
-# - faker (test data generation)
-# - freezegun (time mocking)
-# - responses (HTTP mocking)
 ```
+
+No other test libraries are installed by `requirements.txt`. In particular
+there is no `pytest-xdist`, `pytest-mock`, `pytest-timeout`, `faker`,
+`freezegun` or `responses` — commands and examples that need them do not
+work against this repository.
 
 ### Frontend Setup
 
 ```bash
 cd clients/web
 npm install
-
-# Test dependencies include:
-# - vitest (test framework)
-# - @testing-library/react (component testing)
-# - @testing-library/user-event (user interaction)
-# - jsdom (DOM environment)
-# - msw (API mocking)
+npm run build   # type-check and build; there is no test command
 ```
 
 ---
@@ -74,234 +84,114 @@ npm install
 ### Backend Tests
 
 ```bash
-# Run all tests
+# Run everything pytest collects under tests/
+# (the live trees skip themselves unless their opt-in is set — see below)
 pytest
 
-# Run unit tests only
-pytest tests/unit/
-
-# Run integration tests only
-pytest tests/integration/
-
-# Run with coverage
+# Run with coverage (the form tests/pytest.ini already applies)
 pytest --cov=services --cov=core --cov-report=html
 
-# Run specific test file
-pytest tests/unit/test_auth.py
+# Run a specific real test file
+pytest tests/live/test_search_backends.py --no-cov
 
-# Run specific test
-pytest tests/unit/test_auth.py::TestPasswordHashing::test_hash_password
+# Run a specific test
+pytest tests/medic_compose/test_compose_live.py -k "<test name>"
 
-# Run tests matching pattern
-pytest -k "auth"
+# Run tests matching a name pattern
+pytest -k "search"
 
 # Run with verbose output
 pytest -v
-
-# Run in parallel (faster)
-pytest -n auto
 ```
 
-### Frontend Tests
+There is no `tests/run-tests.sh` script and no parallel `-n auto` mode:
+`pytest-xdist` is not installed.
+
+### Live Connector Tests
+
+The live connector suite is opt-in. A probe whose credentials are absent is
+skipped as not configured rather than failed. Run a group the way its CI
+workflow does, for example the search-backends group:
 
 ```bash
-cd clients/web
-
-# Run all tests
-npm test
-
-# Run tests once (CI mode)
-npm run test:unit
-
-# Watch mode (auto-rerun on changes)
-npm run test:watch
-
-# Run with coverage
-npm run test:coverage
-
-# Run specific test file
-npm test src/utils/api.test.ts
+LIVE_ENV_FILE=/tmp/live.env bash tests/live/ci/search_backends.sh up
+set -a; . /tmp/live.env; set +a
+VIGIL_LIVE_CONNECTORS=1 pytest tests/live/test_search_backends.py --no-cov
+bash tests/live/ci/search_backends.sh down
 ```
 
-### Quick Test Script
+See `tests/live/ACCOUNTS.md` for the accounts the probes expect.
+
+### Medic Tests
+
+The Medic Compose tests are live Compose tests. CI runs a single file with
+the repository conftest and default addopts disabled, because
+`tests/conftest.py` imports the backend's settings:
 
 ```bash
-# Run the full suite (backend pytest + frontend vitest)
-./tests/run-tests.sh
+python -m pytest --noconftest -o addopts= -p no:cacheprovider -rs \
+  tests/medic_compose/test_compose_live.py
+```
+
+The Medic evaluation cells under `tests/medic_eval/inject/` are also
+opt-in; for example the stub cells require a live evaluation stack:
+
+```bash
+VIGIL_MEDIC_EVAL_LIVE=1 python -m pytest tests/medic_eval/inject/test_stub_cells.py
 ```
 
 ---
 
 ## Writing Tests
 
-### Unit Test Example
+### Where tests live
 
-**File**: `tests/unit/test_service.py`
+Add a test to the suite it belongs to:
 
-```python
-import pytest
-from services.my_service import MyService
+| Suite | Directory | Character |
+|---|---|---|
+| Live connector checks | `tests/live/` | One probe per connector, against a real instance; skipped without `VIGIL_LIVE_CONNECTORS=1` |
+| Medic Compose | `tests/medic_compose/` | Live Compose stack tests (`test_compose_live.py`, `test_enable_live.py`, `test_key_group_live.py`, `test_last_seen_live.py`, `test_start_path_live.py`) |
+| Medic evaluation | `tests/medic_eval/` and `tests/medic_eval/inject/` | Evaluation and fault-injection cells (`test_config_cells.py`, `test_helm_config_cells.py`, `test_host_native_cells.py`, `test_pipeline_cells.py`, `test_stub_cells.py`, `test_survival_checks.py`) |
 
-class TestMyService:
-    """Test MyService functionality."""
-    
-    def test_basic_function(self):
-        """Test basic function returns expected result."""
-        result = MyService.calculate(10, 5)
-        assert result == 15
-    
-    @pytest.mark.asyncio
-    async def test_async_function(self):
-        """Test async function."""
-        result = await MyService.fetch_data("123")
-        assert result is not None
-    
-    def test_with_mock(self, mocker):
-        """Test with mocked dependency."""
-        mock_db = mocker.patch('services.my_service.database')
-        mock_db.query.return_value = [{"id": "1"}]
-        
-        result = MyService.get_records()
-        assert len(result) == 1
-```
+Real files in those directories are the working examples for each suite —
+start from the closest existing test rather than from a template.
 
-### Integration Test Example
+### Shared fixtures
 
-**File**: `tests/integration/test_api.py`
+`tests/conftest.py` does not provide per-test data fixtures. It pins the
+environment the suite runs under (authentication on, a test JWT secret,
+CSRF in report-only mode) and defines four autouse fixtures that run for
+every test:
 
-```python
-import pytest
-from fastapi.testclient import TestClient
+- `_reset_settings_cache` — clears the cached `Settings` around each test
+  and ignores the developer's `.env`.
+- `_no_ambient_postgres` — points any accidental database connection at a
+  host that cannot resolve, so a test cannot silently reach a developer's
+  own running stack.
+- `_reset_llm_path_cache` — drops the cached LLM path-health snapshot so
+  one test cannot answer the next.
+- `_bound_to_a_run` — binds a run principal for tool calls, except in tests
+  marked `unbound`.
 
-@pytest.mark.integration
-class TestCaseAPI:
-    """Integration tests for case API."""
-    
-    def test_create_case(self, test_client, auth_headers):
-        """Test case creation endpoint."""
-        response = test_client.post(
-            "/api/cases",
-            headers=auth_headers,
-            json={
-                "title": "Test Case",
-                "priority": "high",
-                "severity": "high"
-            }
-        )
-        
-        assert response.status_code == 201
-        data = response.json()
-        assert data["title"] == "Test Case"
-        assert "id" in data
-    
-    def test_list_cases(self, test_client, auth_headers):
-        """Test listing cases."""
-        response = test_client.get(
-            "/api/cases",
-            headers=auth_headers
-        )
-        
-        assert response.status_code == 200
-        assert isinstance(response.json(), list)
-```
-
-### Frontend Test Example
-
-**File**: `clients/web/src/components/CaseList.test.tsx`
-
-```typescript
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
-import CaseList from './CaseList'
-
-describe('CaseList', () => {
-  it('renders case list', () => {
-    const cases = [
-      { id: '1', title: 'Case 1', priority: 'high' },
-      { id: '2', title: 'Case 2', priority: 'medium' }
-    ]
-    
-    render(<CaseList cases={cases} />)
-    
-    expect(screen.getByText('Case 1')).toBeInTheDocument()
-    expect(screen.getByText('Case 2')).toBeInTheDocument()
-  })
-  
-  it('calls onClick when case is clicked', () => {
-    const handleClick = vi.fn()
-    const cases = [{ id: '1', title: 'Case 1', priority: 'high' }]
-    
-    render(<CaseList cases={cases} onCaseClick={handleClick} />)
-    
-    fireEvent.click(screen.getByText('Case 1'))
-    expect(handleClick).toHaveBeenCalledWith('1')
-  })
-})
-```
+There is no `tests/fixtures/` directory and no shared `test_db_session`,
+`sample_user`, `auth_headers` or `test_client` fixture.
 
 ---
 
-## Test Fixtures
+## Coverage
 
-### Using Shared Fixtures
+Coverage is configured, but no threshold is enforced.
 
-Located in `tests/conftest.py`:
-
-```python
-def test_with_fixtures(test_db_session, sample_user, auth_headers):
-    """Test using multiple fixtures."""
-    # test_db_session: Database session
-    # sample_user: Pre-created user
-    # auth_headers: Authorization headers
-    pass
-```
-
-### JSON Fixtures
-
-Located in `tests/fixtures/`:
-
-```python
-import json
-
-def test_with_json_fixture():
-    """Load test data from JSON file."""
-    with open('tests/fixtures/sample_findings.json') as f:
-        findings = json.load(f)
-    
-    assert len(findings) > 0
-```
-
----
-
-## Coverage Requirements
-
-### Target Coverage
-
-| Component | Unit Coverage | Integration Coverage |
-|-----------|--------------|---------------------|
-| Backend API | 85% | 75% |
-| Services | 80% | 70% |
-| Daemon | 75% | 60% |
-| Database | 70% | 80% |
-| Frontend | 70% | N/A |
-
-### Viewing Coverage Reports
+- `tests/pytest.ini` addopts include `--cov=services --cov=core` with
+  `--cov-fail-under=0`, plus HTML, XML and term-missing reports.
+- The coverage source in `setup.cfg` (`[coverage:run]`) is `services,core`.
+- No CI workflow sets a coverage fail-under threshold.
 
 ```bash
-# Backend
+# Generate an HTML coverage report
 pytest --cov --cov-report=html
 open htmlcov/index.html
-
-# Frontend
-npm run test:coverage
-open coverage/index.html
-```
-
-### Coverage Commands
-
-```bash
-# Check if coverage meets thresholds
-pytest --cov --cov-fail-under=80
 
 # Generate XML coverage for CI
 pytest --cov --cov-report=xml
@@ -310,42 +200,40 @@ pytest --cov --cov-report=xml
 pytest --cov --cov-report=term-missing
 ```
 
+Do not treat any percentage as a repository gate; none is configured.
+
 ---
 
 ## Test Markers
 
-Use markers to categorize tests:
+`tests/pytest.ini` registers only these markers, and addopts include
+`--strict-markers`, so any other marker fails:
+
+| Marker | Meaning (as registered in `tests/pytest.ini`) |
+|---|---|
+| `unit` | Unit tests (fast, isolated) |
+| `unbound` | Calls a tool with no principal bound |
+| `integration` | Integration tests (slower, requires services) |
+| `database` | Database tests |
+| `external_service` | Tests that require an external service to be running |
 
 ```python
-@pytest.mark.unit
-def test_unit():
-    pass
-
 @pytest.mark.integration
 def test_integration():
-    pass
-
-@pytest.mark.slow
-def test_slow_operation():
-    pass
-
-@pytest.mark.performance
-def test_performance_benchmark():
     pass
 ```
 
 Run tests by marker:
 
 ```bash
-# Only unit tests
+# Only tests marked unit
 pytest -m unit
-
-# Skip slow tests
-pytest -m "not slow"
 
 # Only integration tests
 pytest -m integration
 ```
+
+There are no registered `slow`, `performance` or `timeout` markers.
 
 ---
 
@@ -361,19 +249,14 @@ monkeypatch one — it supplies its own instance. Three rules:
 | FastAPI handlers | A `Depends` provider from `core/deps.py` reads `request.app.state.<key>` |
 | Everything else (services, daemon, LLM harnesses) | A constructor keyword argument, defaulting to a locally-built instance |
 
-`tests/unit/_ratchets/test_no_ambient_state.py` enforces this: it fails on a new
-module-level service instantiation *and* on the lazy `global _x` accessor
-shape that #459 retired.
-
 ### Overriding a service in an API test
 
 Use `app.dependency_overrides`, keyed on the provider function itself. The
 handler then talks to your stub and touches no database, LLM, or MCP process.
-Full worked example: `tests/unit/api/test_service_dependency_overrides.py`.
 
 ```python
+from core.api.v1.approvals_router import router as approvals_router
 from core.deps import provide_approvals
-from core.response.approvals_router import router as approvals_router
 
 
 class StubApprovals:
@@ -383,12 +266,15 @@ class StubApprovals:
 
 def test_pending_is_empty():
     app = FastAPI()
-    app.include_router(approvals_router, prefix="/api")
+    app.include_router(approvals_router)
     app.dependency_overrides[provide_approvals] = lambda: StubApprovals()
 
-    resp = TestClient(app).get("/api/approvals/pending")
+    resp = TestClient(app).get("/api/v1/approvals/pending")
     assert resp.json() == {"actions": []}
 ```
+
+The approvals router's prefix is `/api/v1` (with `/api` as a legacy prefix),
+and its pending route returns `{"actions": [...]}`.
 
 A bare `FastAPI()` like the one above runs no lifespan, so `app.state` holds
 nothing — the override *is* the wiring. If you instead build a `TestClient`
@@ -397,19 +283,24 @@ lifespan does run and populates `app.state`; overrides still win.
 
 ### Overriding elsewhere
 
-Outside a request there is no `Depends`, so pass the instance in:
+Outside a request there is no `Depends`, so pass the instance in — using the
+constructors as they actually are at 1.1.2:
 
 ```python
-svc = WorkflowsService(workflow_runs=WorkflowRunService(), approvals=ApprovalService())
-agent = OpenAIAgentService(approvals=stub_approvals)
-claude = ClaudeService(mcp_client=fake_client, mcp_registry=MCPRegistry())
+# core/workflows/workflows_service.py: __init__(workflows_dir=None,
+#   custom_workflows=None, workflow_runs=None) — there is no approvals argument.
+svc = WorkflowsService(workflow_runs=WorkflowRunService())
+
+# core/llm/harness/claude.py: __init__(provider_api_key_ref=None) only.
+claude = ClaudeService()
 ```
 
 ### The one exception: MCPClient
 
 `MCPClient` owns persistent stdio child processes that only its creator closes,
 so exactly one may exist per process. The owner installs it
-(`set_process_mcp_client`) and `process_mcp_client()` returns it.
+(`set_process_mcp_client` in `core/integrations/mcp/client.py`) and
+`process_mcp_client()` returns it.
 
 "One per process, installed by the owner" only holds if the processes are
 enumerated. There are three, and two of them own a client:
@@ -418,9 +309,9 @@ enumerated. There are three, and two of them own a client:
 |---|---|
 | API (`services/api/main.py` lifespan) | yes |
 | Daemon (`services/daemon/main.py` `_init_components`) | yes |
-| ARQ llm-worker (`python -m services.worker`) | **no** — it runs with `use_mcp_tools=False` and reaches data through backend tools |
+| ARQ llm-worker (`python -m services.worker`) | **no** — it constructs `ClaudeService()` directly in `services/worker/jobs.py` and installs no process MCP client |
 
-Before any owner starts — which is the case in a plain unit test — it returns
+Before any owner starts — which is the case in a plain test — it returns
 `None`, so importing the harness never spawns child processes. To supply a fake, pass
 `mcp_client=` to the constructor or override `provide_mcp_client`; only reach
 for `set_process_mcp_client` when the code under test resolves the process slot
@@ -430,36 +321,17 @@ directly.
 
 ## Mocking External Services
 
-### Mocking Claude API
+Prefer substitution over patching: hand the code under test a stub service
+through a dependency override or a constructor argument, as above.
 
-```python
-def test_claude_enrichment(mocker):
-    """Test with mocked Claude API."""
-    mock_response = {
-        "content": [{"type": "text", "text": "Test response"}]
-    }
-    mocker.patch('core.llm.harness.claude.anthropic.Anthropic')
-    
-    result = ClaudeService.enrich_finding({"id": "test"})
-    assert result is not None
-```
+Where a stub cannot be injected, patch with the standard library's
+`unittest.mock` at the place the name is looked up, and patch a method that
+exists. For example, `ClaudeService` (`core/llm/harness/claude.py`) exposes
+`chat(...)`; there is no `enrich_finding` method and no
+`core.llm.harness.claude.anthropic` submodule to patch.
 
-### Mocking Splunk
-
-```python
-@responses.activate
-def test_splunk_search():
-    """Test with mocked Splunk API."""
-    responses.add(
-        responses.GET,
-        'https://splunk.example.com/services/search',
-        json={"results": []},
-        status=200
-    )
-    
-    results = SplunkService.search("query")
-    assert results == []
-```
+There is no installed HTTP-mocking library (`responses` is not a
+dependency), so do not write examples that depend on one.
 
 ---
 
@@ -530,30 +402,30 @@ class TestCases:
     def test_update_case(self):
         update_case(self.case_id)  # Fails if create_case didn't run
 
-# Good - independent tests
+# Good - independent tests, each arranging its own data
 class TestCases:
-    def test_create_case(self, test_db):
+    def test_create_case(self):
         case_id = create_case()
         assert case_id is not None
     
-    def test_update_case(self, test_db, sample_case):
-        result = update_case(sample_case.id)
+    def test_update_case(self):
+        case = create_case()
+        result = update_case(case.id)
         assert result is True
 ```
 
 ### 5. Use Factories for Test Data
 
+Build test data with a plain factory function and explicit defaults; do
+not depend on a data-generation library, as none is installed.
+
 ```python
-from faker import Faker
-
-fake = Faker()
-
 def create_test_user(**kwargs):
     """Factory for creating test users."""
     defaults = {
-        "username": fake.user_name(),
-        "email": fake.email(),
-        "password": fake.password()
+        "username": "testuser",
+        "email": "testuser@example.com",
+        "password": "test-password"
     }
     defaults.update(kwargs)
     return User(**defaults)
@@ -598,11 +470,19 @@ def test_complex_logic():
 
 ## CI/CD Integration
 
-Tests run automatically in GitHub Actions:
+Test execution in GitHub Actions at 1.1.2 is split by suite, not run as a
+single unit-plus-integration job:
 
-- **On Pull Request**: Unit + Integration tests
-- **On Push to main**: Full test suite + coverage
-- **Nightly**: Full suite + performance tests
+- `.github/workflows/ci-cd.yml` runs lint, generated-types, Docker,
+  agent-image, setup-matrix and Helm checks — it contains no pytest test job.
+- `.github/workflows/connectors-live.yml` runs the live connector suite,
+  e.g. `pytest tests/live/test_search_backends.py --no-cov`,
+  `pytest tests/live/test_local.py --no-cov` and
+  `pytest tests/live/test_free_tier.py --no-cov`.
+- `.github/workflows/medic.yml` and `.github/workflows/medic-nightly.yml`
+  run the Medic Compose tests under `tests/medic_compose/`.
+- `.github/workflows/nightly.yml` is a security audit only (`pip-audit`)
+  plus a Slack notification; it runs no test suite and no performance tests.
 
 See [CI_CD_GUIDE.md](/docs/ci-cd/) for details.
 
@@ -612,14 +492,20 @@ See [CI_CD_GUIDE.md](/docs/ci-cd/) for details.
 
 ### Common Issues
 
-**Issue**: `ImportError: No module named 'backend'`
-**Solution**: Ensure you're running from project root and PYTHONPATH is set
+**Issue**: Import errors for application modules
+**Solution**: The code lives in `core/` and `services/` — there is no
+`backend` package. Run pytest from the project root so those packages are
+importable.
 
 **Issue**: Database tests failing
-**Solution**: Ensure PostgreSQL is running: `docker-compose up -d postgres`
+**Solution**: Ensure PostgreSQL is running, using the repository Compose
+file: `docker compose -f infra/docker/docker-compose.yml up -d postgres redis bifrost`
 
 **Issue**: Async tests timing out
-**Solution**: Increase timeout in pytest.ini or use `@pytest.mark.timeout(30)`
+**Solution**: `pytest-timeout` is not installed and the `timeout` marker is
+not registered, so there is no timeout marker to apply. Investigate the
+awaited operation itself, and check the async configuration in
+`tests/pytest.ini` (`--asyncio-mode=auto`).
 
 **Issue**: Fixtures not found
 **Solution**: Check `conftest.py` is in the right location and fixtures are properly defined
@@ -629,7 +515,5 @@ See [CI_CD_GUIDE.md](/docs/ci-cd/) for details.
 ## Additional Resources
 
 - [pytest Documentation](https://docs.pytest.org/)
-- [Vitest Documentation](https://vitest.dev/)
-- [React Testing Library](https://testing-library.com/react)
 - [Testing Best Practices](https://testdriven.io/blog/testing-best-practices/)
 {% endraw %}

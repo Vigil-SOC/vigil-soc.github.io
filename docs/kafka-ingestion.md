@@ -6,8 +6,8 @@ permalink: /docs/kafka-ingestion/
 
 {% raw %}
 Stream security findings into Vigil from Apache Kafka topics. Runs
-alongside the existing REST polling (`daemon/poller.py`) and file/webhook
-upload (`backend/api/ingestion.py`) paths — Kafka messages land in the
+alongside the existing REST polling (`services/daemon/poller.py`) and file/webhook
+upload (`services/api/routers/ingestion.py`) paths — Kafka messages land in the
 same processing pipeline (triage, enrichment, autonomous investigation).
 
 ---
@@ -31,12 +31,11 @@ overhead you don't need.
 | JSON messages                                        | Avro, Protobuf                        |
 | One consumer group                                   | Confluent Schema Registry             |
 | Redis-backed durable dedup                           | Dead-letter topic                     |
-| PLAINTEXT / SSL / SASL_PLAINTEXT / SASL_SSL          | Per-partition lag metrics / Grafana   |
-| Settings UI config + env-var fallback                | Topic → normalizer mapping            |
+| PLAINTEXT / SSL / SASL_SSL                           | Grafana                               |
+| Per-partition lag metrics                            | Topic → normalizer mapping            |
+| Settings UI config + env-var fallback                |                                       |
 
-See the "Follow-ups" section of
-[plans/please-examine-gh-issue-squishy-hippo.md](https://github.com/Vigil-SOC/vigil/blob/main/.claude/plans/please-examine-gh-issue-squishy-hippo.md)
-or [GH issue #83](https://github.com/Vigil-SOC/vigil/issues/83) for the
+See [GH issue #83](https://github.com/Vigil-SOC/vigil/issues/83) for the
 post-MVP roadmap.
 
 ---
@@ -49,7 +48,7 @@ Vigil ships a single-broker KRaft-mode Kafka service under the `kafka`
 Docker Compose profile (no Zookeeper):
 
 ```bash
-cd docker
+cd infra/docker
 docker compose --profile kafka up -d kafka
 ```
 
@@ -75,7 +74,7 @@ Two equivalent paths — pick whichever you prefer.
 
 **Option A: Settings UI** (recommended)
 
-1. Open Vigil → **Settings** → **Kafka**.
+1. Open Vigil → **Settings** → **Data Ingestion**, and find the **Kafka** stream.
 2. Toggle **Enable Kafka consumer** on.
 3. Set **Bootstrap servers** (e.g. `localhost:9092` for local dev,
    `kafka:29092` when the daemon runs inside Docker).
@@ -151,7 +150,7 @@ python produce.py
 
 ### 5. Verify
 
-- **Settings UI → Kafka tab**: the status panel shows
+- **Settings UI → Data Ingestion → Kafka**: the status panel shows
   `CONNECTED — N consumed, N enqueued, N dupes skipped` and a last-message
   timestamp.
 - **Findings page**: the new finding appears with `data_source` set to
@@ -210,8 +209,9 @@ If Redis is unreachable, the consumer falls back to an in-memory set
 (identical behaviour to the pre-Kafka poller). A warning is logged
 and the dedup set is lost on daemon restart.
 
-The same `RedisDedupSet` now backs the REST poller too
-(`daemon/poller.py`), so poller restarts no longer re-process findings.
+The same `RedisDedupSet` class also backs the REST poller
+(`services/daemon/poller.py`, with separate per-source namespaces), so
+poller restarts no longer re-process findings.
 
 ---
 
@@ -226,7 +226,7 @@ All env vars, with their defaults:
 | `KAFKA_CONSUMER_GROUP` | `vigil-soc` | Consumer group id |
 | `KAFKA_TOPICS` | _(empty)_ | Comma-separated list |
 | `KAFKA_AUTO_OFFSET_RESET` | `latest` | `latest` or `earliest` |
-| `KAFKA_SECURITY_PROTOCOL` | `PLAINTEXT` | `PLAINTEXT`\|`SSL`\|`SASL_PLAINTEXT`\|`SASL_SSL` |
+| `KAFKA_SECURITY_PROTOCOL` | `PLAINTEXT` | `PLAINTEXT`\|`SSL`\|`SASL_SSL` |
 | `KAFKA_SASL_MECHANISM` | _(empty)_ | `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512` |
 | `KAFKA_SASL_USERNAME` | _(empty)_ | |
 | `KAFKA_SASL_PASSWORD` | _(empty)_ | **env-only — never stored in DB** |
@@ -301,7 +301,8 @@ not `localhost:9092` — that one's for producers running on the host.
     "last_error": null,
     "last_error_at": null,
     "topics": ["security.findings"],
-    "consumer_group": "vigil-soc"
+    "consumer_group": "vigil-soc",
+    "partitions": []
   }
 }
 ```
@@ -323,7 +324,7 @@ counters so the UI still renders.
 
 **Messages not deduplicated across daemon restarts**
 - Redis is probably unreachable — check for
-  `RedisDedupSet[kafka] using in-memory fallback` in `logs/daemon.log`.
+  `RedisDedupSet[kafka] Redis unavailable, using in-memory fallback` in `logs/daemon.log`.
 - Once Redis is healthy, restart the daemon; dedup will rebuild
   automatically on first message.
 
@@ -345,11 +346,10 @@ counters so the UI still renders.
 
 ## Related files
 
-- [services/kafka_consumer_service.py](https://github.com/Vigil-SOC/vigil/blob/main/services/kafka_consumer_service.py) — consumer loop
-- [daemon/kafka_ingestor.py](https://github.com/Vigil-SOC/vigil/blob/main/daemon/kafka_ingestor.py) — start/stop wrapper
-- [daemon/dedup.py](https://github.com/Vigil-SOC/vigil/blob/main/daemon/dedup.py) — Redis-backed dedup shared with the poller
-- [backend/api/kafka.py](https://github.com/Vigil-SOC/vigil/blob/main/backend/api/kafka.py) — REST endpoints
-- [clients/web/src/components/settings/KafkaTab.tsx](https://github.com/Vigil-SOC/vigil/blob/main/clients/web/src/components/settings/KafkaTab.tsx) — UI
+- [core/ingestion/kafka_consumer_service.py](https://github.com/Vigil-SOC/vigil/blob/main/core/ingestion/kafka_consumer_service.py) — consumer loop
+- [services/daemon/kafka_ingestor.py](https://github.com/Vigil-SOC/vigil/blob/main/services/daemon/kafka_ingestor.py) — start/stop wrapper
+- [core/ingestion/dedup.py](https://github.com/Vigil-SOC/vigil/blob/main/core/ingestion/dedup.py) — Redis-backed dedup shared with the poller
+- [core/ingestion/kafka_router.py](https://github.com/Vigil-SOC/vigil/blob/main/core/ingestion/kafka_router.py) — REST endpoints
+- [clients/web/src/screens/settings/DataIngestion.tsx](https://github.com/Vigil-SOC/vigil/blob/main/clients/web/src/screens/settings/DataIngestion.tsx) — UI (`KafkaForm`)
 - [infra/docker/docker-compose.yml](https://github.com/Vigil-SOC/vigil/blob/main/infra/docker/docker-compose.yml) — `kafka` profile
-- [tests/unit/test_dedup.py](https://github.com/Vigil-SOC/vigil/blob/main/tests/unit/test_dedup.py), [tests/unit/test_kafka_consumer.py](https://github.com/Vigil-SOC/vigil/blob/main/tests/unit/test_kafka_consumer.py) — unit tests
 {% endraw %}

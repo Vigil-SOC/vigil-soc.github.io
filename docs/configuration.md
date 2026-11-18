@@ -16,9 +16,10 @@ Vigil splits configuration into two stores:
    and Settings → Integrations) or by `set_secret()` programmatically. The
    master key sits next to it at `~/.vigil/master.key`.
 
-LLM provider keys (Anthropic, OpenAI, Ollama) are managed entirely through
+LLM provider keys (Anthropic, OpenAI, Gemini) are managed entirely through
 the UI — they land in the encrypted store and are pushed to Bifrost via its
-admin API in the same request. See [STATE.md](/docs/state/) for the full secret
+admin API in the same request. Ollama is configured by URL and has no API
+key. See [STATE.md](/docs/state/) for the full secret
 inventory.
 
 ## `.env`
@@ -35,9 +36,10 @@ chmod 600 .env
 | Variable | Description |
 |----------|-------------|
 | `DEV_MODE` | Bypass auth for local development |
-| `DATABASE_URL` | PostgreSQL connection (default in docker-compose) |
+| `DATABASE_URL` | PostgreSQL connection for the TypeScript agent (its knob; the Python backend does not consult it) |
+| `POSTGRES_HOST` / `POSTGRES_PORT` / `POSTGRES_DB` / `POSTGRES_USER` | Python backend PostgreSQL connection (defaults `localhost` / `5432` / `deeptempo_soc` / `deeptempo`; or the encrypted-store DSN) |
 | `REDIS_URL` | ARQ job queue connection |
-| `BIFROST_URL` | LLM gateway address (default `http://bifrost:8080`) |
+| `BIFROST_URL` | LLM gateway address (default `http://localhost:8080` on the host; `http://bifrost:8080` inside the compose network) |
 | `BIND_HOST` / port numbers | Network binding |
 | `SECRETS_BACKEND` | `encrypted` (default), `dotenv`, `env`, `keyring` — where new secrets are written |
 | `ENABLE_KEYRING` | `false` (default), `true` — include OS keyring in read chain |
@@ -45,20 +47,22 @@ chmod 600 .env
 
 ### What does NOT go in `.env`
 
-- `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / Ollama config — Settings → AI / LLM Providers
-- `SPLUNK_PASSWORD`, `CROWDSTRIKE_CLIENT_SECRET`, `VIRUSTOTAL_API_KEY`, etc. — Settings → Integrations
+- `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` — Settings → AI / LLM Providers (Ollama is configured by URL, not by an API key)
+- `SPLUNK_PASSWORD`, `FALCON_CLIENT_SECRET`, `VIRUSTOTAL_API_KEY`, etc. — Settings → Integrations (`CROWDSTRIKE_CLIENT_SECRET` is the env-file name; the Settings UI stores the CrowdStrike client secret as `FALCON_CLIENT_SECRET`)
 - Any password, token, or private key
 
-Placeholder values for these in `.env` are ignored once the encrypted store
-has a value, and a stale placeholder can mask the real key.
+A stale placeholder in a higher-priority source (such as the process
+environment) can shadow the real value in a lower-priority one; once a value
+is in the encrypted store, `.env` placeholders for it are ignored.
 
 ## Secrets read priority
 
 When reading, backends are checked in order:
 1. Encrypted file (`~/.vigil/secrets.enc`)
 2. Process environment variables
-3. `.env` file (legacy / interoperability)
-4. OS keyring (only if `ENABLE_KEYRING=true`)
+3. Repo-root `.env` file (read-only)
+4. State-dir `.env` file (legacy / interoperability)
+5. OS keyring (only when explicitly enabled, `ENABLE_KEYRING=true`)
 
 ## Deployment Examples
 
@@ -68,23 +72,19 @@ When reading, backends are checked in order:
 ./start.sh
 ```
 
-### Docker
-
-```bash
-docker run --env-file .env vigil
-```
-
 ### Docker Compose
 
-```yaml
-services:
-  vigil:
-    image: vigil
-    ports:
-      - "6987:6987"
-    env_file:
-      - .env
+The full stack (including postgres, redis, and bifrost) is defined in
+`infra/docker/docker-compose.yml`:
+
+```bash
+docker compose -f infra/docker/docker-compose.yml up -d
 ```
+
+Published images are under `ghcr.io/vigil-soc/` — for example
+`ghcr.io/vigil-soc/vigil-backend:<tag>` for the backend. There is no
+single-container `vigil` image; the backend requires the other services
+in the Compose stack.
 
 ### Systemd
 
@@ -103,8 +103,13 @@ Helm chart values, including `secrets.anthropicApiKey`.
 
 ```bash
 kubectl create secret generic vigil-secrets \
-  --from-literal=DATABASE_URL="postgresql://..."
+  --from-literal=DATABASE_URL="postgresql://deeptempo:<password>@postgres:5432/deeptempo_soc"
 ```
+
+Note: `DATABASE_URL` is the TypeScript agent's knob. For the Python
+backend, supply the `POSTGRES_*` settings (or the encrypted-store DSN)
+instead, or use the Helm-secret path (see `secrets.anthropicApiKey`
+above).
 
 ```yaml
 envFrom:
@@ -117,12 +122,12 @@ envFrom:
 Most integrations are configured via **Settings > Integrations** in the web UI:
 
 - API endpoints, usernames, non-sensitive config
-- Passwords/secrets reference environment variables
+- Passwords/secrets are written to the encrypted store by the UI; environment variables are only a read fallback
 - Test connection before saving
 
 ## PostgreSQL Setup
 
-Default connection (matches `docker-compose.yml`):
+Default connection (matches `infra/docker/docker-compose.yml`):
 
 ```
 postgresql://deeptempo:deeptempo_secure_password_change_me@localhost:5432/deeptempo_soc
@@ -131,7 +136,7 @@ postgresql://deeptempo:deeptempo_secure_password_change_me@localhost:5432/deepte
 Start database:
 
 ```bash
-docker-compose up -d postgres
+docker compose -f infra/docker/docker-compose.yml up -d postgres
 ```
 
 ## Security Best Practices

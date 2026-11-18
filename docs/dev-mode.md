@@ -7,7 +7,7 @@ permalink: /docs/dev-mode/
 {% raw %}
 ## 🚀 What is DEV_MODE?
 
-DEV_MODE is a development-only feature that **completely bypasses authentication** to allow rapid iteration without having to log in repeatedly. 
+DEV_MODE is a development-only feature that **bypasses session authentication** to allow rapid iteration without having to log in repeatedly. The bypass is not total — see the exceptions under "What Happens in DEV_MODE?" below.
 
 **⚠️ CRITICAL WARNING**: This should **NEVER** be enabled in staging or production environments!
 
@@ -42,13 +42,15 @@ DEV_MODE is a development-only feature that **completely bypasses authentication
 ./setup_dev.sh
 ```
 
-This script copies the `.env` file with DEV_MODE enabled by default!
+This script copies `env.example` to `.env` with authentication on — the template ships `DEV_MODE=false`. Set `DEV_MODE=true` in the resulting `.env` yourself if you want the bypass.
 
 **Manual alternative:**
 
 ```bash
-# Copy the template (DEV_MODE already set to true)
-cp .env.example .env
+# Copy the template (DEV_MODE is set to false in the template)
+cp env.example .env
+
+# Then set DEV_MODE=true in .env
 
 # Start services - auth will be bypassed!
 ./start.sh
@@ -60,7 +62,7 @@ That's it! **One file, one setting** - both backend and frontend will bypass aut
 
 You now only need to set `DEV_MODE=true` in the **root `.env` file**!
 
-The frontend automatically reads this setting - no separate frontend configuration needed. This makes it much simpler to enable/disable dev mode across the entire application.
+The frontend automatically reads this setting - no separate frontend configuration is normally needed. One exception: an explicit `VITE_DEV_MODE` wins over the root setting (the desktop app forces it to `false`); otherwise the root `.env` `DEV_MODE` value is inherited. This makes it much simpler to enable/disable dev mode across the entire application.
 
 ### Setting DEV_MODE
 
@@ -76,19 +78,16 @@ DEV_MODE=true
 ```
 
 **Option 2: Docker Compose**
-```yaml
-# In docker-compose.yml
-services:
-  soc-api:
-    environment:
-      - DEV_MODE=true
+
+The Compose file is `infra/docker/docker-compose.yml`, and its `backend` service already carries `DEV_MODE: ${DEV_MODE:-false}` — so set `DEV_MODE=true` in the root `.env` and recreate the service:
+
+```bash
+docker compose -f infra/docker/docker-compose.yml up -d backend
 ```
 
 **Option 3: Terminal Export**
-```bash
-export DEV_MODE=true
-./start.sh
-```
+
+Do not rely on `export DEV_MODE=true` before `./start.sh`: `start.sh` loads the root `.env` over the exported value (and copies `env.example`, with `DEV_MODE=false`, if `.env` is missing). Set `DEV_MODE=true` in the root `.env` instead.
 
 ### How It Works
 
@@ -97,14 +96,14 @@ When you set `DEV_MODE=true` in the root `.env` file:
 **Backend (FastAPI):**
 - Reads `DEV_MODE` directly from environment
 - Bypasses JWT authentication
-- Returns mock admin user
+- Returns a mock admin user (see "What Happens in DEV_MODE?" for the exact identity rules)
 
 **Frontend (React + Vite):**
-- Vite reads `DEV_MODE` from root `.env` file
+- Vite reads `DEV_MODE` from root `.env` file, unless an explicit `VITE_DEV_MODE` overrides it
 - Automatically exposes it as `VITE_DEV_MODE` to the frontend
 - Frontend bypasses login UI and uses mock admin user
 
-No separate frontend configuration needed! 🎉
+No separate frontend configuration is normally needed! 🎉
 
 ---
 
@@ -114,8 +113,8 @@ No separate frontend configuration needed! 🎉
 
 **For Fresh Install** (Recommended):
 ```bash
-# Copy template (DEV_MODE already set to true)
-cp .env.example .env
+# Copy template (DEV_MODE is set to false in the template, so set it to true in .env afterwards)
+cp env.example .env
 ```
 
 **For Existing Setup**:
@@ -127,10 +126,12 @@ echo "DEV_MODE=true" >> .env
 ### 2. Restart Services
 
 ```bash
-# Restart API
-docker-compose restart soc-api
+# Recreate the backend service so the changed .env is picked up
+# (a plain restart does not recreate the container)
+docker compose -f infra/docker/docker-compose.yml up -d backend
 
-# Restart frontend (if running)
+# Frontend: VITE_DEV_MODE is frozen into the bundle at Vite startup,
+# so stop the running dev server first, then start it again
 cd clients/web
 npm run dev
 ```
@@ -152,9 +153,21 @@ open http://localhost:6988
 ### Backend Behavior:
 
 1. **Authentication Bypassed**: `get_current_user()` returns a mock admin user
-2. **No JWT Validation**: Token validation is completely skipped
-3. **Full Permissions**: ALL permission checks return `True` - complete unrestricted access
+2. **No JWT Validation**: Token validation is skipped for session auth
+3. **Permissions**: Backend permission checks grant the built-in Admin role's catalog permissions — a permission name not in the catalog is denied, not granted
 4. **Warning Logs**: Server logs will show warnings that DEV_MODE is active
+
+**Exceptions — the bypass is not total:**
+
+- `GET /metrics` still requires its metrics token: an unset token refuses everyone, including DEV_MODE.
+- `/internal` endpoints are not affected: they stay shared-secret only and have no dev-mode branch.
+- Person-only permissions (`audit.forward`, `audit.manage`) are still refused for a non-person principal, before the DEV_MODE branch is reached.
+
+DEV_MODE also opens or relaxes other gates:
+
+- The vstrike inbound push endpoint (`POST /api/integrations/vstrike/findings`) accepts pushes without its bearer token.
+- LLM budget enforcement is relaxed.
+- MCP auto-connect defaults at startup are relaxed.
 
 ```python
 # Normal mode
@@ -168,29 +181,22 @@ Authorization: <anything or nothing>     # Ignored
 
 1. **Login Skipped**: No redirect to /login
 2. **Mock User Loaded**: Automatically logged in as "dev-user"
-3. **Full Access**: ALL permission checks return `true` - every feature is accessible
+3. **Full Access**: Frontend `hasPermission()` returns `true` for any check — every feature is accessible in the UI. This frontend behaviour is broader than the backend catalog limit described above.
 4. **Console Warnings**: Browser console shows DEV_MODE warnings
 
+Frontend mock user (from `clients/web/src/contexts/AuthContext.tsx`) — it has no `permissions` field; the all-true effect comes from `hasPermission()`:
+
 ```javascript
-// Mock user automatically set with ALL permissions:
 {
   user_id: 'dev-user-id',
   username: 'dev-user',
   email: 'dev@localhost',
   full_name: 'Dev User (Full Admin)',
   role_id: 'role-admin',
-  permissions: {
-    // ALL system permissions set to true:
-    'findings.read': true, 'findings.write': true, 'findings.delete': true,
-    'cases.read': true, 'cases.write': true, 'cases.delete': true, 'cases.assign': true,
-    'integrations.read': true, 'integrations.write': true,
-    'users.read': true, 'users.write': true, 'users.delete': true,
-    'settings.read': true, 'settings.write': true,
-    'ai_chat.use': true, 'ai_decisions.approve': true,
-    // PLUS: hasPermission() returns true for ANY permission check
-  }
 }
 ```
+
+Backend identity is different: `_get_dev_user` returns the real `admin` row if one exists; only otherwise does it return a transient `dev-user` with a random-UUID `user_id` and the admin role's id (or a random UUID). In DEV_MODE, backend `get_user_permissions` returns the whole built-in Admin catalog — do not rely on a fixed enumerated permission list.
 
 ---
 
@@ -199,8 +205,8 @@ Authorization: <anything or nothing>     # Ignored
 ### ⚠️ Never Enable in Production
 
 **Risks if DEV_MODE is enabled in production:**
-- **No authentication** - Anyone can access the system
-- **Full admin access** - All users have admin permissions
+- **No authentication** - Anyone who can reach the instance can access the system, subject to the exceptions above
+- **Full admin access** - Requests run with admin permissions
 - **Data exposure** - Sensitive data is unprotected
 - **Audit trail broken** - All actions appear to be from "dev-user"
 - **Compliance violation** - Likely violates security compliance
@@ -212,8 +218,8 @@ Authorization: <anything or nothing>     # Ignored
    - Logs clearly indicate DEV_MODE is active
 
 2. **Environment Separation**:
-   - Separate `.env.development` files
-   - Not in default `.env.example`
+   - `DEV_MODE` is in the default `env.example` template, set to `false`
+   - The backend refuses to start only when `DEV_MODE=true` and `ENVIRONMENT=production` (Helm sets `ENVIRONMENT=production`; Compose and local installs leave it unset). The staging ban above is policy, not code enforcement — a staging install without `ENVIRONMENT=production` is not automatically blocked.
 
 3. **Documentation**:
    - Clear warnings in all documentation
@@ -240,7 +246,7 @@ cat .env | grep DEV_MODE
 **Check Backend:**
 ```bash
 # Check if backend sees DEV_MODE
-docker-compose exec soc-api env | grep DEV_MODE
+docker compose -f infra/docker/docker-compose.yml exec backend env | grep DEV_MODE
 
 # Should show: DEV_MODE=true
 ```
@@ -252,8 +258,8 @@ echo "DEV_MODE=true" >> .env
 
 # Restart both services
 ./start.sh
-# OR
-docker-compose restart soc-api
+# OR recreate the backend, and stop then restart the frontend dev server
+docker compose -f infra/docker/docker-compose.yml up -d backend
 cd clients/web && npm run dev
 ```
 
@@ -263,18 +269,18 @@ This means backend DEV_MODE is not enabled.
 
 **Check logs:**
 ```bash
-docker-compose logs soc-api | grep "DEV_MODE"
+docker compose -f infra/docker/docker-compose.yml logs backend | grep "DEV_MODE"
 
 # Should see: "⚠️  DEV_MODE is ENABLED"
 ```
 
 **If not showing:**
 ```bash
-# Set in docker-compose.yml or .env
+# Set in root .env
 DEV_MODE=true
 
-# Restart
-docker-compose restart soc-api
+# Recreate the backend service so the change is picked up
+docker compose -f infra/docker/docker-compose.yml up -d backend
 ```
 
 ### Problem: Frontend Still Shows Login Page
@@ -295,7 +301,8 @@ cat .env | grep DEV_MODE
 # If missing, add it
 echo "DEV_MODE=true" >> .env
 
-# Restart frontend dev server (it will read from root .env via Vite)
+# Stop the running frontend dev server first, then restart it
+# (VITE_DEV_MODE is computed when Vite loads its config)
 cd clients/web
 npm run dev
 ```
@@ -313,8 +320,8 @@ DEV_MODE=false
 
 # Restart services (both backend and frontend will use auth)
 ./start.sh
-# OR
-docker-compose restart soc-api
+# OR recreate the backend, and stop then restart the frontend dev server
+docker compose -f infra/docker/docker-compose.yml up -d backend
 
 cd clients/web
 npm run dev
@@ -427,6 +434,7 @@ npm run dev
 # - Backend auth also bypassed automatically!
 
 # 4. When done, disable for testing
+# Stop the dev server first, then change .env and restart it
 sed -i 's/DEV_MODE=true/DEV_MODE=false/' .env
 npm run dev
 
@@ -440,7 +448,7 @@ npm run dev
 echo "DEV_MODE=true" >> .env
 
 # 2. Start API
-uvicorn services.api.main:app --reload
+uvicorn services.api.main:app --host 127.0.0.1 --port 6987 --reload
 
 # 3. Test endpoints with curl (no auth needed)
 curl http://localhost:6987/api/cases
@@ -448,7 +456,7 @@ curl http://localhost:6987/api/cases
 
 # 4. When done, disable for testing
 sed -i 's/DEV_MODE=true/DEV_MODE=false/' .env
-uvicorn services.api.main:app --reload
+uvicorn services.api.main:app --host 127.0.0.1 --port 6987 --reload
 
 # 5. Test with real auth
 curl -H "Authorization: Bearer $TOKEN" \
@@ -462,10 +470,11 @@ curl -H "Authorization: Bearer $TOKEN" \
 echo "DEV_MODE=true" >> .env
 
 # 2. Start all services
+# start.sh already launches the frontend (Vite) itself — do not start it again,
+# and Compose has no frontend service.
 ./start.sh
 # OR
-docker-compose up -d
-cd clients/web && npm run dev
+docker compose -f infra/docker/docker-compose.yml up -d
 
 # 3. Develop freely without auth barriers
 # - Backend auth bypassed
@@ -485,7 +494,7 @@ sed -i 's/DEV_MODE=true/DEV_MODE=false/' .env
 Before deploying to staging or production, verify:
 
 - [ ] `DEV_MODE` is not set to `true` in `.env` files (or is set to `false`)
-- [ ] Docker Compose has no `DEV_MODE=true` in environment section
+- [ ] No `DEV_MODE=true` reaches the deployment through the root `.env` / Compose interpolation
 - [ ] Environment variables verified in deployment config
 - [ ] Authentication tested and working (login page appears)
 - [ ] RBAC permissions enforced correctly
@@ -516,12 +525,9 @@ DEV_MODE is a powerful tool for rapid development, but use it responsibly:
 - ✅ **Faster Iteration**: No login required
 - ✅ **Full Access**: All permissions granted
 - ⚠️ **Local Only**: Never in production
-- ⚠️ **No Security**: Authentication completely bypassed
+- ⚠️ **No Security**: Session authentication bypassed (with the exceptions noted above)
 
 **Happy developing! 🚀**
 
 ---
-
-*Last Updated: January 20, 2026*  
-*Version: 2.0.0*
 {% endraw %}

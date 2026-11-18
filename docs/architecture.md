@@ -7,7 +7,17 @@ permalink: /docs/architecture/
 {% raw %}
 ## Overview
 
-Vigil uses **backend tool integration via Claude Agent SDK**. No desktop application or separate MCP servers required for core functionality.
+Vigil's tool-calling work runs in **one TypeScript agent loop**:
+`services/agent/core/stream.ts`. The FastAPI backend enqueues agent runs,
+the loop calls LLM providers through the **Bifrost** gateway, and tools are
+dispatched through the backend tool registry and the **MCP registry** for
+connected integrations. Python provides one-shot completions, not a second
+loop — see "One loop, and where it is" below.
+
+MCP is part of the current architecture, not a predecessor to it: connected
+MCP servers are registered in the MCP registry at startup, and chat reaches
+their tools through the integration-door tools described under Tool
+Categories. No desktop application is required; the web UI is the client.
 
 ## Architecture Diagram
 
@@ -20,36 +30,50 @@ Vigil uses **backend tool integration via Claude Agent SDK**. No desktop applica
        ↓
 ┌─────────────────────┐
 │  FastAPI Backend    │
-│  (Python)           │
+│  (Python, 6987)     │
 │  ├── API Endpoints  │
-│  ├── Tool Routing   │
-│  └── Claude Service │
+│  └── Agent-run      │
+│      queueing       │
 └──────┬──────────────┘
-       │ Agent SDK
+       │ enqueued runs
        ↓
 ┌─────────────────────┐
-│  Anthropic Servers  │
-│  (Claude 4.5)       │
-│  Agent SDK          │
+│  TypeScript Agent   │
+│  Loop               │
+│  services/agent/    │
+│  core/stream.ts     │
 └──────┬──────────────┘
-       │ Autonomous tool execution
+       │ via Bifrost gateway
+       ↓
+┌─────────────────────┐
+│  LLM Providers      │
+│  (default model:    │
+│   claude-sonnet-4-6)│
+└──────┬──────────────┘
+       │ tool calls dispatched by the loop
        ↓
 ┌─────────────────────┐
 │   Backend Tools     │
 │  ├── Security       │
-│  │   Detections    │
-│  ├── Case Mgmt      │
+│  │   Detections     │
+│  ├── Findings &     │
+│  │   Cases          │
 │  ├── Approvals      │
-│  └── ATT&CK         │
+│  ├── ATT&CK         │
+│  ├── Threat Intel   │
+│  ├── Memory         │
+│  └── Skills         │
+│   + MCP registry    │
+│     (integrations)  │
 └──────┬──────────────┘
        │
        ↓
 ┌─────────────────────┐
 │   Data Layer        │
 │  ├── PostgreSQL     │
-│  ├── Detection      │
-│  │   Rules (6.7K)  │
-│  └── Services       │
+│  └── Detection      │
+│      Rules (synced  │
+│      into Postgres) │
 └─────────────────────┘
 ```
 
@@ -62,7 +86,7 @@ Vigil uses **backend tool integration via Claude Agent SDK**. No desktop applica
 
 ### Backend
 - FastAPI (Python 3.10+)
-- Claude API integration
+- LLM traffic via the Bifrost gateway
 - Backend tools
 - Port: 6987
 
@@ -72,19 +96,30 @@ Vigil uses **backend tool integration via Claude Agent SDK**. No desktop applica
 - Port: 5432
 
 ### Detection Rules
-- 7,200+ rules (Sigma, Splunk, Elastic, KQL)
-- Loaded from: `~/security-detections/`
-- Indexed in memory on first use
+- Rules in Sigma, Splunk, Elastic and KQL formats, plus rules from Kibana's
+  detection engine, Splunk saved searches and the Wazuh manager
+- Answers come from the rules as `core/detections/inventory` syncs them into
+  Postgres — not from an in-memory index of the cloned repositories alone
 
 ## Tool Categories
 
+Tool schemas are defined in `core/llm/tool_schemas.py`. See the
+[Backend Tools Guide](/docs/backend-tools/) for detailed documentation.
+
 ### 1. Security Detection Tools
-Access to detection rule database:
+Access to the detection rule database:
 - `analyze_coverage` - Coverage by MITRE technique
 - `search_detections` - Keyword search across rules
+- `link_detection_rule` - Link a detection rule
 - `identify_gaps` - Gap analysis
 - `get_coverage_stats` - Statistics
+- `detection_metrics` - Detection metrics
 - `get_detection_count` - Counts by source
+- `lint_detections` - Lint detection rules
+- `check_detection_candidate` - Check a candidate detection
+- `save_detection_rule` - Save a detection rule
+- `detection_rule_exception` - Manage per-copy rule exceptions
+- `reconstruct_run` - Reconstruct a run
 
 ### 2. Finding & Case Tools
 SOC investigation workflow:
@@ -92,17 +127,22 @@ SOC investigation workflow:
 - `search_findings` - Keyword search across findings
 - `get_findings_stats` - Finding statistics
 - `get_finding` - Get specific finding
-- `nearest_neighbors` - Similar findings
+- `dismiss_finding` - Dismiss a finding
 - `list_cases` - Query cases
-- `get_case` - Get specific case
+- `read_case_shell` - Read a case shell
 - `create_case` - Create new case
 - `add_finding_to_case` - Associate findings
 - `update_case` - Update case status and metadata
+- `restrict_case` - Restrict case access
+- `change_case_readers` - Change who can read a case
 - `add_resolution_step` - Document resolution steps
+- `list_completed_hunts` - List completed hunts
+- `list_learning_episodes` - List learning episodes
+- `export_learning_episodes` - Export learning episodes
+- `replay_hunt` - Replay a hunt
 
 ### 3. MITRE ATT&CK Tools
 Technique mapping and visualization:
-- `get_attack_layer` - Generate Navigator layer
 - `get_technique_rollup` - Technique statistics
 
 ### 4. Approval Tools
@@ -113,6 +153,25 @@ Autonomous response workflow:
 - `reject_action` - Reject action
 - `get_approval_stats` - Statistics
 
+### 5. Threat Intel Tools
+- `lookup_indicators` - Look up observables in the threat-indicator database
+- `propose_feed_hunts` - Propose hunts for recently fed, unhunted indicators
+
+### 6. Memory Tools
+- `recall_entity` - Recall what past investigations saw and concluded about an entity
+- `check_hunt_coverage` - Check whether a hunt already covers a report or entity
+
+### 7. Skill Tools
+- `read_skill` - Read a skill from the skill library
+
+### Integration Tools
+
+Two further tools sit outside the categories above and form chat's door to
+the connected MCP integrations:
+
+- `find_integration_tools` - Search the tools of connected integrations by keyword
+- `call_integration_tool` - Run one tool that `find_integration_tools` returned
+
 ## Request Flow
 
 ### Example: Detection Coverage Query
@@ -120,23 +179,26 @@ Autonomous response workflow:
 ```
 1. User: "What's our coverage for T1059.001?"
    ↓
-2. Web UI → POST /api/claude/chat
+2. Web UI → POST /api/claude/chat/stream
    ↓
-3. Backend → Claude API (with tool definitions)
+3. Work that needs tools is enqueued as an agent run
    ↓
-4. Claude decides to use: analyze_coverage
+4. The TypeScript agent loop drives the run, calling the LLM
+   via the Bifrost gateway
    ↓
-5. Backend executes: security_tools.analyze_coverage(["T1059.001"])
+5. The loop dispatches the tool call: analyze_coverage,
+   via the agent layer / tool registry
+   (core/agents/tool_registry.py)
    ↓
-6. Loads detection rules (if not cached)
+6. Detection answers come from the rules synced into
+   Postgres by core/detections/inventory
    ↓
-7. Searches Sigma, Splunk, Elastic, KQL rules
+7. Example output (illustrative only):
+   { "T1059.001": { count: 234, by_source: {...} } }
    ↓
-8. Returns: { "T1059.001": { count: 234, by_source: {...} } }
+8. The loop synthesizes a response
    ↓
-9. Claude synthesizes response
-   ↓
-10. Web UI displays result
+9. Web UI displays the streamed result
 ```
 
 ## Configuration
@@ -159,12 +221,16 @@ SPLUNK_PATHS="${HOME}/security-detections/security_content/detections"
 ELASTIC_PATHS="${HOME}/security-detections/detection-rules/rules"
 KQL_PATHS="${HOME}/security-detections/Hunting-Queries-Detection-Rules"
 
-# Database
-DATABASE_URL="postgresql://deeptempo:deeptempo_secure_password_change_me@localhost:5432/deeptempo_soc"
-
-# LLM gateway (Bifrost) — provider keys are NOT set here
-BIFROST_URL="http://bifrost:8080"
+# LLM gateway (Bifrost) — provider keys are NOT set here.
+# Host-run default; "bifrost" as a hostname resolves only
+# inside the compose network, which injects its own value.
+BIFROST_URL="http://localhost:8080"
 ```
+
+The Python backend does **not** read a `DATABASE_URL` setting — that is the
+TypeScript agent's knob. Python sessions go through `DatabaseConfig`, which
+uses `POSTGRESQL_CONNECTION_STRING` read from the encrypted secret store, or
+the `POSTGRES_*` settings.
 
 ### One loop, and where it is
 
@@ -173,14 +239,17 @@ There is exactly **one tool-calling loop** in Vigil, and it is TypeScript:
 prompt-injection scan and the turn cap, so anything that reasons with tools gets
 all four by construction rather than by remembering to.
 
-Python holds **no** loop. `ClaudeService.chat()` is a one-shot completion for the
-~20 callers that want a single answer and no tools:
+Python holds **no** loop. `ClaudeService.chat()` is a one-shot completion for
+callers that want a single answer and no tools:
 
 ```python
 from core.llm.harness.claude import ClaudeService
 
 answer = ClaudeService().chat(message="...", system_prompt="...")
 ```
+
+Most one-shot callers now go through `core/llm/oneshot.py` rather than
+constructing `ClaudeService` directly.
 
 Work that needs tools is enqueued as a run and the worker drives it:
 
@@ -203,7 +272,7 @@ did not catch the fifth.
 
 ```bash
 # Terminal 1: Database
-cd docker && docker-compose up -d postgres
+cd infra/docker && docker compose up -d postgres
 
 # Terminal 2: Backend
 source venv/bin/activate
@@ -216,40 +285,28 @@ cd clients/web && npm run dev
 ### Production (Docker)
 
 ```bash
-cd docker
-docker-compose up -d
+cd infra/docker
+docker compose up -d
 ```
 
-Includes:
+The compose file at `infra/docker/docker-compose.yml` defines more than the
+database and API, including:
+
 - PostgreSQL
+- Redis
 - Backend API
-- Nginx (optional)
+- Agent, worker and daemon services
+- MCP runner
+- Bifrost gateway
 
 ## Performance
 
-### Tool Execution Latency
-
-| Tool | Avg Latency |
-|------|------------|
-| Detection search | 100-500ms |
-| Coverage analysis | 200-1000ms |
-| Database queries | 10-50ms |
-| ATT&CK layer | 200-500ms |
-
-### Resource Usage
-
-| Component | Memory | CPU |
-|-----------|--------|-----|
-| Backend | 500MB | 10-20% |
-| Detection rules (loaded) | 200MB | 0% |
-| PostgreSQL | 100MB | 5% |
-
-### Scalability
-
-- **Concurrent users**: 50-100 (single instance)
-- **Detection rule index**: Shared across all users
-- **Claude API**: Rate limited by Anthropic
 - **Database**: PostgreSQL with connection pooling enabled
+- **Claude API**: Rate limited by the provider, via the Bifrost gateway
+
+No verified latency, resource-usage or concurrent-user figures are published
+for this stack; earlier tables of such figures had no counterpart in the code
+and have been removed.
 
 ## Monitoring
 
@@ -258,9 +315,6 @@ Includes:
 ```bash
 # Backend health
 curl http://localhost:6987/api/health
-
-# Claude API status
-curl http://localhost:6987/api/claude/status
 
 # Database connectivity
 curl http://localhost:6987/api/storage/status
@@ -272,16 +326,18 @@ curl http://localhost:6987/api/storage/status
 # Backend logs (stdout when running uvicorn directly, or Docker logs)
 docker logs deeptempo-postgres  # PostgreSQL logs
 docker logs -f <backend-container>  # Backend API logs
-
-# Tool execution (debug) — enable via LOG_LEVEL=DEBUG in .env
 ```
 
 ## Security
 
 ### API Key Management
-- Stored in secure keychain (macOS/Linux)
-- Fallback to environment variables
-- Never logged or exposed
+- Preferred store: the Fernet-encrypted file at `~/.vigil/secrets.enc`
+- Fallbacks, in priority order: environment variables, the repo-root `.env`
+  (read-only), and the state-dir `.env` file
+- Keyring access is off by default (it triggers macOS keychain prompts) and
+  is used only when explicitly enabled
+- Provider keys configured in the web UI are pushed to Bifrost over its
+  admin API (see Configuration above)
 
 ### Tool Permissions
 - No dangerous operations exposed
@@ -289,27 +345,25 @@ docker logs -f <backend-container>  # Backend API logs
 - Rate limiting on API endpoints
 - Authentication required (configurable)
 
-## Comparison: Previous vs Current Architecture
+## How Tool Access Works
 
-### Before (MCP-Based)
-```
-Web UI → Backend → MCP Client → MCP Servers (stdio)
-                                     ↓
-                              Tool Implementations
-```
-- Required desktop application for local use
-- Complex MCP server configuration
-- Not web UI compatible
-- Higher latency (protocol overhead)
+Backend tools and MCP integrations are both current parts of the
+architecture; neither replaces the other:
 
-### Now (Agent SDK)
 ```
-Web UI → Backend → Claude Agent SDK → Backend Tools → Services
+Web UI → FastAPI Backend → agent-run queue → TypeScript agent loop
+                                                  ↓
+                          Backend tools (tool registry) + MCP registry
+                                                  ↓
+                                               Services
 ```
-- Autonomous tool execution via Agent SDK
-- Simple configuration
-- Production-ready
-- Lower latency
+
+- Backend tools are defined in `core/llm/tool_schemas.py` and dispatched
+  through the agent layer / `core/agents/tool_registry.py`.
+- Connected MCP servers are registered in the MCP registry; chat reaches
+  their tools through `find_integration_tools` and `call_integration_tool`.
+- LLM traffic goes through the Bifrost gateway, not a direct
+  backend-to-provider tool loop.
 
 ## Troubleshooting
 
@@ -317,8 +371,8 @@ Web UI → Backend → Claude Agent SDK → Backend Tools → Services
 
 ```python
 # Tools are the registry's, not an LLM client's. Startup populates it.
-from core.integrations.mcp.registry import get_mcp_registry
-print(get_mcp_registry().get_tool_names())
+from core.integrations.mcp.registry import MCPRegistry, safe_tool_names
+print(safe_tool_names(MCPRegistry()))
 ```
 
 An empty list means no MCP server connected this boot: the disk cache is a
@@ -366,34 +420,22 @@ echo $POSTGRESQL_CONNECTION_STRING
 }
 ```
 
-2. **Implement tool** in appropriate service
+2. **Implement and dispatch the tool** in the agent layer — dispatch lives
+   in the TypeScript agent layer (`services/agent/core/`) and in
+   `core/agents/tool_registry.py`. Python's `ClaudeService` is a one-shot
+   completion with no tools and no loop, so there is no tool-routing step
+   to add there.
 
-3. **Route tool** in `core/llm/harness/claude.py` → `_process_backend_tool_use()`:
+3. **For MCP tools**, add them in `tools/mcp/vigil.py` so they are served
+   through the MCP registry.
 
-```python
-elif tool_name == 'my_new_tool':
-    from services.my_service import MyService
-    service = MyService()
-    result = service.my_method(**arguments)
-```
-
-4. **Test**:
-
-```bash
-python tests/test_backend_tools.py
-```
+4. **Test** with the test suite below.
 
 ### Running Tests
 
 ```bash
-# Backend tool tests
-python tests/test_backend_tools.py
-
-# Integration tests
-python tests/test_integration_backend_tools.py
-
-# Unit tests
-pytest tests/unit/
+# Test suite (tests/ contains live/, medic_compose/ and medic_eval/)
+pytest tests/
 ```
 
 ## Documentation

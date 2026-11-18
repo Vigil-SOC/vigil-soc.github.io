@@ -14,7 +14,7 @@ permalink: /docs/chat-case-quick-reference/
 | "Add this to case-123" | Adds current finding to specified case |
 | "Add f-001 to case-123" | Adds specific finding to case |
 | "Add f-001, f-002, f-003 to case-123" | Bulk adds multiple findings |
-| "Add this finding - it's the persistence mechanism" | Adds finding with contextual note |
+| "Add this finding - it's the persistence mechanism" | Adds finding; the note is logged as a case activity (single add takes no note) |
 
 ### Creating Cases
 
@@ -97,12 +97,14 @@ permalink: /docs/chat-case-quick-reference/
 | "Mark as duplicate of case-123" | Links as duplicate |
 | "Set case-789 as parent" | Creates parent-child relationship |
 
-### Escalations 🆕
+### Moving a Case 🆕
+
+Escalation has been replaced by the beta move: a case is moved to another team with the `move_case` tool (or `POST /api/v1/cases/{case_id}/move`). The move requires the case's current team.
 
 | What You Say | What Happens |
 |--------------|--------------|
-| "Escalate to soc-manager" | Escalates case to management |
-| "Escalate as critical - active breach" | High urgency escalation |
+| "Move this case to the incident response team" | Moves case to the named team |
+| "Move case-123 to soc-manager - active breach" | Moves case to the named team with a reason |
 
 ### Closure 🆕
 
@@ -121,6 +123,9 @@ Use these activity types when logging:
 - `investigation_step` - Investigation progress
 - `communication` - Contacted users/teams
 - `status_change` - Status updates
+- `finding_added` - Findings added to the case
+- `task_update` - Task changes
+- `case_linked` - Case linked to another case
 
 ## Timeline Event Types
 
@@ -137,7 +142,7 @@ Use these for timeline entries:
 1. "Show me high severity findings"
 2. "Analyze f-001"
 3. "This looks suspicious - create a case"
-4. "Find similar findings"
+4. "List findings to compare"
 5. "Add all of these to the case"
 ```
 
@@ -156,19 +161,19 @@ Use these for timeline entries:
 2. "Note: user confirmed clicking phishing link"
 3. "Add resolution step - reset user password"
 4. "Log action - isolated user's system"
-5. "Update status to contained"
+5. "Update status to investigating"
 ```
 
 ## Finding & Case ID Formats
 
 - **Finding IDs**: `f-YYYYMMDD-XXXXXXXX`
   - Example: `f-20260121-abc12345`
-- **Case IDs**: `case-YYYYMMDD-XXXXXXXX`
-  - Example: `case-20260121-def67890`
+- **Case IDs**: `case-YYYY-MM-DD-XXXXXXXX`
+  - Example: `case-2026-01-21-def67890`
 
 ## Tips
 
-✓ **Be conversational** - Claude understands natural language
+✓ **Be conversational** - The assistant understands natural language
 ✓ **Provide context** - "Add this because..." helps with documentation
 ✓ **Build as you go** - Don't wait until the end to document
 ✓ **Use bulk operations** - Add multiple findings at once
@@ -214,7 +219,7 @@ Use these for timeline entries:
 
 ## Remember
 
-🎯 **The goal**: Have a natural conversation while investigating. Claude handles the documentation.
+🎯 **The goal**: Have a natural conversation while investigating. The assistant handles the documentation.
 
 📝 **The result**: Fully documented case with timeline, findings, MITRE mapping, and resolution steps.
 

@@ -5,34 +5,118 @@ permalink: /docs/integrations/vstrike-killchain/
 ---
 
 {% raw %}
-This is the request to the CloudCurrent / VStrike engineering team for a new
-MCP tool that lets Vigil drive kill-chain replays through the VStrike UI.
+> **Status: PROPOSED — external request, not shipped behaviour.**
+> This page is the request to the CloudCurrent / VStrike engineering team
+> for a new MCP tool, `ui-killchain-replay`, that would let Vigil drive
+> kill-chain replays through the VStrike UI. The tool definition, step
+> schema, and defaults below are the proposed VStrike-side specification;
+> they are not a description of behaviour shipped in Vigil 1.1.2. The
+> shipped status is stated in the next section.
 
-The Vigil side of the wire is already shipped. Once VStrike's MCP server
-exposes `ui-killchain-replay`, Vigil's "Play" button (visible in the iframe
-toolbar inside every Vigil case dialog) starts working with no further code
-changes on Vigil's side. Until then, the button surfaces a friendly
-"VStrike server doesn't yet implement kill-chain replay" notice.
+## Shipped status at Vigil 1.1.2
+
+What exists on the Vigil side:
+
+- The MCP client method `killchain_replay_in_ui` exists in
+  `core/integrations/vstrike/client.py` (lines 576–622). It forwards
+  caller-supplied arguments to `_call_mcp_tool("ui-killchain-replay", …)`
+  — see "MCP tools" below.
+- That method has **zero callers** in `core/`, `services/`, or
+  `clients/`. Nothing in Vigil walks a case's findings, dedupes by asset,
+  or builds a step list for it, and the client passes `steps` through
+  without validating their contents.
+- If the VStrike server has not shipped the tool, the method raises
+  `VStrikeToolNotImplemented` with the exact message: "VStrike server
+  does not yet implement ui-killchain-replay. Update the VStrike MCP
+  server to a version that ships the kill-chain tool."
+  (`core/integrations/vstrike/client.py:618-622`, on a `-32601` /
+  "method not found" / "tool not found" / "unknown tool" error.)
+
+What does **not** exist at 1.1.2:
+
+- No Vigil REST route for kill-chain replay — see the complete REST
+  route list below.
+- No frontend Play button, iframe toolbar, or iframe host component.
+  There is no `clients/web/src/components/graph/` directory and no
+  `VStrikeIframeHost.tsx` anywhere under `clients/`. The only VStrike
+  mention in the web UI source is in
+  `clients/web/src/screens/dashboard/FindingPopup.tsx`, which notes
+  that the embedded VStrike `NetworkContextPanel` is "deliberately not
+  ported: it needs the VStrike provider, which isn't mounted under the
+  console shell."
+
+Further Vigil-side code — a caller that builds the step list, a REST
+route, and a UI surface — would therefore be required before an analyst
+could use this replay, even once VStrike ships the tool.
 
 ## Why we need this
 
 When a Vigil analyst opens a case enriched by VStrike, every finding's
 `entity_context.vstrike` carries an `attack_path` (an ordered list of
 asset IDs from initial access to the target) plus `adjacent_assets` (the
-MITRE technique on each edge). Today, the user can see the topology in
-the embedded VStrike iframe, but they can't replay the kill-chain across
-those nodes without manually clicking through.
+MITRE technique on each edge) —
+`core/integrations/vstrike/schemas.py:36,45-49`, with the per-edge
+technique on `VStrikeAdjacentAsset.edge_technique` (`schemas.py:26-30`).
+There is currently no way to replay that kill chain across those nodes
+as an animated sequence.
 
-Vigil walks the case's findings, dedupes by asset, and ships VStrike a
-clean step list. VStrike then animates that sequence — highlighting each
-node, drawing edges as transitions, surfacing the MITRE technique labels.
-One MCP tool, one WebSocket push to the active session, no iframe reload.
+The request is for one MCP tool: Vigil's client would send VStrike a
+step list, and VStrike would animate that sequence — highlighting each
+node, drawing edges as transitions, surfacing the MITRE technique
+labels. As described in the client, VStrike pushes the animation to
+its active UI session over its own WebSocket, with no iframe reload.
 
-This pattern is identical to the existing `ui-network-load` tool — same
-auth (JWT), same JSON-RPC transport, same SSE response framing, same
-session-state assumption (the iframe is already open and authenticated).
+This pattern follows the existing `ui-network-load` tool — same auth
+(JWT via `/mcp-login`), same JSON-RPC transport at VStrike's `/mcp`
+endpoint, same SSE response framing, same session-state assumption
+(the VStrike UI session is already open and authenticated).
 
-## Tool definition
+## Vigil REST API (shipped) — separate from MCP
+
+Vigil's own REST router for VStrike is
+`services/api/routers/vstrike.py`, under the prefix
+`/api/integrations/vstrike` (`ROUTER_META`, lines 42–43). It defines
+exactly three routes, none of which is a kill-chain replay route:
+
+| Method and path | Handler | Purpose |
+|---|---|---|
+| `POST /api/integrations/vstrike/findings` | `ingest_findings` (`:109`, on `router`) | Receive a batch of VStrike-enriched findings pushed to Vigil |
+| `GET /api/integrations/vstrike/health` | `health_check` (`:264`, on `authenticated_router`) | Check outbound connectivity to the configured VStrike server |
+| `GET /api/integrations/vstrike/topology/asset/{asset_id}` | `get_asset_topology` (`:287`, on `authenticated_router`) | Proxy to the VStrike asset-topology lookup for one asset |
+
+The kill-chain payload in the curl example below is **not** sent via
+any of these routes. The Vigil MCP client sends it directly to
+VStrike's `/mcp` endpoint.
+
+## MCP tools (VStrike server) — separate from REST
+
+Vigil's client, `core/integrations/vstrike/client.py`, calls tools on
+VStrike's MCP server by JSON-RPC `tools/call` at `MCP_RPC_PATH = "/mcp"`
+(`client.py:50`; `_call_mcp_tool` at `:421`), using JWT auth obtained
+via `/mcp-login`. Relevant client methods:
+
+| MCP tool | Vigil client method | Status |
+|---|---|---|
+| `ui-network-load` | `load_network_in_ui` (`client.py:567-574`), called with `{"networkId": network_id}` | Existing pattern this request borrows from |
+| `ui-killchain-replay` | `killchain_replay_in_ui` (`client.py:576-622`) | Client method implemented; zero callers; depends on the VStrike server shipping the tool |
+| `network-list` | `list_networks` (`client.py:562-565`) | Existing |
+| `node-search` | `node_search` (`client.py:642`) | Existing |
+| `node-drift-get` | `node_drift_get` (`client.py:656`) | Existing |
+
+There is no `node-list` tool referenced by the Vigil client.
+
+For `ui-killchain-replay`, the only argument names and defaults with a
+Vigil code counterpart are those the client actually sends
+(`client.py:576-603`): `networkId`, `steps`, `loop` (default `False`),
+and `auto_play` (default `True`).
+
+## Proposed tool definition
+
+The following is the **proposed** VStrike-side specification. Values
+that appear only here — for example the `dwell_ms` default of 2000,
+`minItems: 1`, the required step fields `["node_id", "timestamp"]`, and
+`execution.taskSupport: "forbidden"` — have no Vigil code counterpart:
+the client passes `steps` through unvalidated (`client.py:595-603`).
 
 ```jsonc
 {
@@ -61,7 +145,7 @@ session-state assumption (the iframe is already open and authenticated).
         }
       },
       "loop":      { "type": "boolean", "description": "If true, restart from step 0 after the last step (default false)." },
-      "auto_play": { "type": "boolean", "description": "If false, the iframe shows the steps loaded but waits for the user's Play button (default true)." }
+      "auto_play": { "type": "boolean", "description": "If false, the steps are loaded but playback does not start automatically (default true)." }
     },
     "required": ["networkId", "steps"]
   },
@@ -93,24 +177,27 @@ These don't block shipping the tool, but they affect what the user sees:
    highlighted node. If that doesn't exist today, can it ship alongside
    the MCP tool?
 
-2. **Playback-finished event.** Can the iframe send a "playback finished"
-   message back over its existing WebSocket so Vigil can sync its
-   EventTimeline scrubber? Bidirectional channel — nice-to-have, not a
-   blocker. If you can emit this, Vigil will hook it up; if not, we'll
-   add a dwell-sum estimate on Vigil's side.
+2. **Playback-finished event.** Can the VStrike UI send a "playback
+   finished" message back over its existing WebSocket? Bidirectional
+   channel — nice-to-have, not a blocker. No Vigil component currently
+   exists to consume such an event (there is no `EventTimeline`
+   component in `clients/web/src`, `core/`, or `services/` at 1.1.2),
+   so consuming it would require new Vigil-side work; without it, a
+   dwell-sum estimate on Vigil's side remains an option.
 
 3. **`node_id` format.** Vigil's findings carry asset identifiers that
-   we believe match VStrike's `node-list` output (the `id` / `network_id`
-   / `uuid` field, in that priority order). Please confirm. If `node_id`
-   needs to be the same shape `node-list` returns per network, Vigil
-   already produces that shape.
+   we believe match the identifiers returned by the tools the Vigil
+   client actually uses — `network-list`, `node-search`, and
+   `node-drift-get` (the `id` / `network_id` / `uuid` field, in that
+   priority order). Please confirm. The Vigil client references no
+   `node-list` tool.
 
-## Curl example — what Vigil sends
+## Curl example — what the Vigil client sends to VStrike
 
-This is what a real call looks like once the tool ships. Vigil already
-emits exactly this payload via `POST /api/integrations/vstrike/ui/killchain-replay`,
-which translates to a `tools/call` JSON-RPC request against VStrike's
-`/mcp` endpoint:
+This is what a real call looks like once the tool ships. It is the
+payload the Vigil MCP client method `killchain_replay_in_ui` sends
+directly to VStrike's `/mcp` endpoint as a `tools/call` JSON-RPC
+request — it does not go through any Vigil REST endpoint:
 
 ```bash
 curl -X POST 'https://vstrike.example/mcp' \
@@ -150,6 +237,9 @@ Direct questions about the Vigil-side implementation to:
 - Vigil repo: <https://github.com/Vigil-SOC/vigil>
 - Tool client lives in [`core/integrations/vstrike/client.py`](https://github.com/Vigil-SOC/vigil/blob/main/core/integrations/vstrike/client.py) (see
   `killchain_replay_in_ui`)
-- API surface: [`services/api/routers/vstrike.py`](https://github.com/Vigil-SOC/vigil/blob/main/services/api/routers/vstrike.py) (`POST /ui/killchain-replay`)
-- Frontend Play button: [`clients/web/src/components/graph/VStrikeIframeHost.tsx`](https://github.com/Vigil-SOC/vigil/blob/main/clients/web/src/components/graph/VStrikeIframeHost.tsx)
+- Vigil REST API surface: [`services/api/routers/vstrike.py`](https://github.com/Vigil-SOC/vigil/blob/main/services/api/routers/vstrike.py)
+  — `POST /api/integrations/vstrike/findings`,
+  `GET /api/integrations/vstrike/health`, and
+  `GET /api/integrations/vstrike/topology/asset/{asset_id}` only; there
+  is no kill-chain replay route
 {% endraw %}

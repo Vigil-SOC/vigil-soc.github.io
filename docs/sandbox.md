@@ -11,10 +11,12 @@ Vigil integrates with four sandboxes:
 |---|---|---|
 | Hybrid Analysis | cloud (Falcon) | `core/integrations/hybrid_analysis/tool.py` |
 | Any.Run | cloud | `core/integrations/anyrun/tool.py` |
-| Joe Sandbox | cloud or on-prem | external MCP (`joesandboxMCP`) wired via `mcp-config.json` |
-| CAPE Sandbox | self-hosted (bring your own) | `core/integrations/cape_sandbox/tool.py` (new in #86) |
+| Joe Sandbox | cloud or on-prem | external MCP (`joe-sandbox`) wired via `mcp-config.json` |
+| CAPE Sandbox | self-hosted (bring your own) | `core/integrations/cape_sandbox/tool.py` |
 
-The Malware Analyst agent loads all four. The daemon has an opt-in
+The Malware Analyst agent loads CAPE, Hybrid Analysis, and Any.Run;
+Joe Sandbox is wired as an external MCP server and as a daemon
+auto-submission target. The daemon has an opt-in
 auto-submission pipeline that ties sandbox output back to findings and
 cases.
 
@@ -26,7 +28,7 @@ cases.
 │  (finding in)  │      │ ._enrich_finding()   │      │ Investigation q. │
 └────────────────┘      │   • VirusTotal       │      └──────────────────┘
                         │   • Shodan           │
-                        │   • Sandbox submit ◀─┼──── daemon/sandbox_submitter.py
+                        │   • Sandbox submit ◀─┼──── services/daemon/sandbox_submitter.py
                         └──────────────────────┘            (safety gates +
                                                              hash-cache lookup)
                                  │
@@ -34,11 +36,11 @@ cases.
                         enrichment.sandbox_submissions = {hash: {cape:{task_id}}}
                                  │
                                  ▼  (every SANDBOX_POLL_INTERVAL s)
-                        daemon/sandbox_poller.py
+                        services/daemon/sandbox_poller.py
                                  │
                                  ├─ fetches completed report
                                  ├─ writes back to finding.enrichment.sandbox_reports
-                                 └─ services/sandbox_correlation_service.py
+                                 └─ core/cases/sandbox_correlation_service.py
                                          │
                                          ▼
                                 CaseEvidence (analysis_results = raw report)
@@ -53,6 +55,14 @@ All env vars live in `env.example`. Minimum for CAPE:
 CAPE_SANDBOX_ENABLED=true
 CAPE_SANDBOX_URL=http://cape.internal:8000
 CAPE_SANDBOX_API_KEY=<token>
+```
+
+Joe Sandbox has its own variables:
+
+```bash
+JOE_SANDBOX_ENABLED=true
+JOE_SANDBOX_URL=https://jbxcloud.joesecurity.org/api
+JOE_SANDBOX_API_KEY=<key>
 ```
 
 Enable the pipeline (off by default):
@@ -78,9 +88,10 @@ SANDBOX_POLL_INTERVAL=60       # seconds between poller passes
   means a human operator (or the agent, via the MCP tool) must upload the
   sample manually.
 - **Allowlist + size cap**: safety gating lives in
-  `daemon/sandbox_submitter.py::is_hash_safe_to_submit`.
+  `services/daemon/sandbox_submitter.py::is_hash_safe_to_submit`.
 - **API-only transport**: no shared filesystems between Vigil and the
-  sandbox; all traffic is HTTPS REST.
+  sandbox; all traffic is HTTP(S) REST; use HTTPS for non-local CAPE
+  endpoints.
 
 ## Result correlation
 
@@ -105,8 +116,9 @@ Completed reports are written into existing tables — no schema changes:
   and leave the infra outside this repo.
 - **Binary upload path.** When the daemon gains access to the original
   file bytes (e.g. via email attachment extraction or network capture
-  ingestion), add a second branch to `SandboxSubmitter.submit_file` that
-  uploads via `cape_submit_file` / `ha_submit_file`.
+  ingestion), add a file-upload branch to `SandboxSubmitter` (currently
+  hash-only via `submit_hash`) that uploads via `cape_submit_file`;
+  Hybrid Analysis has no file-submit tool.
 - **Signature merge with MITRE Analyst.** Sandbox reports surface
   `mitre_techniques`; the correlation service records them on evidence,
   but the MITRE Analyst agent does not yet read them back.

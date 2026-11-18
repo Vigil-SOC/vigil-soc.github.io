@@ -11,6 +11,8 @@ The SLA Policy Management API provides comprehensive CRUD operations for managin
 
 **Base URL**: `/api/sla-policies`
 
+> Note: Policy IDs, names, and times shown in the examples on this page (for example `sla-critical-default` with 1h response / 4h resolution) are illustrative examples only. No default policies are seeded or shipped pre-configured; policies are created through this API.
+
 ## Authentication
 
 All endpoints require authentication. Include the authentication token in your request headers:
@@ -18,6 +20,13 @@ All endpoints require authentication. Include the authentication token in your r
 ```bash
 Authorization: Bearer <your-token>
 ```
+
+In addition to authentication, endpoints are permission-gated:
+
+- Reads (`GET`) require the `cases.read` permission.
+- Writes — create, update, delete, and set-default (`POST`, `PUT`, `DELETE`) — require the `cases.write` permission.
+
+A caller with only read permission will be denied write operations.
 
 ## Endpoints
 
@@ -169,7 +178,10 @@ Create a new SLA policy.
 - `is_active` (boolean, optional, default: true): Whether policy is active
 - `is_default` (boolean, optional, default: false): Whether this is the default policy for its priority level
 
-**Escalation Rules Format**:
+**Escalation Rules Format** (illustrative only):
+
+`escalation_rules` is stored as an opaque JSON object (`Optional[dict]`); the API does not validate or enforce the subfields below, and no code consumes them as a schema. The format shown is an example convention, not a validated format:
+
 ```json
 {
   "threshold_percent": {
@@ -206,7 +218,7 @@ curl -X POST "http://localhost:6987/api/sla-policies" \
 - Resolution time must be greater than response time
 - If setting as default, other default policies for the same priority will be unset
 
-**Success Response** (201 Created):
+**Success Response** (200 OK):
 ```json
 {
   "policy_id": "sla-vip-critical",
@@ -299,23 +311,16 @@ curl -X PUT "http://localhost:6987/api/sla-policies/sla-critical-default" \
 
 ### 5. Delete SLA Policy
 
-Delete an SLA policy. By default, prevents deletion if policy is in use.
+Delete an SLA policy. Deletion is refused if any case still references the policy; there is no `force` option. To retire a policy that is still referenced, deactivate it instead with `PUT /api/sla-policies/{policy_id}` and `is_active: false` — no new case will take it, and the cases that used it keep their SLA history.
 
 **Endpoint**: `DELETE /api/sla-policies/{policy_id}`
 
 **Path Parameters**:
 - `policy_id` (string, required): The policy ID to delete
 
-**Query Parameters**:
-- `force` (boolean, optional, default: false): Force delete even if policy is in use
-
 **Example Request**:
 ```bash
-# Safe delete (fails if in use)
 curl -X DELETE "http://localhost:6987/api/sla-policies/sla-old-policy"
-
-# Force delete (removes even if in use)
-curl -X DELETE "http://localhost:6987/api/sla-policies/sla-old-policy?force=true"
 ```
 
 **Success Response** (200 OK):
@@ -333,9 +338,9 @@ curl -X DELETE "http://localhost:6987/api/sla-policies/sla-old-policy?force=true
   "detail": "SLA policy not found"
 }
 
-// 400 - Policy in use
+// 409 - Policy still referenced by cases
 {
-  "detail": "Cannot delete policy that is in use by 5 case(s). Use force=true to delete anyway."
+  "detail": "Cannot delete an SLA policy that cases still reference (5 case(s)). Deactivate it instead with PUT /api/sla-policies/sla-old-policy (is_active=false): no new case will take it, and the cases that used it keep their SLA history."
 }
 ```
 
@@ -376,6 +381,9 @@ Get usage statistics for an SLA policy.
 **Path Parameters**:
 - `policy_id` (string, required): The policy ID
 
+**Query Parameters**:
+- `since` (datetime, optional): Count only cases whose SLA was created at or after this time
+
 **Example Request**:
 ```bash
 curl -X GET "http://localhost:6987/api/sla-policies/sla-critical-default/usage"
@@ -391,7 +399,8 @@ curl -X GET "http://localhost:6987/api/sla-policies/sla-critical-default/usage"
   "breached_cases": 8,
   "compliance_rate": 94.67,
   "is_active": true,
-  "is_default": true
+  "is_default": true,
+  "restricted_not_counted": 0
 }
 ```
 
@@ -436,7 +445,8 @@ curl -X GET "http://localhost:6987/api/sla-policies/sla-critical-default/cases?s
       ...
     }
   ],
-  "total": 1
+  "total": 1,
+  "restricted_not_counted": 0
 }
 ```
 
@@ -542,6 +552,13 @@ curl -X POST "http://localhost:6987/api/cases/CASE-001/sla" \
   }'
 ```
 
+**Error Responses**:
+
+- `404` — No such case: `Case {case_id} not found`
+- `404` — Policy not found: `SLA policy {policy_id} not found`
+- `409` — Policy retired/deactivated: the named policy is deactivated, so no new case takes it; name an active policy or reactivate it
+- `409` — No default policy: `No active default SLA policy exists for this case's priority.` (when no `sla_policy_id` is given and no active default exists)
+
 ---
 
 ## Best Practices
@@ -594,10 +611,12 @@ Use descriptive names that indicate:
 - Invalid time values (response >= resolution)
 - Invalid priority level
 - Duplicate policy ID
-- Policy in use (deletion)
 
 **404 Not Found**
 - Policy ID doesn't exist
+
+**409 Conflict**
+- Policy still referenced by cases (deletion refused; deactivate the policy instead)
 
 **500 Internal Server Error**
 - Database connection issues
@@ -614,15 +633,13 @@ Use descriptive names that indicate:
 
 ## Rate Limits
 
-Standard API rate limits apply:
-- **GET requests**: 100 per minute
-- **POST/PUT/DELETE requests**: 30 per minute
+No SLA-specific rate limits are defined for these endpoints.
 
 ---
 
 ## Changelog
 
-### v1.0.0 (2024-01-21)
+### Initial release
 - Initial release of SLA Policy Management API
 - Full CRUD operations for policies
 - Usage statistics endpoint
@@ -634,8 +651,9 @@ Standard API rate limits apply:
 ## Support
 
 For questions or issues:
-- Check the main documentation: `/docs/SLA_SYSTEM_ENHANCEMENT_PLAN.md`
-- Review the assessment: `/docs/SLA_SYSTEM_ASSESSMENT.md`
+- SLA API reference: `/docs/sla-api/`
+- SLA usage guide: `/docs/sla-usage/`
+- SLA quick reference: `/docs/sla-quick-reference/`
 - File issues in the project repository
 
 ---
@@ -643,12 +661,7 @@ For questions or issues:
 ## Related Endpoints
 
 - **Case SLA Management**: `/api/cases/{case_id}/sla`
-- **SLA Metrics**: `/api/cases/metrics/sla-compliance`
+- **SLA Metrics Summary**: `/api/cases/metrics/summary`
 - **Breached Cases**: `/api/cases/metrics/breached`
 - **Case Templates** (with SLA defaults): `/api/cases/templates`
-
----
-
-**Last Updated**: January 21, 2026  
-**API Version**: 1.0.0
 {% endraw %}

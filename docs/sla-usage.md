@@ -9,9 +9,11 @@ permalink: /docs/sla-usage/
 
 This guide shows you how to add and manage SLA (Service Level Agreements) for cases in Vigil.
 
+All SLA and case endpoints require authentication. The `curl` examples below include an `Authorization: Bearer <token>` header; the web UI calls the same endpoints with its signed-in session.
+
 ## Automatic SLA Assignment ✨
 
-**Good News!** SLA is now **automatically assigned** when you create a case.
+**Good News!** SLA is **automatically assigned** when you create a case — provided an active default policy exists for the case's priority.
 
 ### How It Works
 
@@ -19,10 +21,13 @@ This guide shows you how to add and manage SLA (Service Level Agreements) for ca
 2. **SLA is automatically assigned** based on the default policy for that priority
 3. **Countdown starts immediately** from case creation
 
+If no active default policy exists for the priority, the case is still created, but it has no SLA until one is assigned manually (see Troubleshooting).
+
 **Example:**
 ```bash
 # Create a high priority case
 curl -X POST "http://localhost:6987/api/cases/" \
+  -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Security Incident",
@@ -31,14 +36,13 @@ curl -X POST "http://localhost:6987/api/cases/" \
     "description": "Critical security incident"
   }'
 
-# SLA is automatically assigned using the default "high" priority policy
-# Response deadline: 2 hours
-# Resolution deadline: 8 hours
+# SLA is automatically assigned using the default "high" priority policy,
+# with the response and resolution deadlines set by that policy
 ```
 
-## Default SLA Policies
+## Example SLA Policies
 
-Your system comes with 4 pre-configured policies:
+Vigil does not ship with pre-configured SLA policies. Create one default policy per priority; the values below are an example set you can start from:
 
 | Priority | Response Time | Resolution Time | Coverage |
 |----------|---------------|-----------------|----------|
@@ -46,6 +50,8 @@ Your system comes with 4 pre-configured policies:
 | High | 2 hours | 8 hours | 24/7 |
 | Medium | 4 hours | 24 hours | Business hours |
 | Low | 8 hours | 72 hours | Business hours |
+
+Note: a newly created policy defaults to `business_hours_only: true` unless you set it to `false`.
 
 ## Manual SLA Assignment
 
@@ -56,6 +62,7 @@ If you need to override the automatic assignment:
 ```bash
 # Assign specific SLA policy to a case
 curl -X POST "http://localhost:6987/api/cases/CASE-001/sla" \
+  -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
     "sla_policy_id": "sla-vip-critical"
@@ -63,26 +70,33 @@ curl -X POST "http://localhost:6987/api/cases/CASE-001/sla" \
 
 # Or use default for priority (same as automatic)
 curl -X POST "http://localhost:6987/api/cases/CASE-001/sla" \
+  -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{}'
 ```
 
 ### Via Frontend (TypeScript/React)
 
-```typescript
-import { casesApi } from '@/services/api'
+There is no `casesApi` helper for assigning an SLA — call the REST endpoint directly:
 
+```typescript
 // Assign SLA to case
 const assignSLA = async (caseId: string) => {
   try {
     // Use default policy for case priority
-    await casesApi.assignSLA(caseId, {})
-    
-    // Or specify a policy
-    await casesApi.assignSLA(caseId, {
-      sla_policy_id: 'sla-vip-critical'
+    await fetch(`/api/cases/${caseId}/sla`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
     })
-    
+
+    // Or specify a policy
+    await fetch(`/api/cases/${caseId}/sla`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sla_policy_id: 'sla-vip-critical' })
+    })
+
     console.log('SLA assigned successfully')
   } catch (error) {
     console.error('Failed to assign SLA:', error)
@@ -96,7 +110,8 @@ const assignSLA = async (caseId: string) => {
 
 ```bash
 # Get SLA status for a case
-curl -X GET "http://localhost:6987/api/cases/CASE-001/sla"
+curl -X GET "http://localhost:6987/api/cases/CASE-001/sla" \
+  -H "Authorization: Bearer <token>"
 ```
 
 **Response:**
@@ -104,8 +119,8 @@ curl -X GET "http://localhost:6987/api/cases/CASE-001/sla"
 {
   "case_id": "CASE-001",
   "sla_policy_id": "sla-high-default",
-  "response_due": "2024-01-20T16:30:00",
-  "resolution_due": "2024-01-21T00:30:00",
+  "response_due": "2026-01-20T16:30:00",
+  "resolution_due": "2026-01-21T00:30:00",
   "response_remaining_seconds": 3600,
   "resolution_remaining_seconds": 25200,
   "response_percent_elapsed": 50.0,
@@ -121,6 +136,8 @@ curl -X GET "http://localhost:6987/api/cases/CASE-001/sla"
 }
 ```
 
+If the case has no SLA assigned, this endpoint returns `null` instead of a status object.
+
 ### Via Frontend
 
 ```typescript
@@ -131,11 +148,17 @@ const checkSLA = async (caseId: string) => {
   try {
     const response = await casesApi.getSLA(caseId)
     const sla = response.data
-    
+
+    // sla is null when the case has no SLA assigned
+    if (!sla) {
+      console.log('No SLA assigned to this case')
+      return
+    }
+
     console.log(`Health: ${sla.health_status}`)
     console.log(`Response: ${sla.response_percent_elapsed}% elapsed`)
     console.log(`Resolution: ${sla.resolution_percent_elapsed}% elapsed`)
-    
+
     if (sla.is_breached) {
       console.warn(`SLA BREACHED: ${sla.breach_type}`)
     }
@@ -162,22 +185,24 @@ Sometimes you need to pause the SLA clock (waiting for customer, external depend
 
 ```bash
 # Pause SLA
-curl -X POST "http://localhost:6987/api/cases/CASE-001/sla/pause"
+curl -X POST "http://localhost:6987/api/cases/CASE-001/sla/pause" \
+  -H "Authorization: Bearer <token>"
 
 # Resume SLA
-curl -X POST "http://localhost:6987/api/cases/CASE-001/sla/resume"
+curl -X POST "http://localhost:6987/api/cases/CASE-001/sla/resume" \
+  -H "Authorization: Bearer <token>"
 ```
 
 ### Via Frontend
 
-```typescript
-import { casesApi } from '@/services/api'
+There are no `casesApi` helpers for pause/resume — call the REST endpoints directly:
 
+```typescript
 // Pause SLA
-await casesApi.pauseSLA(caseId)
+await fetch(`/api/cases/${caseId}/sla/pause`, { method: 'POST' })
 
 // Resume SLA
-await casesApi.resumeSLA(caseId)
+await fetch(`/api/cases/${caseId}/sla/resume`, { method: 'POST' })
 ```
 
 **Important Notes:**
@@ -191,19 +216,23 @@ await casesApi.resumeSLA(caseId)
 
 ```bash
 # Get all active policies
-curl -X GET "http://localhost:6987/api/sla-policies/?active_only=true"
+curl -X GET "http://localhost:6987/api/sla-policies/?active_only=true" \
+  -H "Authorization: Bearer <token>"
 
 # Get default policies only
-curl -X GET "http://localhost:6987/api/sla-policies/?default_only=true"
+curl -X GET "http://localhost:6987/api/sla-policies/?default_only=true" \
+  -H "Authorization: Bearer <token>"
 
 # Get policies for specific priority
-curl -X GET "http://localhost:6987/api/sla-policies/?priority_level=high"
+curl -X GET "http://localhost:6987/api/sla-policies/?priority_level=high" \
+  -H "Authorization: Bearer <token>"
 ```
 
 ### Create Custom Policy
 
 ```bash
 curl -X POST "http://localhost:6987/api/sla-policies/" \
+  -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
     "policy_id": "sla-vip-high",
@@ -219,10 +248,13 @@ curl -X POST "http://localhost:6987/api/sla-policies/" \
   }'
 ```
 
+Note: `notification_thresholds` is stored on the policy, but nothing currently acts on it — setting custom thresholds does not produce notifications. When the field is omitted, the server stores the default `[75, 90, 100]`.
+
 ### Update Policy
 
 ```bash
 curl -X PUT "http://localhost:6987/api/sla-policies/sla-high-default" \
+  -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
     "response_time_hours": 1.5,
@@ -234,38 +266,15 @@ curl -X PUT "http://localhost:6987/api/sla-policies/sla-high-default" \
 
 ```bash
 # Make this the default policy for its priority level
-curl -X POST "http://localhost:6987/api/sla-policies/sla-vip-high/set-default"
+curl -X POST "http://localhost:6987/api/sla-policies/sla-vip-high/set-default" \
+  -H "Authorization: Bearer <token>"
 ```
 
 ## Frontend Integration
 
-### Using the CaseSLA Component
+### SLA Policies Settings Screen
 
-The system includes a pre-built React component for displaying SLA status:
-
-```tsx
-import CaseSLA from '@/components/cases/CaseSLA'
-
-function CaseDetailView({ caseId }: { caseId: string }) {
-  return (
-    <div>
-      <h1>Case Details</h1>
-      
-      {/* SLA Component - shows countdown, progress, pause/resume */}
-      <CaseSLA caseId={caseId} />
-      
-      {/* Rest of case details */}
-    </div>
-  )
-}
-```
-
-**Features:**
-- Real-time countdown timer
-- Visual progress bar
-- Color-coded status (green → yellow → orange → red)
-- Pause/resume buttons
-- Breach alerts
+The web UI includes an SLA policies section in Settings for managing policies. There is no pre-built per-case SLA component; use the API helpers and REST endpoints below to work with SLA data from your own code.
 
 ### Using the SLA Policies API
 
@@ -297,10 +306,13 @@ await slaPoliciesApi.update('sla-custom-001', {
 const usage = await slaPoliciesApi.getUsage('sla-high-default')
 console.log(`Compliance rate: ${usage.compliance_rate}%`)
 
-// Get cases using this policy
-const cases = await slaPoliciesApi.getCases('sla-high-default', {
-  breached_only: true
-})
+// Get cases using this policy (no slaPoliciesApi helper exists;
+// call the REST endpoint directly — it supports `status` and
+// `breached_only` query parameters)
+const casesResponse = await fetch(
+  '/api/sla-policies/sla-high-default/cases?breached_only=true'
+)
+const cases = await casesResponse.json()
 ```
 
 ## Common Workflows
@@ -318,25 +330,28 @@ const caseResponse = await casesApi.create({
 
 const caseId = caseResponse.data.case_id
 
-// 2. Override with VIP SLA policy
-await casesApi.assignSLA(caseId, {
-  sla_policy_id: 'sla-vip-high'
+// 2. Override with VIP SLA policy (REST endpoint; no casesApi helper)
+await fetch(`/api/cases/${caseId}/sla`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ sla_policy_id: 'sla-vip-high' })
 })
 ```
 
 ### Workflow 2: Monitor SLA Health
 
 ```typescript
-// Get all cases with SLA issues
-const breachedCases = await casesApi.getAll({
-  status: 'open'
+// Get all open cases
+const openCases = await casesApi.getAll({
+  closed: false
 })
 
-for (const case of breachedCases.data.cases) {
-  const sla = await casesApi.getSLA(case.case_id)
-  
-  if (sla.data.health_status === 'critical') {
-    console.warn(`Case ${case.case_id} is at risk!`)
+for (const caseItem of openCases.data.cases) {
+  const slaResponse = await casesApi.getSLA(caseItem.case_id)
+  const sla = slaResponse.data
+
+  if (sla && sla.health_status === 'critical') {
+    console.warn(`Case ${caseItem.case_id} is at risk!`)
     // Send alert, escalate, etc.
   }
 }
@@ -347,37 +362,20 @@ for (const case of breachedCases.data.cases) {
 ```typescript
 // Customer needs to provide information
 await casesApi.addComment(caseId, {
-  content: 'Waiting for customer response',
-  author: 'analyst@company.com'
+  content: 'Waiting for customer response'
 })
 
-// Pause SLA while waiting
-await casesApi.pauseSLA(caseId)
+// Pause SLA while waiting (REST endpoint; no casesApi helper)
+await fetch(`/api/cases/${caseId}/sla/pause`, { method: 'POST' })
 
 // Later, when customer responds...
 await casesApi.addComment(caseId, {
-  content: 'Customer provided requested information',
-  author: 'analyst@company.com'
+  content: 'Customer provided requested information'
 })
 
-// Resume SLA
-await casesApi.resumeSLA(caseId)
+// Resume SLA (REST endpoint; no casesApi helper)
+await fetch(`/api/cases/${caseId}/sla/resume`, { method: 'POST' })
 ```
-
-## Testing SLA Assignment
-
-A test script is provided to verify SLA functionality:
-
-```bash
-# Run the test suite
-python scripts/test_sla_assignment.py
-```
-
-**Tests included:**
-1. ✓ List SLA policies
-2. ✓ Automatic SLA assignment
-3. ✓ Manual SLA assignment
-4. ✓ Pause/resume functionality
 
 ## Troubleshooting
 
@@ -386,7 +384,8 @@ python scripts/test_sla_assignment.py
 **Check:**
 1. Is there a default policy for the case priority?
    ```bash
-   curl -X GET "http://localhost:6987/api/sla-policies/?priority_level=high&default_only=true"
+   curl -X GET "http://localhost:6987/api/sla-policies/?priority_level=high&default_only=true" \
+     -H "Authorization: Bearer <token>"
    ```
 
 2. Check backend logs for errors:
@@ -405,6 +404,7 @@ python scripts/test_sla_assignment.py
 ```bash
 # Create or activate a default policy
 curl -X PUT "http://localhost:6987/api/sla-policies/sla-high-default" \
+  -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{"is_active": true, "is_default": true}'
 ```
@@ -419,10 +419,12 @@ curl -X PUT "http://localhost:6987/api/sla-policies/sla-high-default" \
 **Check:**
 ```bash
 # Verify policy times
-curl -X GET "http://localhost:6987/api/sla-policies/sla-high-default"
+curl -X GET "http://localhost:6987/api/sla-policies/sla-high-default" \
+  -H "Authorization: Bearer <token>"
 
 # Check case creation time
-curl -X GET "http://localhost:6987/api/cases/CASE-001"
+curl -X GET "http://localhost:6987/api/cases/CASE-001" \
+  -H "Authorization: Bearer <token>"
 ```
 
 ## Best Practices
@@ -434,20 +436,20 @@ Let the system automatically assign SLA based on priority. Only override for spe
 Always add a comment when pausing SLA to explain why:
 ```typescript
 await casesApi.addComment(caseId, {
-  content: 'Pausing SLA - waiting for vendor response',
-  author: 'analyst@company.com'
+  content: 'Pausing SLA - waiting for vendor response'
 })
-await casesApi.pauseSLA(caseId)
+await fetch(`/api/cases/${caseId}/sla/pause`, { method: 'POST' })
 ```
 
 ### 3. Monitor Health Status
 Set up alerts for cases with `health_status: 'critical'` to prevent breaches.
 
 ### 4. Review Policies Regularly
-Check compliance rates and adjust policies:
+Check per-policy compliance rates and adjust policies:
 ```bash
-# Get compliance report
-curl -X GET "http://localhost:6987/api/cases/metrics/sla-compliance"
+# Get usage statistics (including compliance_rate) for a policy
+curl -X GET "http://localhost:6987/api/sla-policies/sla-high-default/usage" \
+  -H "Authorization: Bearer <token>"
 ```
 
 ### 5. Test Before Production
@@ -457,19 +459,15 @@ Always test new policies with a few cases before setting as default.
 
 For complete API documentation, see:
 - [SLA Policy API Guide](/docs/sla-api/)
-- [SLA System Enhancement Plan](https://github.com/Vigil-SOC/vigil/blob/main/docs/SLA_SYSTEM_ENHANCEMENT_PLAN.md)
-- [SLA System Assessment](https://github.com/Vigil-SOC/vigil/blob/main/docs/SLA_SYSTEM_ASSESSMENT.md)
 
 ## Support
 
 For issues or questions:
 1. Check the logs: `logs/backend.log`
-2. Run the test script: `python scripts/test_sla_assignment.py`
-3. Review the API documentation
-4. Check database for policy configuration
+2. Review the API documentation
+3. Check database for policy configuration
 
 ---
 
-**Last Updated**: January 21, 2026  
-**Version**: 1.0.0
+**Last Updated**: November 17, 2026
 {% endraw %}

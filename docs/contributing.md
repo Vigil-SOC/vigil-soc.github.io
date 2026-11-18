@@ -11,16 +11,19 @@ Thank you for your interest in contributing to Vigil. This document covers how t
 
 ### Prerequisites
 
-- Python 3.10+
-- Node.js 18+
-- Docker Desktop (must be running)
-- Git with submodule support
-- Claude API key from [console.anthropic.com](https://console.anthropic.com/)
+- Python 3.12 (pinned in `.python-version`)
+- Node.js 20+
+- Docker (must be running)
+- Git
+
+An LLM provider is not a prerequisite: configure one in the UI under
+Settings → AI models → Providers & Keys, or use a local Ollama model,
+which needs no key.
 
 ### Local Setup
 
 ```bash
-git clone --recurse-submodules https://github.com/Vigil-SOC/vigil.git
+git clone https://github.com/Vigil-SOC/vigil.git
 cd vigil
 ./start.sh
 ```
@@ -36,7 +39,7 @@ See the [README](https://github.com/Vigil-SOC/vigil/blob/main/README.md) for ful
 1. **Fork** the repository to your GitHub account
 2. **Clone** your fork locally:
    ```bash
-   git clone --recurse-submodules https://github.com/YOUR-USERNAME/vigil.git
+   git clone https://github.com/YOUR-USERNAME/vigil.git
    cd vigil
    ```
 3. **Create a branch** for your work:
@@ -73,10 +76,11 @@ git config user.email "your@email.com"
 
 ### Versioning and Releases
 
-Vigil follows [Semantic Versioning](https://semver.org/). While in `0.x`,
-minor version bumps may include breaking changes to agent prompts, workflow
-schemas, and MCP integration interfaces. Patch bumps are always backward
-compatible. See [`RELEASING.md`](/docs/releasing/) for the full release process.
+Vigil follows [Semantic Versioning](https://semver.org/). At 1.x, the
+`/api/v1` surface is frozen and changes only additively within a major;
+removal or an incompatible shape change is a major bump. See
+`VERSIONING.md` in the repository for the full 1.x contract, and
+[`RELEASING.md`](/docs/releasing/) for the full release process.
 
 The Helm chart at `infra/helm/vigil/` has two version fields: `appVersion`
 (the Vigil release the chart deploys) and chart `version` (the chart
@@ -90,23 +94,13 @@ escape hatch for chart-only changes between app releases.
 
 Look for issues labeled [`good-first-issue`](https://github.com/Vigil-SOC/vigil/labels/good-first-issue) — these are scoped, well-defined tasks suitable for new contributors.
 
-### Using the Auto-Contributor
-
-Vigil includes a competitive research tool in `contrib/auto-contributor/` that identifies capability gaps versus proprietary AI security platforms and generates contribution specifications. If you want to find meaningful work:
-
-1. Pick a proprietary AI SOC or security platform
-2. Run the auto-contributor skill to identify gaps
-3. The output includes ready-to-file GitHub issues with acceptance criteria
-
-See `contrib/README.md` for details.
-
 ### Contribution Areas
 
 Contributions are welcome across all areas:
 
 - **New MCP integrations** — connect Vigil to additional security tools (EDR, SIEM, cloud, ticketing)
 - **Agent improvements** — enhance agent prompts, reasoning, or tool usage
-- **New Workflows** — define new multi-agent workflows in `workflows/`
+- **New Workflows** — define new multi-agent workflows in `core/workflows/definitions/`
 - **Detection rules** — add Sigma, Splunk, Elastic, or KQL rules
 - **Bug fixes** — check the issue tracker
 - **Documentation** — improve docs, add examples, fix errors
@@ -120,10 +114,12 @@ Contributions are welcome across all areas:
 vigil/
 ├── core/            # Shared library: capability domains + storage/platform tier
 │   └── workflows/definitions/   # Multi-agent workflow definitions (WORKFLOW.md files)
-├── services/        # Deployables only: api (FastAPI + Agent SDK), daemon
-│                    #   (headless autonomous SOC), worker (ARQ llm-worker)
+├── services/        # Deployables only: agent, api (FastAPI), daemon
+│                    #   (headless autonomous SOC), mcp_runner, medic,
+│                    #   medic_dockerproxy, medic_gateway, worker (ARQ llm-worker)
 ├── clients/web/     # React web client
-├── contrib/         # Community development tools (not runtime)
+├── tools/           # MCP servers and related tooling
+├── scripts/         # Setup, startup and maintenance scripts
 ├── infra/           # Docker Compose, Helm chart, DB init SQL
 ├── data/            # Schemas, registry, taxonomy
 ├── docs/            # Documentation
@@ -139,9 +135,10 @@ pinned toolchain and the hook that matches it once:
 pip install -r requirements-dev.txt && pre-commit install
 ```
 
-Pass the tools no arguments — `setup.cfg` is the only config, and pre-commit
-reads the same file, so formatting locally cannot produce a tree CI rejects.
-`./setup_dev.sh` does both steps for you.
+Pass the tools no arguments — the tools read `setup.cfg` for their
+configuration, and pre-commit pins matching hook versions separately in
+`.pre-commit-config.yaml`, so formatting locally cannot produce a tree CI
+rejects. `./setup_dev.sh` does both steps for you.
 
 - Python: follow existing patterns in `core/`. Use type hints. `core/` must not
   import `services/`, and `core/storage` + `core/platform` must not import a
@@ -156,8 +153,10 @@ reads the same file, so formatting locally cannot produce a tree CI rejects.
 Run the test suite before submitting:
 
 ```bash
-./tests/run-tests.sh
+pytest tests/
 ```
+
+Pytest configuration lives in `tests/pytest.ini`.
 
 New features should include tests. Place them in `tests/` following existing naming conventions.
 
@@ -185,13 +184,16 @@ Signed-off-by: Your Name <your@email.com>
 
 **Common types:**
 
-- `feat:` — a new feature (triggers a minor version bump)
-- `fix:` — a bug fix (triggers a patch bump)
+- `feat:` — a new feature
+- `fix:` — a bug fix
 - `docs:` — documentation only
 - `chore:` — tooling, build, dependency bumps
 - `refactor:` — code change that neither fixes a bug nor adds a feature
 - `test:` — adding or fixing tests
 - `perf:` — performance improvement
+
+Releases currently always bump patch, regardless of commit type, per
+`"versioning": "always-bump-patch"` in `.github/release-please-config.json`.
 
 **Common scopes for Vigil:** `agents`, `workflows`, `mcp`, `frontend`,
 `daemon`, `helm`, `api`, `db`.
@@ -205,7 +207,7 @@ Signed-off-by: Your Name <your@email.com>
 feat(mcp): add SentinelOne integration
 fix(daemon): prevent double-processing of correlated alerts
 docs(workflows): clarify threat-hunt phase ordering
-chore(deps): bump fastapi to 0.110.0
+chore(deps): bump fastapi to 0.162.2
 feat(agents)!: rename Triage agent prompt schema
 ```
 
@@ -220,8 +222,7 @@ feat(agents)!: rename Triage agent prompt schema
 ### Pull Request Titles
 
 Because we squash-merge PRs, the PR title becomes the commit message on
-`main` — which is what `release-please` reads to decide version bumps and
-changelog entries. **Setting a Conventional Commits-style PR title is the
+`main` — which is what `release-please` reads to build changelog entries. **Setting a Conventional Commits-style PR title is the
 author's responsibility** (e.g., `feat(mcp): add SentinelOne integration`).
 You can update the title at any point before merge by editing the PR. If
 you forget, a maintainer may adjust it before merging, but please don't
@@ -238,7 +239,7 @@ disclosure window, and safe harbor.
 
 ## Community
 
-Join us on [Discord](https://discord.gg/Kw68sPJU) to discuss ideas, get help, and collaborate.
+Join us on [Discord](https://discord.gg/nVprk5uHGq) to discuss ideas, get help, and collaborate.
 
 ## License
 

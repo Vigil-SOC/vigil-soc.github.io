@@ -20,11 +20,24 @@ Complete guide to the CI/CD pipeline for Vigil.
 
 ## Overview
 
-Vigil uses **GitHub Actions** for CI/CD with three main workflows:
+Vigil uses **GitHub Actions** for CI/CD. The `.github/workflows/` directory
+contains 14 workflow files at the current release:
 
 1. **ci-cd.yml**: Main pipeline for PRs and pushes
-2. **release.yml**: Production deployment on tags
-3. **nightly.yml**: Scheduled comprehensive testing
+2. **release.yml**: Publishes release images on version tags
+3. **release-please.yml**: Drives releases from merges to `main`
+4. **nightly.yml**: Scheduled security audit
+5. **connectors-live.yml**: Live connector tests
+6. **erasure-nightly.yml**: Scheduled erasure checks
+7. **helm-chart.yml**: Helm chart lint and testing
+8. **medic.yml**, **medic-bundled-check.yml**, **medic-bundled-ratchet.yml**,
+   **medic-helm.yml**, **medic-nightly.yml**, **medic-pack-refresh.yml**,
+   **medic-pack-release.yml**: Medic checks, bundles, and pack releases
+
+This page covers the three workflows most contributors interact with —
+`ci-cd.yml`, `release.yml` (with `release-please.yml`), and `nightly.yml`.
+There is **no automated deployment**: no workflow SSHes anywhere or deploys
+to a staging or production VM.
 
 ### Pipeline Architecture
 
@@ -42,14 +55,8 @@ Vigil uses **GitHub Actions** for CI/CD with three main workflows:
        │
        ▼
 ┌──────────────┐
-│  Unit Tests  │
-│ Backend/FE   │
-└──────┬───────┘
-       │
-       ▼
-┌──────────────┐
-│ Integration  │
-│    Tests     │
+│   Checks &   │
+│ Schema Tests │
 └──────┬───────┘
        │
        ▼
@@ -61,12 +68,14 @@ Vigil uses **GitHub Actions** for CI/CD with three main workflows:
        ▼
 ┌──────────────┐
 │ Build Docker │
-│    Images    │
+│ Images (CI,  │
+│  not pushed) │
 └──────┬───────┘
        │
-       ▼ (main branch only)
+       ▼
 ┌──────────────┐
-│Deploy Staging│
+│    Build     │
+│   Frontend   │
 └──────────────┘
 ```
 
@@ -81,39 +90,46 @@ Vigil uses **GitHub Actions** for CI/CD with three main workflows:
 **Triggers**:
 - Pull requests to `main` or `develop`
 - Pushes to `main` or `develop`
+- Manual: `workflow_dispatch`
 
 **Jobs**:
 1. `lint-backend` - Python linting (flake8, black, isort, mypy)
 2. `lint-frontend` - TypeScript/React linting (ESLint)
-3. `lint-docker` - Dockerfile linting (hadolint)
-4. `test-unit-backend` - Backend unit tests with coverage
-5. `test-unit-frontend` - Frontend unit tests
-6. `test-integration` - Integration tests with PostgreSQL
-7. `security-scan-python` - Bandit SAST scanning
-8. `security-scan-npm` - NPM audit
-9. `build-images` - Build and push Docker images
-10. `build-frontend` - Build frontend static assets
-11. `scan-images` - Trivy vulnerability scanning
-12. `deploy-staging` - Deploy to staging (main branch only) — **currently commented out in `ci-cd.yml`; no staging deploy runs.**
+3. `check-generated-api-types` - Generated API types are up to date
+4. `lint-docker` - Dockerfile linting (hadolint)
+5. `build-agent-image` - Build the agent image (not pushed)
+6. `build-backend-image` - Build the backend image (not pushed)
+7. `build-daemon-image` - Build the daemon image (not pushed)
+8. `build-mcp-runner-image` - Build the MCP runner image (not pushed)
+9. `test-setup-matrix` - Setup matrix tests
+10. `typecheck-agent-layer` - Agent layer type checking
+11. `check-entity-key-agreement` - Entity key agreement check
+12. `test-helm-install-schema` - Helm install schema test (PostgreSQL service)
+13. `security-scan-python` - Bandit SAST scanning (gates, see Stage 4)
+14. `security-scan-npm` - NPM audit (gates, see Stage 4)
+15. `build-frontend` - Build frontend static assets
 
 ### Release Workflow
 
 **File**: `.github/workflows/release.yml`
 
 **Triggers**:
-- Tags matching `v*.*.*` (e.g., v1.0.0)
+- Tags matching `v[0-9]+.[0-9]+.[0-9]+` (e.g., v1.0.0) — only release-please
+  `vX.Y.Z` tags
 
 **Jobs**:
 1. `version` - Resolve the `vX.Y.Z` version from the pushed tag
 2. `build-backend` - Build & push `ghcr.io/vigil-soc/vigil-backend` (also reused by the llm-worker)
 3. `build-daemon` - Build & push `ghcr.io/vigil-soc/vigil-daemon`
-4. `smoke-test` - Pull the published images and verify they start
-5. `update-release` - Append the image digests to the GitHub Release notes
+4. `build-mcp-runner` - Build & push `ghcr.io/vigil-soc/vigil-mcp-runner`
+5. `build-agent` - Build & push `ghcr.io/vigil-soc/vigil-agent`
+6. `smoke-test` - Pull the published images and verify they start
+7. `update-release` - Append the image digests to the GitHub Release notes
 
 > **No deployment runs here.** `release.yml` publishes images only; it does
 > not SSH anywhere or deploy. The GitHub Release object itself is created by
-> `release-please.yml`, not this workflow. See Stage 7 for the (currently
-> disabled) manual deploy path.
+> `release-please.yml`, not this workflow. See Stage 7: there is no
+> automated deployment path.
 
 ### Nightly Tests
 
@@ -124,10 +140,8 @@ Vigil uses **GitHub Actions** for CI/CD with three main workflows:
 - Manual: workflow_dispatch
 
 **Jobs**:
-1. `full-test-suite` - Complete test coverage
-2. `performance-tests` - Performance regression testing
-3. `security-audit` - pip-audit vulnerability scan
-4. `migration-tests` - Database migration validation
+1. `security-audit` - pip-audit vulnerability scan
+2. `notify` - Slack notification, on failure only (see Monitoring & Alerts)
 
 `security-audit` audits `requirements.lock`, not `requirements.txt`, so it sees
 the versions that actually install. Findings are reported, not fatal — but a
@@ -154,77 +168,95 @@ Versions are pinned in `requirements-dev.txt`, which is also what
 
 **Frontend Linting**:
 ```yaml
-- ESLint: JavaScript/TypeScript linting
-- Prettier: Code formatting (optional)
+- ESLint: JavaScript/TypeScript linting  (advisory)
 ```
+
+For Dockerfiles, the backend hadolint step is advisory; only the
+agent-image hadolint step gates.
 
 **Exit Criteria**:
-- All linters pass
-- No critical issues found
+- The gating linters pass (flake8, black, isort, import-linter, and the
+  agent-image hadolint step)
+- Advisory checks (mypy, frontend ESLint, backend hadolint) report but do
+  not fail the pipeline
 
-### Stage 2: Unit Tests
+### Stage 2: Checks and Schema Tests
 
-**Backend**:
-```bash
-pytest tests/unit/ tests/security/ -v --cov=services --cov=core
-```
+`ci-cd.yml` does not run backend or frontend unit-test jobs, and no workflow
+runs `pytest tests/unit/ tests/security/` or a frontend test script
+(`clients/web/package.json` defines no test script at all). The
+test-flavoured jobs that do run are:
 
-**Frontend**:
-```bash
-npm run test:unit
-```
+- `test-setup-matrix` - Setup matrix tests
+- `typecheck-agent-layer` - Agent layer type checking
+- `check-entity-key-agreement` - Entity key agreement check
+- `check-generated-api-types` - Generated API types are up to date
+- `test-helm-install-schema` - Helm install schema test (Stage 3)
 
 **Exit Criteria**:
-- All tests pass
-- Coverage thresholds met (80% backend, 70% frontend)
+- The jobs above pass
+- No coverage threshold is enforced: `tests/pytest.ini` sets
+  `--cov-fail-under=0`
 
-### Stage 3: Integration Tests
+### Stage 3: Helm Install Schema Test
 
-**Setup**:
+There is no `test-integration` job and no `tests/integration/` run in CI.
+
+**Setup** (in the `test-helm-install-schema` job):
 - PostgreSQL container via GitHub Actions services
-- Test database: `deeptempo_test`
-
-**Execution**:
-```bash
-pytest tests/integration/ -v --cov
-```
+- Test database: `deeptempo_soc`
 
 **Exit Criteria**:
-- All integration tests pass
+- The Helm install schema test passes
 - No database errors
-- External API mocks working
 
 ### Stage 4: Security Scanning
 
+Both scanners in this stage **gate** — either one can fail the pipeline.
+
 **Python (Bandit)**:
 ```bash
-bandit -r services/ core/ -f json -o bandit-report.json
+bandit -r core/ services/ tools/ scripts/ -ll -ii
+```
+
+The `-ll -ii` thresholds gate on medium-or-higher severity and confidence.
+A separate report step re-runs Bandit with `--exit-zero` to write a JSON
+report, which is uploaded as an artifact for triage by hand:
+
+```bash
+bandit -r core/ services/ tools/ scripts/ -ll -ii -f json -o bandit-report.json --exit-zero
 ```
 
 **NPM**:
 ```bash
-npm audit --audit-level=moderate
+npm audit --omit=dev --audit-level=high
 ```
 
-**Exit Criteria**: neither tool gates — both are `continue-on-error`, so this
-stage cannot fail the pipeline today. It produces a report, uploaded as an
-artifact, for triage by hand.
+This runs across `clients/web`, `services/agent`, and `clients/desktop`,
+and the job fails (exit status 1) when high-or-worse findings are reported.
+
+**Exit Criteria**: Bandit reports no medium-or-higher severity/confidence
+findings, and npm audit reports no high-or-worse findings in the shipped
+dependencies.
 
 ### Stage 5: Build Images
 
-**Backend Image**:
+The per-image build jobs in `ci-cd.yml` build four images — agent, backend,
+daemon, and MCP runner. Images are built locally on the runner
+(`push: false`, `load: true`); they are **not** pushed from CI. GHCR pushes
+happen only in `release.yml`.
+
+**Backend Image** (`infra/docker/Dockerfile.backend`):
+- Multi-stage build on `python:3.12-slim` (the version comes from
+  `.python-version` / the `PYTHON_VERSION` build arg)
+- Entrypoint:
 ```dockerfile
-FROM python:3.10-slim
-COPY . /app
-RUN pip install -r requirements.txt
-CMD ["uvicorn", "services.api.main:app", "--host", "0.0.0.0"]
+CMD ["python", "-m", "uvicorn", "services.api.main:app", "..."]
 ```
 
-**Daemon Image**:
+**Daemon Image** (`infra/docker/Dockerfile.daemon`):
 ```dockerfile
-FROM python:3.10-slim
-COPY . /app
-CMD ["python", "-m", "daemon.main"]
+CMD ["python", "services/daemon/main.py"]
 ```
 
 **Optimization**:
@@ -235,40 +267,37 @@ CMD ["python", "-m", "daemon.main"]
 **Exit Criteria**:
 - Images build successfully
 - Tagged with branch and SHA
-- Pushed to GitHub Container Registry
+- Not pushed — publishing to GitHub Container Registry happens only in
+  `release.yml`
 
 ### Stage 6: Container Scanning
 
-**Trivy Scanner**:
-```bash
-trivy image --severity CRITICAL,HIGH ghcr.io/user/image:tag
-```
+There is no standalone image-scanning job. Trivy runs inside each
+per-image build job in `ci-cd.yml`, via
+`aquasecurity/trivy-action` (v0.36.0), against the locally built image.
+
+**Behaviour**:
+- Trivy reports HIGH and CRITICAL findings
+- The job fails only on **fixable CRITICAL** findings
+- Waivers live in `.trivyignore`
+- No SARIF upload / GitHub Security upload is configured
 
 **Exit Criteria**:
-- No critical vulnerabilities
-- Scan results uploaded to GitHub Security
+- No fixable CRITICAL vulnerabilities (after `.trivyignore` waivers)
 
 ### Stage 7: Deployment
 
 > **Not currently enabled.** CI builds, scans, and publishes images, but
 > no automated deployment runs — neither staging nor production. The
-> `release.yml` workflow only builds and publishes images. The commands
-> below describe the *manual* deploy path via `scripts/deploy_to_vm.sh`
-> (and the intended automated wiring for automated deployment).
-> The script's default `IMAGE_NAME` is stale — override it,
-> e.g. `IMAGE_NAME=vigil-soc/vigil`, so it pulls the published images.
+> `release.yml` workflow only builds and publishes images.
+>
+> The old manual deploy script, `scripts/deploy_to_vm.sh`, has been
+> **deleted** from the repo — do not use it or any instructions based on
+> it. The current local tooling is `scripts/vigil-compose.sh` (which wraps
+> `infra/docker/docker-compose.yml`) and `scripts/vigil-upgrade.sh`;
+> neither is a VM SSH deployer.
 
-**Staging** (intended: automatic on main):
-```bash
-./scripts/deploy_to_vm.sh staging
-```
-
-**Production** (manual, against release-tagged images):
-```bash
-./scripts/deploy_to_vm.sh production
-```
-
-**Exit Criteria**:
+**Exit Criteria** (for a manual rollout of published images):
 - Services healthy
 - Smoke tests pass
 - Rollback available
@@ -277,54 +306,46 @@ trivy image --severity CRITICAL,HIGH ghcr.io/user/image:tag
 
 ## Secrets Configuration
 
-### Required Secrets
+### Secrets and Variables the Workflows Actually Use
 
-Configure in **Settings → Secrets → Actions**:
-
-#### SSH & VM Access
-
-> Only needed for the **manual** `scripts/deploy_to_vm.sh` path (see Stage 7).
-> No wired workflow consumes these today — leave them unset until automated
-> deployment is turned on.
-
-```
-SSH_PRIVATE_KEY         # SSH key for VM access
-STAGING_VM_HOST         # Staging VM hostname/IP
-STAGING_VM_USER         # SSH username (staging)
-PROD_VM_HOST            # Production VM hostname/IP
-PROD_VM_USER            # SSH username (production)
-```
+Configure in **Settings → Secrets and variables → Actions**:
 
 #### Container Registry
 ```
 GITHUB_TOKEN            # Auto-provided by GitHub Actions
 ```
 
-#### API Keys
+#### Release automation
 ```
-ANTHROPIC_API_KEY       # Claude API key for testing
+vars.RELEASE_PLEASE_APP_ID          # GitHub App ID used by release-please.yml
+secrets.RELEASE_PLEASE_PRIVATE_KEY  # GitHub App private key for release-please.yml
+```
+These are also used by `connectors-live.yml`, `medic-pack-refresh.yml`,
+and `medic-pack-release.yml`.
+
+#### Live connector tests
+`connectors-live.yml` consumes vendor secrets for its live test suites
+(the `LIVE_*` secrets, e.g. the vendor API keys and account identifiers
+configured for that workflow).
+
+#### Notifications (optional)
+```
+SLACK_WEBHOOK_URL       # Optional: failure notifications only (nightly.yml, connectors-live.yml)
 ```
 
-#### Notifications
-```
-SLACK_WEBHOOK_URL       # Slack webhook for deployment notifications
-```
-
-#### Monitoring
-```
-SENTRY_DSN              # Sentry error tracking DSN
-```
+No workflow consumes SSH/VM secrets, an Anthropic API key, or a Sentry DSN.
+Sentry is configured from application settings at runtime, not from a CI
+secret — see Sentry Integration under Monitoring & Alerts.
 
 ### Setting Secrets
 
 ```bash
 # Via GitHub CLI
-gh secret set SSH_PRIVATE_KEY < ~/.ssh/id_rsa
 gh secret set SLACK_WEBHOOK_URL -b "https://hooks.slack.com/..."
 
 # Via GitHub Web UI
 1. Go to repository Settings
-2. Click Secrets → Actions
+2. Click Secrets and variables → Actions
 3. Click "New repository secret"
 4. Add name and value
 ```
@@ -335,39 +356,23 @@ gh secret set SLACK_WEBHOOK_URL -b "https://hooks.slack.com/..."
 
 ### Staging Deployment
 
-**Automatic on main branch merge**:
-
-1. All tests pass
-2. Images built and scanned
-3. SSH to staging VM
-4. Pull latest images
-5. Run migrations
-6. Rolling restart services
-7. Health checks
-8. Slack notification
-
-**Manual Rollback**:
-```bash
-ssh user@staging-host
-cd /opt/vigil
-docker-compose down
-git checkout previous-commit
-docker-compose up -d
-```
+There is no staging deployment. No workflow deploys to a staging VM on
+merge to `main` (or on any other trigger) — CI builds, scans, and, for
+releases, publishes images only.
 
 ### Production Deployment
 
-> **Not automated.** Pushing a version tag runs `release.yml`, which **builds
-> and publishes images only** — it does not deploy. Deploying those images to a
-> VM is a separate, manual step (Stage 7 / `scripts/deploy_to_vm.sh`) that is
-> not currently wired into CI.
+> **Not automated.** Merging a release PR (below) pushes a version tag,
+> which runs `release.yml`, which **builds and publishes images only** —
+> it does not deploy. Deploying those images is a separate, manual step
+> that is not wired into CI.
 
 What a version tag (e.g. `v1.2.3`) actually triggers (`release.yml`):
 
-1. Build & push `vigil-backend` and `vigil-daemon` images to GHCR
-2. Trivy-scan the published images
-3. Smoke-test that the images start
-4. Annotate the GitHub Release with the image digests
+1. Build & push the `vigil-backend`, `vigil-daemon`, `vigil-mcp-runner`,
+   and `vigil-agent` images to GHCR
+2. Smoke-test that the images start
+3. Annotate the GitHub Release with the image digests
 
 **Creating a Release** — releases are driven by `release-please`, not by
 hand-pushing tags:
@@ -376,39 +381,27 @@ hand-pushing tags:
 2. On merge, `release-please` pushes the `vX.Y.Z` tag and creates the GitHub
    Release; that tag push triggers `release.yml` (above).
 
-See `RELEASING.md` for the full process.
+See the [Releasing guide](/docs/releasing/) for the full process.
 
 ### Rollback Procedure
 
-> The automatic-rollback step below is **illustrative** — it belongs to the
-> not-yet-wired VM deploy path, not an active workflow. Manual rollback is the
-> real procedure today.
-
-**Automatic Rollback** (on health check failure):
-```yaml
-- name: Rollback on failure
-  if: failure()
-  run: |
-    ssh $VM_USER@$VM_HOST '
-      cd /opt/vigil &&
-      docker-compose down &&
-      docker-compose up -d --force-recreate
-    '
-```
+There is no automatic rollback — there is no automated deployment to roll
+back. Rollback is manual: re-run the previous published image version
+locally with the compose tooling.
 
 **Manual Rollback**:
 ```bash
-# SSH to production
-ssh prod-user@prod-host
-
 # View available images
 docker images | grep vigil
 
-# Rollback to previous version
-cd /opt/vigil
-export IMAGE_TAG=1.2.2  # Previous version (image tags are pushed without the v prefix; git tags still use v)
-docker-compose up -d --force-recreate
+# Roll back to the previous version (image tags are pushed without the
+# v prefix; git tags still use v)
+export IMAGE_TAG=1.2.2  # Previous version
+scripts/vigil-compose.sh up -d
 ```
+
+`scripts/vigil-compose.sh` drives the Compose file at
+`infra/docker/docker-compose.yml`.
 
 ---
 
@@ -419,84 +412,73 @@ docker-compose up -d --force-recreate
 **Docker Layer Caching**:
 ```yaml
 - name: Build and push
-  uses: docker/build-push-action@v5
+  uses: docker/build-push-action@v7
   with:
     cache-from: type=gha
     cache-to: type=gha,mode=max
 ```
 
-**Dependency Caching**:
-```yaml
-- name: Cache pip dependencies
-  uses: actions/cache@v3
-  with:
-    path: ~/.cache/pip
-    key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-```
-
 **NPM Caching**:
 ```yaml
 - name: Setup Node.js
-  uses: actions/setup-node@v5
+  uses: actions/setup-node@v7
   with:
     cache: 'npm'
     cache-dependency-path: clients/web/package-lock.json
 ```
 
+There is no standalone `actions/cache` pip-caching step in `ci-cd.yml`;
+npm caching is provided by `actions/setup-node` as shown above.
+
 ### Parallel Execution
 
 Jobs run in parallel when possible:
 - All linting jobs run concurrently
-- Unit tests (backend/frontend) run concurrently
+- Check and schema-test jobs run concurrently
 - Security scans run in parallel
 
-**Estimated Pipeline Duration**:
-- Linting: 2-3 minutes
-- Tests: 5-7 minutes
-- Build: 8-10 minutes
-- Deploy: 3-5 minutes
-- **Total**: ~15 minutes (with caching)
+No pipeline duration figures are published here: the repo carries no
+timing data to support them.
 
 ---
 
 ## Monitoring & Alerts
 
-### Deployment Notifications
+### Failure Notifications
 
-**Slack Integration**:
+Slack is used for **failure notifications only** — there are no deployment
+notifications, because there are no deployments.
+
+**Slack Integration** (as used in `nightly.yml`):
 ```yaml
 - name: Notify Slack
-  uses: slackapi/slack-github-action@v1
+  uses: slackapi/slack-github-action@v4
   with:
+    webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+    webhook-type: incoming-webhook
     payload: |
       {
-        "text": "Deployment Successful",
-        "blocks": [
-          {
-            "type": "section",
-            "text": {
-              "type": "mrkdwn",
-              "text": "*Version:* ${{ github.ref_name }}"
-            }
-          }
-        ]
+        "text": "Nightly Security Audit Failed"
       }
 ```
 
 **Notification Triggers**:
-- Staging deployment success/failure
-- Production deployment success/failure
-- Nightly test failures
-- Security scan failures
+- Nightly security audit failure (`nightly.yml`, only when
+  `SLACK_WEBHOOK_URL` is set)
+- Live connector test failure (`connectors-live.yml` notify job)
 
 ### GitHub Status Checks
 
-**Required Checks** (configure in branch protection):
+Job names that exist today and can be required in branch protection
+include:
 - lint-backend
 - lint-frontend
-- test-unit-backend
-- test-integration
 - security-scan-python
+- security-scan-npm
+- build-frontend
+
+The branch-protection settings themselves are configured on GitHub and
+cannot be verified from the repository.
 
 **Branch Protection Rules**:
 ```
@@ -513,13 +495,16 @@ Settings → Branches → Branch protection rules
 - Performance monitoring
 - Release tracking
 
-**Configuration**:
+**Configuration** (`core/platform/monitoring.py`): the DSN, environment,
+and release come from application settings, not from environment-based
+CI secrets:
+
 ```python
-# backend/monitoring.py
+# core/platform/monitoring.py
 sentry_sdk.init(
-    dsn=os.getenv("SENTRY_DSN"),
-    environment=os.getenv("ENVIRONMENT"),
-    release=os.getenv("RELEASE_VERSION")
+    dsn=sentry_dsn,
+    environment=environment,
+    release=release,
 )
 ```
 
@@ -544,18 +529,16 @@ gh run rerun --failed
 pytest tests/unit/ -v --lf  # Run last failed
 
 # Check test logs in GitHub Actions
-Actions → Failed workflow → test-unit-backend → Logs
+Actions → Failed workflow → <job name> → Logs
 ```
 
-**Deployment Failures**:
+**Local Stack Failures**:
 ```bash
-# SSH to VM and check logs
-ssh user@host
-cd /opt/vigil
-docker-compose logs --tail=100 backend
+# Check logs through the local compose tooling
+scripts/vigil-compose.sh logs --tail=100
 
 # Check service status
-docker-compose ps
+scripts/vigil-compose.sh ps
 ```
 
 ### Common Issues
@@ -568,9 +551,6 @@ docker-compose ps
 
 **Issue**: Test database connection failed
 **Solution**: Ensure PostgreSQL service is healthy in workflow
-
-**Issue**: Permission denied on deployment
-**Solution**: Check SSH key is correct and VM user has docker permissions
 
 ---
 
@@ -596,14 +576,19 @@ ci: Optimize Docker build caching
 
 ### 3. Pull Request Workflow
 
-1. Create feature branch from `develop`
+The repo's flow is `main`-centric:
+
+1. Create a feature branch from `main`
 2. Make changes and commit
-3. Push and create PR to `develop`
+3. Push and create a PR to `main`
 4. Wait for CI checks to pass
 5. Request code review
-6. Merge to `develop`
-7. Periodic merges from `develop` to `main`
-8. Tag releases from `main`
+6. Merge to `main`
+7. Releases are cut from `main` by `release-please` (see Creating a
+   Release above)
+
+(`develop` is still accepted as a trigger branch by `ci-cd.yml` and
+`helm-chart.yml`, but it is not the integration branch in this flow.)
 
 ### 4. Emergency Hotfixes
 
@@ -618,12 +603,12 @@ pytest tests/
 # Commit and push
 git commit -m "fix: Resolve critical bug"
 git push origin hotfix/critical-bug
-
-# Create PR directly to main
-# After merge, tag new patch version
-git tag v1.2.4
-git push origin v1.2.4
 ```
+
+Create a PR directly to `main`. After it merges, the fix ships in the
+next release cut by `release-please` — do not hand-push a version tag;
+hand-pushed tags are not the release mechanism, and `release.yml` only
+accepts release-please `vX.Y.Z` tags.
 
 ---
 
