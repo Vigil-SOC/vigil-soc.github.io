@@ -7,34 +7,43 @@ permalink: /docs/integrations/
 {% raw %}
 Configure integrations via **Settings > Integrations** in the web UI.
 
-## Backend Tools via Agent SDK (Recommended)
+## Backend Tools (in-process)
 
-Backend tool integration via Claude Agent SDK eliminates desktop dependency.
+Backend tools are defined in-process in `core/llm/tool_schemas.py` and
+served alongside MCP. There is no separate agent SDK layer.
 
 ### Available Backend Tools
+
+The lists in `core/llm/tool_schemas.py` (`ALL_TOOLS`) cover:
 
 | Category | Tools |
 |----------|-------|
 | **Security Detections** | Coverage analysis, detection search, gap identification |
 | **Findings & Cases** | List/get findings, case management, similarity search |
-| **MITRE ATT&CK** | Attack layer generation, technique rollup |
+| **MITRE ATT&CK** | Technique rollup (`get_technique_rollup`) |
+| **Threat Intel** | Threat intelligence lookups |
 | **Approval Workflow** | Pending approvals, approve/reject actions, statistics |
+| **Memory** | Memory recall and storage |
+| **Skill** | Skill execution |
+
+Access to connected integrations goes through two additional tools that
+are deliberately kept out of `ALL_TOOLS`: `find_integration_tools` and
+`call_integration_tool` (`INTEGRATION_TOOLS` in
+`core/llm/tool_schemas.py`).
 
 ### Benefits
 
-- ✅ **Zero Desktop Dependency** - Works entirely through Agent SDK
 - ✅ **Web UI Compatible** - All tools accessible via browser
 - ✅ **Production Ready** - Multi-user deployments
-- ✅ **Lower Latency** - Direct function calls via Agent SDK
-- ✅ **Simpler Deployment** - No MCP server configuration needed
+- ✅ **In-process** - Backend tools run in-process, with no separate desktop app
 
 ### Usage
 
-Backend tools are automatically enabled for web UI users via the Claude Agent SDK. See [Backend Tools Guide](/docs/backend-tools/) for detailed documentation.
+Backend tools are automatically enabled for web UI users. See [Backend Tools Guide](/docs/backend-tools/) for detailed documentation.
 
 ## MCP Servers (Optional - Advanced Integration)
 
-> **Note**: MCP servers are optional and primarily used for advanced integrations requiring external services (Splunk, VirusTotal, etc.). Web UI users get full functionality through the Agent SDK backend tools.
+> **Note**: MCP servers are optional and primarily used for advanced integrations requiring external services (Splunk, VirusTotal, etc.). Web UI users get full functionality through the in-process backend tools described above.
 
 Each connector in `mcp-config.json` is checked weekly against a real instance by the [live connector checks](/docs/github-workflows/#5-connectors-liveyml---live-connector-checks).
 {% endraw %}
@@ -44,6 +53,8 @@ Each connector in `mcp-config.json` is checked weekly against a real instance by
 {% assign untested = rows | where_exp: "c", "c.status != 'pass'" | where_exp: "c", "c.status != 'fail'" %}
 {% assign failed = rows | where: "status", "fail" %}
 Checked on {{ matrix.ran_at | date: "%B %-d, %Y" }} at commit `{{ matrix.commit }}` ([run]({{ matrix.run }})).
+
+> Note: this table is generated from the snapshot above, which predates the current release; it does not yet include every configured connector (for example, `amazon-security-lake` is missing from this snapshot).
 
 | Connector | Version | Live result |
 |-----------|---------|-------------|
@@ -66,14 +77,22 @@ Security-Detections-MCP provides:
 - **Tribal Knowledge** - Document and retrieve detection decisions
 - **Pattern Intelligence** - Learn from existing detection rules
 
+The tool categories and expert prompts below describe the external
+`security-detections-mcp` server configured in `mcp-config.json`; they
+are not defined in this repository and cannot be verified from it. The
+7,200+ rules figure matches `setup_dev.sh` (~7,200 rules, ~4GB).
+
 ### Configuration
 
-Automatically configured during `./setup_dev.sh`. Detection repositories are cloned to `~/security-detections/`.
+Detection repositories are **off by default** during `./setup_dev.sh`
+and are opt-in only, because the download is heavy (~7,200 rules, ~4GB).
+To enable them, run setup with the opt-in flag:
 
-To skip automatic installation:
 ```bash
-SKIP_DETECTION_REPOS=true ./setup_dev.sh
+SETUP_DETECTION_REPOS=1 ./setup_dev.sh
 ```
+
+When enabled, detection repositories are cloned to `~/security-detections/`.
 
 To update repositories:
 ```bash
@@ -133,16 +152,15 @@ Guided workflows for detection engineering:
 
 See [DETECTION_ENGINEERING.md](/docs/detection-engineering/) for complete usage guide, examples, and best practices.
 
-### Verification
-
-Test integration:
-```bash
-python scripts/test_detection_integration.py
-```
-
 ## Splunk
 
 Natural language to SPL query generation.
+
+Vigil has two Splunk entries in `mcp-config.json`: `splunk`, the
+external Splunk Official MCP server reached via `mcp-remote`, and
+`splunk-selfhosted`, the in-repo server in
+`core/integrations/splunk/tool.py`. The tool table below is the in-repo
+self-hosted server's table.
 
 ### Configuration
 
@@ -155,36 +173,36 @@ Settings > Integrations > Splunk:
 - Username
 - Verify SSL
 
-### MCP Tools
+### MCP Tools (in-repo `splunk-selfhosted`)
 
 | Tool | Description |
 |------|-------------|
-| `generate_spl_query` | Natural language to SPL |
-| `execute_spl_search` | Run SPL query |
-| `search_by_ip` | Quick IP search |
-| `search_by_hostname` | Quick hostname search |
-| `search_by_username` | Quick user search |
-| `natural_language_search` | Generate and execute |
-| `get_splunk_indexes` | List available indexes |
+| `splunk_generate_spl` | Natural language to SPL |
+| `splunk_execute` | Run SPL query |
+| `splunk_search_ip` | Quick IP search |
+| `splunk_search_host` | Quick hostname search |
+| `splunk_nl_search` | Generate and execute |
+
+The in-repo server has no tool for listing indexes.
 
 ## Elastic Security
 
-Elasticsearch SIEM with detection alert ingestion, bi-directional case sync, and IOC enrichment.
+Elasticsearch SIEM with detection alert ingestion and IOC enrichment.
 
 ### Configuration
 
 ```bash
-ELASTIC_HOST="https://elasticsearch.example.com:9200"
-ELASTIC_KIBANA_URL="https://kibana.example.com:5601"
-ELASTIC_API_KEY="your_api_key"
+ELASTIC_SIEM_ELASTICSEARCH_URL="https://elasticsearch.example.com:9200"
+ELASTIC_SIEM_KIBANA_URL="https://kibana.example.com:5601"
+ELASTIC_SIEM_API_KEY="your_api_key"
 # Or use basic auth:
-# ELASTIC_USERNAME="elastic"
-# ELASTIC_PASSWORD="your_password"
+# ELASTIC_SIEM_USERNAME="elastic"
+# ELASTIC_SIEM_PASSWORD="your_password"
 ```
 
 Settings > Integrations > Elastic Security (SIEM):
 - Elasticsearch URL
-- Kibana URL (required for detection alerts and case sync)
+- Kibana URL (required for detection alerts)
 - API Key or Username/Password
 - Alert Index Pattern (default: `.alerts-security.alerts-default`)
 
@@ -200,29 +218,17 @@ Settings > Integrations > Elastic Security (SIEM):
 ### Features
 
 - **Alert Ingestion**: Daemon poller fetches detection alerts from Kibana Detections API
-- **Bi-directional Sync**: Case status changes in Vigil sync back to Elastic Security alerts
 - **IOC Enrichment**: Agents query Elasticsearch indices for logs matching case IOCs
 
-## Timesketch
+## Timesketch (no integration at this version)
 
-Forensic timeline analysis.
-
-### Configuration
-
-Settings > Integrations > Timesketch:
-- Server URL: `http://localhost:5000` (local) or production URL
-- Auth: Username/Password or API Token
-- Auto-sync interval (optional)
-
-### MCP Tools
-
-| Tool | Description |
-|------|-------------|
-| `list_sketches` | List investigation workspaces |
-| `get_sketch` | Get sketch details |
-| `create_sketch` | Create new workspace |
-| `search_timesketch` | Lucene query search |
-| `export_to_timesketch` | Export findings/cases |
+There is no Timesketch integration at this version: there is no
+`timesketch` entry in `mcp-config.json`, no slice under
+`core/integrations/`, and no Timesketch entry in the web UI integrations
+catalog. The only counterpart in code is a storage model,
+`SketchMapping` in `core/storage/models/config.py`, which links
+cases/findings to Timesketch sketches. No Timesketch MCP tools are
+available.
 
 ## Threat Intelligence
 
@@ -230,8 +236,11 @@ Settings > Integrations > Timesketch:
 
 ```bash
 # Settings > Integrations > VirusTotal
-VT_API_KEY="your_api_key"
+VIRUSTOTAL_API_KEY="your_api_key"
 ```
+
+VirusTotal is descriptor-only in-repo (no `tool.py`); it is served by
+the external server configured in `mcp-config.json`.
 
 Tools: `vt_check_hash`, `vt_check_ip`, `vt_check_domain`, `vt_check_url`
 
@@ -241,15 +250,18 @@ Tools: `vt_check_hash`, `vt_check_ip`, `vt_check_domain`, `vt_check_url`
 SHODAN_API_KEY="your_api_key"
 ```
 
+Shodan is descriptor-only in-repo; the tools below are the external
+server's names.
+
 Tools: `shodan_search_ip`, `shodan_get_host_info`, `shodan_search_exploits`
 
 ### AlienVault OTX
 
 ```bash
-OTX_API_KEY="your_api_key"
+ALIENVAULT_OTX_API_KEY="your_api_key"
 ```
 
-Tools: `otx_get_indicator`, `otx_search_pulses`, `otx_get_pulse`
+Tools: `otx_check_ip`, `otx_check_domain`, `otx_check_hash`
 
 ### MISP
 
@@ -258,7 +270,7 @@ MISP_URL="https://misp.example.com"
 MISP_API_KEY="your_api_key"
 ```
 
-Tools: `misp_search`, `misp_get_event`, `misp_add_attribute`
+Tools: `misp_search_ioc`, `misp_get_events`
 
 ### Cloudflare Cloudforce One (STIX/TAXII)
 
@@ -287,7 +299,7 @@ customers can subscribe to either or both.
 HYBRID_ANALYSIS_API_KEY="your_api_key"
 ```
 
-Tools: `ha_submit_file`, `ha_get_report`, `ha_search`
+Tools: `ha_search_hash`, `ha_get_report`
 
 ### Joe Sandbox
 
@@ -295,7 +307,10 @@ Tools: `ha_submit_file`, `ha_get_report`, `ha_search`
 JOE_SANDBOX_API_KEY="your_api_key"
 ```
 
-Tools: `joe_submit`, `joe_get_report`, `joe_search`
+Joe Sandbox has no in-repo `tool.py` (descriptor only in
+`core/integrations/joe_sandbox/`); it is served by the external server
+configured in `mcp-config.json`, so no in-repo tool names are listed
+here.
 
 ### ANY.RUN
 
@@ -303,7 +318,7 @@ Tools: `joe_submit`, `joe_get_report`, `joe_search`
 ANYRUN_API_KEY="your_api_key"
 ```
 
-Tools: `anyrun_get_report`, `anyrun_search`, `anyrun_get_iocs`
+Tools: `anyrun_get_report`, `anyrun_search_hash`
 
 ### CAPE Sandbox
 
@@ -315,6 +330,8 @@ Docker Desktop.
 
 ```bash
 CAPE_SANDBOX_ENABLED="true"
+# Default in env.example is http://localhost:8000; the value below is an
+# example deployment value for an internal CAPE host.
 CAPE_SANDBOX_URL="http://cape.internal:8000"
 CAPE_SANDBOX_API_KEY="your_cape_api_token"
 ```
@@ -365,9 +382,10 @@ CLOUDFLARE_ACCOUNT_ID="..."   # required for Zero Trust + Access actions
 CLOUDFLARE_ZONE_ID="..."      # optional default zone for WAF rules
 ```
 
-All write actions route through `services/approval_service.py`; the auto-
-responder agent only auto-approves at confidence ≥ 0.90, otherwise an analyst
-must approve in the Approvals UI before the daemon executes the call.
+All write actions route through `core/response/approval_service.py`. No
+confidence band auto-approves them: an analyst must approve in the Approvals
+UI before the daemon executes the call (confidence thresholds are routing
+bands only).
 
 ### Cloudflare Cloudy ingestion (gated)
 
@@ -383,12 +401,18 @@ are surfaced into the Threat Intel agent's context window.
 
 ### CrowdStrike
 
-```bash
-CS_CLIENT_ID="your_client_id"
-CS_CLIENT_SECRET="your_client_secret"
-```
+CrowdStrike is the external `falcon-mcp` server in `mcp-config.json`;
+there is no in-repo `tool.py` for it (descriptor only in
+`core/integrations/crowdstrike/`), so its tool names are the external
+server's and are not listed here.
 
-Tools: `get_crowdstrike_alert_by_ip`, `crowdstrike_foundry_isolate`, `crowdstrike_foundry_unisolate`, `get_host_status`
+```bash
+# Env names read by the MCP server entry in mcp-config.json:
+FALCON_CLIENT_ID="your_client_id"
+FALCON_CLIENT_SECRET="your_client_secret"
+FALCON_BASE_URL="https://api.crowdstrike.com"
+# env.example uses CROWDSTRIKE_CLIENT_ID / CROWDSTRIKE_CLIENT_SECRET.
+```
 
 ## Communication
 
@@ -399,30 +423,34 @@ SLACK_BOT_TOKEN="xoxb-..."
 SLACK_DEFAULT_CHANNEL="#soc-alerts"
 ```
 
-Tools: `slack_send_message`, `slack_send_alert`, `slack_create_channel`, `slack_upload_file`
+The in-repo server (`core/integrations/slack/tool.py`) exposes one tool:
+
+Tools: `slack_send_alert`
 
 ### Jira
 
-```bash
-JIRA_URL="https://company.atlassian.net"
-JIRA_EMAIL="user@company.com"
-JIRA_API_TOKEN="your_token"
-```
-
-Tools: `jira_create_issue`, `jira_update_issue`, `jira_add_comment`, `jira_search`, `jira_get_issue`
+Jira is covered by the hosted Atlassian Rovo MCP server in
+`mcp-config.json` (reached via `mcp-remote`, OAuth 2.1 browser flow).
+It is descriptor-only in-repo (no `tool.py`), so its tool names are the
+hosted server's and are not Vigil-defined; no `JIRA_URL` / `JIRA_EMAIL` /
+`JIRA_API_TOKEN` env block applies to that OAuth wiring.
 
 ## Data Pipeline
 
 ### Cribl Stream
 
 ```bash
+CRIBL_BASE_URL="..."
+CRIBL_AUTH_TYPE="cloud"
+CRIBL_CLIENT_ID="..."
+CRIBL_CLIENT_SECRET="..."
+CRIBL_USERNAME="..."
 CRIBL_PASSWORD="your_password"
-CRIBL_WORKER_GROUP="default"
 ```
 
 Benefits:
 - Normalize log formats before DeepTempo analysis
-- Filter noise, reduce Splunk ingestion 30-50%
+- Filter noise before downstream ingestion
 - Enrich events with GeoIP, asset info
 - Route data to multiple destinations
 
@@ -431,6 +459,148 @@ Data Sources -> Cribl Stream -> DeepTempo LogLM
                             -> Splunk
                             -> S3/Data Lake
 ```
+
+## Additional Connectors
+
+The connectors below are configured via **Settings > Integrations**
+and named as MCP servers in `mcp-config.json`. Each entry notes whether
+Vigil ships an in-repo slice for it under `core/integrations/`.
+
+### Amazon Security Lake
+
+MCP server `amazon-security-lake`. Full in-repo slice:
+`core/integrations/amazon_security_lake/` (`tool.py`, `descriptor.py`,
+`lake.py`). Also listed in the web UI integrations catalog.
+See [Amazon Security Lake](/docs/integrations/amazon-security-lake/).
+
+### Atomic Red Team
+
+MCP server `atomic-red-team`. In-repo slice:
+`core/integrations/atomic_red_team/` (`tool.py`, `descriptor.py`).
+Also listed in the web UI integrations catalog.
+
+### AWS Security Hub
+
+MCP server `aws-security` in `mcp-config.json`; the descriptor and web
+UI catalog use the name `aws-security-hub`
+(`core/integrations/aws_security_hub/`, descriptor only — no `tool.py`).
+
+### Azure AD
+
+MCP server `azure-ad`. In-repo slice: `core/integrations/azure_ad/`
+(`tool.py`, `descriptor.py`). Also listed in the web UI integrations
+catalog.
+
+### Azure Sentinel
+
+MCP server `azure-sentinel` (hosted). Descriptor only in
+`core/integrations/azure_sentinel/` — no `tool.py`. Also listed in the
+web UI integrations catalog.
+
+### Carbon Black
+
+MCP server `carbon-black`. In-repo slice:
+`core/integrations/carbon_black/` (`tool.py`, `descriptor.py`). Also
+listed in the web UI integrations catalog.
+
+### Firecrawl
+
+MCP server `firecrawl`. No in-repo descriptor directory or slice; also
+listed in the web UI integrations catalog.
+
+### GCP Security Command Center
+
+MCP server `gcp-scc`. MCP-only connector: no in-repo descriptor
+directory and no web UI catalog entry.
+
+### GCP Security Operations
+
+MCP server `gcp-secops`. No in-repo descriptor directory or slice; also
+listed in the web UI integrations catalog as `gcp-secops`.
+
+### GCP Threat Intelligence
+
+MCP server `gcp-threat-intel`. No in-repo descriptor directory or
+slice; also listed in the web UI integrations catalog as
+`gcp-threat-intel`.
+
+### GitHub
+
+MCP server `github`. No in-repo descriptor directory or slice; also
+listed in the web UI integrations catalog as `github`.
+
+### IP Geolocation
+
+MCP server `ip-geolocation`. In-repo slice:
+`core/integrations/ip_geolocation/` (`tool.py`, `descriptor.py`). Also
+listed in the web UI integrations catalog.
+
+### DeepTempo LogLM
+
+MCP server `loglm` (hosted). No in-repo descriptor directory or slice;
+also listed in the web UI integrations catalog as `loglm`.
+
+### Microsoft Defender
+
+MCP server `microsoft-defender`. In-repo slice:
+`core/integrations/microsoft_defender/` (`tool.py`, `descriptor.py`,
+plus adapter/ingestion code). Also listed in the web UI integrations
+catalog.
+
+### Microsoft Teams
+
+MCP server `microsoft-teams`. In-repo slice:
+`core/integrations/microsoft_teams/` (`tool.py`, `descriptor.py`).
+Also listed in the web UI integrations catalog.
+
+### Okta
+
+MCP server `okta`. Descriptor only in `core/integrations/okta/` — no
+`tool.py`. Also listed in the web UI integrations catalog.
+
+### OpenCTI
+
+MCP server `opencti`. Full in-repo slice:
+`core/integrations/opencti/` (`tool.py`, `descriptor.py`, `client.py`).
+Also listed in the web UI integrations catalog.
+See [OpenCTI](/docs/integrations/opencti/).
+
+### OpenSearch
+
+MCP server `opensearch`. Full in-repo slice:
+`core/integrations/opensearch/` (`tool.py`, `descriptor.py`, plus
+adapter/client/ingestion code). Also listed in the web UI integrations
+catalog. See [OpenSearch](/docs/integrations/opensearch/).
+
+### PagerDuty
+
+MCP server `pagerduty`. Descriptor only in
+`core/integrations/pagerduty/` — no `tool.py`. Also listed in the web
+UI integrations catalog.
+
+### Palo Alto
+
+MCP server `palo-alto`. In-repo slice:
+`core/integrations/palo_alto/` (`tool.py`, `descriptor.py`). Also
+listed in the web UI integrations catalog.
+
+### SentinelOne
+
+MCP server `sentinelone`. Descriptor only in
+`core/integrations/sentinelone/` — no `tool.py`. Also listed in the web
+UI integrations catalog.
+
+### URL Analysis
+
+MCP server `url-analysis`. In-repo slice:
+`core/integrations/url_analysis/` (`tool.py`, `descriptor.py`). Also
+listed in the web UI integrations catalog.
+
+### Wazuh
+
+MCP server `wazuh`. Full in-repo slice: `core/integrations/wazuh/`
+(`tool.py`, `descriptor.py`, `client.py`). Also listed in the web UI
+integrations catalog. See [Wazuh](/docs/integrations/wazuh/).
 
 ## Adding Custom Integrations
 
@@ -450,19 +620,38 @@ radius.
 
 ### Integration surface
 
-| Direction | Endpoint / Tool | Purpose |
-|-----------|-----------------|---------|
+Vigil exposes exactly three VStrike REST routes
+(`services/api/routers/vstrike.py`). All other VStrike operations are
+MCP tools in `core/integrations/vstrike/tool.py` only — they are not
+REST routes.
+
+REST routes:
+
+| Direction | Endpoint | Purpose |
+|-----------|----------|---------|
 | VStrike → Vigil | `POST /api/integrations/vstrike/findings` | Push enriched findings (batched) |
 | Vigil → VStrike | `GET /api/integrations/vstrike/health` | Outbound reachability check |
-| Vigil → VStrike | `GET /api/integrations/vstrike/topology/asset/{id}` | Asset topology lookup |
-| Vigil → VStrike | `GET /api/integrations/vstrike/topology/asset/{id}/adjacent` | One-hop neighbors |
-| Vigil → VStrike | `GET /api/integrations/vstrike/topology/asset/{id}/blast-radius` | Blast radius |
-| Vigil → VStrike | `POST /api/integrations/vstrike/network-graph` | Full network graph: `{label, nodes, edges, bbox}` |
-| Vigil → VStrike | `POST /api/integrations/vstrike/ui/legend-apply` | Apply selected legend in the iframe |
-| Vigil → VStrike | `POST /api/integrations/vstrike/ui/rightpanel-focus` | Open / focus the iframe's right-hand details panel |
-| MCP | `core/integrations/vstrike/tool.py` (`vstrike_*` tools) | Agent-invokable topology queries + UI control |
+| Vigil → VStrike | `GET /api/integrations/vstrike/topology/asset/{asset_id}` | Asset topology lookup |
 
-#### Recently added MCP tools
+MCP tools (`core/integrations/vstrike/tool.py`):
+
+| Tool | Purpose |
+|------|---------|
+| `vstrike_get_asset_topology` | Asset topology lookup |
+| `vstrike_list_adjacent_assets` | One-hop neighbors |
+| `vstrike_get_blast_radius` | Blast radius |
+| `vstrike_get_segment_findings` | Findings by segment |
+| `vstrike_node_search` | Node search |
+| `vstrike_node_drift_get` | Node drift |
+| `vstrike_storyline_list` | List storylines |
+| `vstrike_storyline_events_get` | Storyline events |
+| `vstrike_legend_run_list` | List legend runs |
+| `vstrike_legend_run_results_get` | Legend run results |
+| `vstrike_network_graph_get` | Full network graph: `{label, nodes, edges, bbox}` |
+| `vstrike_ui_legend_apply` | Apply selected legend in the iframe |
+| `vstrike_ui_rightpanel_focus` | Open / focus the iframe's right-hand details panel |
+
+#### MCP-only UI and graph tools
 
 | Tool | Input | Behavior |
 |------|-------|----------|
@@ -470,11 +659,9 @@ radius.
 | `vstrike_ui_legend_apply` | `legendId` (required, value from `legend-run-list`), `networkId` (optional) | Applies the selected legend run inside the active VStrike iframe session. |
 | `vstrike_ui_rightpanel_focus` | none | Opens the VStrike iframe's right-hand details panel for whatever node is currently selected. |
 
-UX wiring:
-
-- The toolbar's Legend dropdown now has an Apply button parallel to the existing Storyline Apply.
-- Picking a node from the toolbar search results chains `ui-camera-node` → `ui-rightpanel-focus` so the camera selects the node and its details panel opens automatically.
-- Clicking an adjacent-asset chip in `NetworkContextPanel` chains the same way: Vigil highlights the node in its own EntityGraph, then drives VStrike with `cameraNode` + `focusRightPanel`.
+These are MCP tools only; there are no corresponding Vigil REST routes
+for adjacent assets, blast radius, network graph, legend apply, or
+right-panel focus.
 
 Service methods accept `**kwargs` and REST routes use `extra="allow"` Pydantic models, so future schema bumps on VStrike's side don't require a Vigil refactor.
 
@@ -496,8 +683,7 @@ UI: **Settings → Integrations → CloudCurrent VStrike**.
 
 VStrike enrichment lives at `finding.entity_context["vstrike"]` (JSONB —
 no DB migration required). Shape is defined by
-`core/integrations/vstrike/schemas.py::VStrikeEnrichment` and mirrored by
-`clients/web/src/types/vstrike.ts`.
+`core/integrations/vstrike/schemas.py::VStrikeEnrichment`.
 
 The ingest handler does read-modify-write on `entity_context` so existing
 keys (`src_ip`, `hostname`, etc.) are never clobbered.
@@ -554,20 +740,18 @@ curl -X POST http://localhost:6987/api/integrations/vstrike/findings \
 
 ### Visualization
 
-- **Finding detail**: `NetworkContextPanel` renders the VStrike sub-dict
-  (criticality, segment, mission system, blast radius, attack-path
-  breadcrumb, clickable adjacent-asset chips).
-- **Entity graph**: nodes are tinted by segment when VStrike metadata is
-  present; the first MITRE technique on a link is rendered as an edge
-  label (always on highlighted links, and at zoom > 2.0 otherwise).
-- **Pivot**: clicking an adjacent-asset chip dispatches
-  `vstrike-graph-highlight` — `pages/Investigation.tsx` listens for this
-  event and feeds the node id into `EntityGraph.highlightedNodes`.
+The embedded VStrike `NetworkContextPanel` is deliberately not ported
+to the web UI: `clients/web/src/screens/dashboard/FindingPopup.tsx`
+notes it needs the VStrike provider, which isn't mounted under the
+console shell. There is no `Investigation.tsx`, `EntityGraph`, or
+`vstrike-graph-highlight` wiring in the web UI at this version. The
+`vstrike_ui_*` MCP tools above exist as agent-invokable tools only;
+treat any in-UI graph highlighting or panel rendering as planned, not
+shipped.
 
 ### Testing
 
-```bash
-pytest tests/integration/test_vstrike_ingest.py -v
-pytest tests/unit/test_vstrike_service.py -v
-```
+There are no VStrike tests in the repository at this version (no test
+file under `tests/` references VStrike), so there are no VStrike test
+commands to run.
 {% endraw %}

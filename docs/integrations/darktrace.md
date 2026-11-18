@@ -28,6 +28,8 @@ case creation work identically to Splunk/CrowdStrike sources.
 
 ## Vigil configuration
 
+Darktrace can be configured in the Settings UI (**Settings → Data Ingestion** → **Darktrace webhook**, backed by `GET`/`POST /api/config/darktrace`) or in `.env`. Values saved in the Settings UI take precedence over `.env` for the enabled flag, the console URL, and the max body size. The webhook secret is stored via the secrets manager under `DARKTRACE_WEBHOOK_SECRET`; the `.env` value is honoured only as a fallback.
+
 Set in `.env`:
 
 ```
@@ -44,9 +46,10 @@ Generate a secret:
 openssl rand -hex 32
 ```
 
-`DARKTRACE_URL` is optional. When set, every ingested finding gets an
-`evidence_links` entry pointing back to the originating console (model
-breach or AI Analyst incident URL).
+`DARKTRACE_URL` is optional. When set, Model Breach and AI Analyst
+findings get an `evidence_links` entry pointing back to the originating
+console (model breach or AI Analyst incident URL). System Status
+findings do not get an `evidence_links` entry.
 
 ## Darktrace configuration
 
@@ -54,7 +57,7 @@ breach or AI Analyst incident URL).
 2. **URL**: `https://<vigil-host>:6987/api/webhooks/darktrace/model-breach` (repeat for `ai-analyst` and `system-status` — each endpoint is separate so you can wire each stream independently).
 3. **Authentication**: select **HMAC-SHA256**. Paste the same value you used for `DARKTRACE_WEBHOOK_SECRET`.
 4. **Signature header**: `X-Darktrace-Signature` — hex HMAC-SHA256 over the raw request body. Vigil also accepts the `sha256=...` prefix style.
-5. Click **Test** — Vigil returns `202 Accepted` on success, `401` if the signature doesn't match.
+5. Click **Test** — the test feature probes `GET /api/webhooks/darktrace/health`, which returns `200` with `{"status": "ok", ...}`. A signed POST to one of the alert endpoints returns `202 Accepted` on success, `401` if the signature doesn't match.
 
 ### SaaS vs on-prem notes
 
@@ -63,7 +66,7 @@ breach or AI Analyst incident URL).
 
 ## Verifying end-to-end
 
-1. Run Vigil's backend (`./start.sh` or `uvicorn services.api.main:app --reload`).
+1. Run Vigil's backend (`./start.sh` or `uvicorn services.api.main:app --port 6987 --reload`).
 2. Confirm the receiver is live:
    ```bash
    curl https://<vigil-host>:6987/api/webhooks/darktrace/health
@@ -78,14 +81,16 @@ breach or AI Analyst incident URL).
      -d "$BODY"
    ```
    Expect `HTTP 202` with `{"accepted": true, "finding_id": "f-YYYYMMDD-xxxxxxxx"}`.
-4. Confirm ingestion: `curl https://<vigil-host>:6987/api/findings?data_source=darktrace`.
+4. Confirm ingestion (this endpoint requires authentication): `curl -H "Authorization: Bearer <token>" https://<vigil-host>:6987/api/findings?data_source=darktrace`.
 
 ## Idempotency
 
 Vigil derives each `finding_id` from the alert's stable identifier
-(`pbid` for Model Breach, `uuid` for AI Analyst, `id`/`name` fallback for
-System Status). Replaying the same webhook produces the same finding ID,
-which the ingestion layer skips as a duplicate — safe to re-deliver.
+(`pbid` for Model Breach, `uuid` or `id` for AI Analyst, `id`, `eventId`,
+or `name` for System Status — falling back to a stable SHA-1 digest of
+the sorted payload when none of those is present). Replaying the same
+webhook produces the same finding ID, which the ingestion layer skips
+as a duplicate — safe to re-deliver.
 
 ## Security
 
