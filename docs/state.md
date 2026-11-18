@@ -21,21 +21,25 @@ checkouts don't nuke stored credentials.
 
 1. `EncryptedFileBackend` — `~/.vigil/secrets.enc` (preferred)
 2. `EnvironmentBackend` — `os.environ`
-3. `DotEnvBackend` — `~/.deeptempo/.env` (**legacy, prefer migrate**)
-4. `KeyringBackend` — OS keychain, only when `ENABLE_KEYRING=true`
+3. `DotEnvBackend` — repo-root `.env` (read-only; skipped under `VIGIL_DISABLE_DOTENV`)
+4. `DotEnvBackend` — state-dir `.env` (`~/.vigil/.env`, with legacy `~/.deeptempo/.env` fallback)
+5. `KeyringBackend` — OS keychain, only when explicitly enabled (via `ENABLE_KEYRING=true`, the `enable_keyring` key in `general_config.json`, or `SECRETS_BACKEND=keyring`)
 
-**Default write backend:** `encrypted` (override with
+**Default write backend:** `encrypted` when `cryptography` is
+available, otherwise `dotenv` (override with
 `SECRETS_BACKEND=env|dotenv|keyring`).
 
 **Editing a secret.** Use the LLM Providers UI (Settings → AI Config →
-Providers) or the `set_secret()` helper from `backend.secrets_manager`.
+Providers) or the `set_secret()` helper from `core.secrets` /
+`core.secrets_manager`.
 Never write secrets into `.env` by hand; that file is for non-secret
 bootstrap flags only (see below).
 
 **Migrating legacy secrets.** Run once:
 
-    python scripts/migrate_secrets.py          # copy → encrypted store
-    python scripts/migrate_secrets.py --purge  # also strip from ~/.deeptempo/.env
+    python scripts/migrate_dotenv_secrets.py            # move keys from ~/.vigil/.env into the encrypted store, removing each from the dotenv file as it is migrated
+    python scripts/migrate_dotenv_secrets.py --dry-run  # copy into secrets.enc but keep the dotenv copy (still writes to secrets.enc; not a preview)
+    python scripts/migrate_dotenv_secrets.py --keys KEY [KEY ...]  # restrict to specific keys
 
 **Backup.** Back up `~/.vigil/` as a unit — both files are needed.
 Losing `master.key` means losing every secret in `secrets.enc`; there
@@ -46,7 +50,7 @@ is no recovery.
 **Authoritative store: Postgres `system_config` table.** Runtime-editable
 settings (orchestrator tunables, AI operations, general/S3/Darktrace
 settings, feature flags, etc.) live here with a full audit trail in
-`config_audit_log`. Access via `backend.api.config` and the Settings UI.
+`config_audit_log`. Access via `services/api/routers/config.py` and the Settings UI.
 
 New runtime config should go here — not into `.env`.
 
@@ -68,15 +72,16 @@ or `set_secret()`; they land in `~/.vigil/secrets.enc`.
 Historical `ANTHROPIC_API_KEY` placeholder lines in `.env` are ignored
 when the encrypted store has a value.
 
-## `~/.deeptempo/.env` (deprecated)
+## State-dir `.env` (`~/.vigil/.env`)
 
-This was the old default write target of `DotEnvBackend`. It still
-*reads* for backward compatibility (position 3 in the backend chain)
-but nothing should write here anymore. `scripts/migrate_secrets.py`
-moves values from here into `~/.vigil/secrets.enc`; run with `--purge`
-to clear it.
+This is the default file for `DotEnvBackend`. `~/.deeptempo/.env` is
+only a legacy *read* fallback for the same file; writes always target
+the state directory (`~/.vigil/`). `scripts/migrate_dotenv_secrets.py`
+moves values from the state-dir dotenv file into
+`~/.vigil/secrets.enc`, removing each key from the dotenv file as it
+is migrated (use `--dry-run` to keep the dotenv copy).
 
-## `~/.deeptempo/general_config.json`
+## `~/.vigil/general_config.json`
 
 Kept for one thing only: the `enable_keyring` flag. You can also set
 this via the `ENABLE_KEYRING` env var in `.env`. This file is benign
@@ -101,76 +106,36 @@ anymore — that was the old flow and caused the "key lost on restart"
 problem. Instead:
 
 - On backend startup, `core.llm.bifrost.admin.sync_all_provider_keys()`
-  pushes every key in the secrets manager to Bifrost via its admin API
-  (`PUT /api/providers/{name}`).
+  pushes every key in the secrets manager to Bifrost via its admin API.
+  Keys are a subresource at `/api/providers/{name}/keys`, not on the
+  `/api/providers/{name}` document: an existing key is updated with
+  `PUT /api/providers/{name}/keys/{id}`, and a new key is created with
+  `POST /api/providers/{name}/keys`.
 - On provider create/update/delete in the UI, the corresponding endpoint
-  in `backend/api/llm_providers.py` pushes the new (or empty) value to
+  in `services/api/routers/llm_providers.py` pushes the new (or empty) value to
   Bifrost in the same request.
 
 So the flow is: **UI → secrets_manager → bifrost_admin → Bifrost** in
 one synchronous chain. No container restart needed to rotate a key.
 
-The seed `infra/docker/bifrost/config.json` still references `env.*` for
-first-boot provider/model definitions, but the actual key *values* are
-overwritten at runtime.
+The seed `infra/docker/bifrost/config.json` references `env.*` only for
+the admin password (`env.BIFROST_ADMIN_PASSWORD`) and the Ollama URL
+(`env.OLLAMA_URL`); the hosted providers' `keys` arrays in the seed are
+empty, and the actual key *values* are pushed at runtime.
 
 ## Workdirs and logs
 
 - `data/investigations/` — orchestrator working files (investigation
   transcripts, context docs, agent output).
-- `data/mitre/`, `data/schemas/` — static reference data.
 - `logs/*.log`, `logs/*.pid` — runtime logs and process pids (started
   via `start.sh`).
 
-## MemPalace (persistent agent memory)
-
-MemPalace is Vigil's cross-session memory layer — agents write IOCs,
-investigation summaries, and knowledge-graph edges here so future
-sessions can reuse the work. It's shipped as a git submodule at
-`./mempalace` (see `.gitmodules`) and installed editable via
-`requirements.txt` (`-e ./mempalace`).
-
-**Palace location: `~/.vigil/mempalace/palace`.** Override with
-`MEMPALACE_PALACE_PATH` in `.env` if you need to relocate (shared NAS,
-different user, etc.). All three consumers — the MCP server
-(`mcp-config.json`), the daemon (`daemon/orchestrator.py`), and the
-web service (`core/llm/harness/claude.py`) — resolve the path through
-`core.platform.mempalace_paths.get_palace_path()`, so the default can't
-drift again.
-
-**Structure:**
-
-```
-~/.vigil/mempalace/palace/
-├── chroma/                               # ChromaDB collection (vector search)
-├── investigations/closed-cases/*.json    # daemon-written investigation snapshots
-└── sessions/*.json                       # ClaudeService session transcripts
-```
-
-**Persistence guarantee.** Survives `docker compose down`,
-`./start.sh` restarts, `venv` rebuilds, and `git submodule update`.
-Does *not* survive `rm -rf ~/.vigil/`.
-
-**Backup.** Tar the directory as a unit:
-
-    tar -czf mempalace-backup-$(date +%Y%m%d).tar.gz ~/.vigil/mempalace/
-
-**Migrating from legacy `~/.mempalace/`.** Earlier builds of the daemon
-defaulted to `~/.mempalace/palace`. If that directory exists, move it
-once:
-
-    mv ~/.mempalace ~/.vigil/mempalace
-
-**Emergency disable.** `MEMPALACE_DAEMON_ENABLED=false` in `.env`
-skips the daemon's palace integration (investigation snapshots won't
-be written). The MCP server side is controlled via
-`mcp-config.json` / `PUT /api/mcp/servers/mempalace/enabled`.
-
 ## Docker volumes
 
-- `deeptempo-postgres` — Postgres data.
-- `deeptempo-redis` — Redis (ARQ queue + rate limiting).
-- `deeptempo-bifrost` — Bifrost's internal state (if any persistent).
+- `postgres_data` — Postgres data.
+- `redis_data` — Redis (ARQ queue + rate limiting).
+- `bifrost_data` — Bifrost's internal state (if any persistent).
+- `prometheus_data` — Prometheus data.
 
 ## Quick reference
 
@@ -182,7 +147,5 @@ be written). The MCP server side is controlled via
 | Ephemeral runtime | Redis, Postgres |
 | Investigation files | `data/investigations/` |
 | Logs, PIDs | `logs/` |
-| MemPalace palace (agent memory) | `~/.vigil/mempalace/palace/` |
 | Legacy secrets (migrate from) | `~/.deeptempo/.env` |
-| Legacy mempalace path (migrate from) | `~/.mempalace/` |
 {% endraw %}

@@ -23,9 +23,19 @@ envelope metadata with `payload_included: false`;
   "total_records": 150,
   "truncated": true,
   "records": [],
-  "raw_text": "optional source-native text"
+  "raw_text": "optional source-native text",
+  "raw_text_truncated": false,
+  "payload_included": true
 }
 ```
+
+`payload_included` appears on list projections, where it is `false` and the
+`records`/`raw_text` payload is omitted.
+
+`provenance` is one of:
+
+- `embedded`: the evidence was embedded in the ingested artifact.
+- `joined`: the evidence was joined by the ingestion pipeline.
 
 `telemetry_kind` is the renderer selector, not `finding.data_source`. Supported
 values are `netflow`, `dns`, `http_session`, and `generic_log`. This lets the
@@ -62,6 +72,11 @@ Ingestion retains at most 100 structured records and 64 KiB of raw text per
 finding, records truncation metadata, converts non-finite numbers to `null`,
 and never lets malformed evidence prevent the finding itself from ingesting.
 
+For NetFlow findings, ingestion also computes a digest over all records —
+before the preview truncation above — and stores it beside the preview at
+`finding.entity_context.netflow_digest`, so counts over every flow survive
+even when the preview itself is truncated.
+
 ## Canonical record fields
 
 The built-in tables recognize these v1 field names:
@@ -71,6 +86,10 @@ The built-in tables recognize these v1 field names:
   `forward_bytes`, `backward_bytes`, `duration_ms`.
 - DNS: `timestamp`, `client_ip`, `server_ip`, `query`, `query_type`, `answer`,
   `response_code`, `ttl`.
+
+These lists are renderer display conventions, not a validated canonical
+schema: validation requires only the minimal fields — `timestamp`,
+`source_ip`, and `destination_ip` for NetFlow, and `query` for DNS.
 
 HTTP-session and generic-log records render as ordered, expandable key/value
 records so source fields remain visible without inventing a universal schema.

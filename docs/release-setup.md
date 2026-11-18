@@ -8,7 +8,9 @@ permalink: /docs/release-setup/
 One time setup for Vigil's automated release flow. Day to day releases
 need no configuration on this page — see [RELEASING.md](/docs/releasing/)
 for the release procedure. This document covers the GitHub App that
-`.github/workflows/release-please.yml` depends on.
+`.github/workflows/release-please.yml` depends on. The workflow runs on
+push to `main` and on manual dispatch (`workflow_dispatch`), where the
+operator can choose a `patch` / `minor` / `major` bump (default `patch`).
 
 ## Why a GitHub App
 
@@ -26,13 +28,21 @@ Grant only these **Repository permissions** — leave everything else at
 
 | Permission     | Access         | Why                                                       |
 |----------------|----------------|-----------------------------------------------------------|
-| Contents       | Read and write | Push tags and update `VERSION` / `CHANGELOG.md`           |
+| Contents       | Read and write | Push a `Release-As:` commit directly to `main`, push tags, and update `VERSION` / `CHANGELOG.md` (plus the other files release-please manages in `.github/release-please-config.json`) |
 | Pull requests  | Read and write | Open and update the release PR                            |
 | Issues         | Read and write | Link release notes to closed issues                       |
 | Workflows      | Read and write | In case the release PR ever touches `.github/workflows/`  |
 
 Uncheck "Active" under Webhooks (not needed). Restrict installation to
 "Only on this account". Install the App on the `vigil` repo only.
+
+## Add the App as a ruleset bypass actor
+
+Add the App as a bypass actor on the `main branch protection` ruleset.
+The workflow's "Add Release-As commit" step uses the App token to commit
+directly to `main` via the Git API, which branch protection would
+otherwise block. Without this bypass listing, that step fails even when
+the App is installed and the repo configuration below is set correctly.
 
 ## Wire it into the repo
 
@@ -53,6 +63,15 @@ for the mechanics of generating the `.pem`.
 
 If either configuration item is missing or empty, the "Mint GitHub App
 token" step in `release-please.yml` fails immediately and no release PR
-is opened. Symptom: every push to `main` produces a failed
-release-please workflow run; no release PR appears in the PR list.
+is opened. On the canonical `Vigil-SOC/vigil` repo, the symptom is that
+every push to `main` (or a manual dispatch) produces a failed
+release-please workflow run and no release PR appears in the PR list.
+On forks the workflow is skipped entirely (repository guard), so no
+failure appears.
+
+If the App is not listed as a bypass actor on the `main branch
+protection` ruleset, the "Add Release-As commit" step fails instead,
+with an error stating that the ruleset must list the release-please
+GitHub App as a bypass actor. The Mint step succeeds in this case; the
+failure is in the direct-to-`main` commit, not in token creation.
 {% endraw %}

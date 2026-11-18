@@ -6,9 +6,13 @@ permalink: /docs/helm-secrets/
 
 {% raw %}
 The chart supports four ways to provide secrets to Vigil pods. Pick whichever
-fits your existing secret-management setup; all four produce the same
-Kubernetes Secret shape that backend, daemon, llm-worker, and the db-init
-Job reference.
+fits your existing secret-management setup; all four end up behind the same
+Secret name, which backend, daemon, llm-worker, agent-worker, and
+agent-serve `envFrom`. The upgrade Jobs do not `envFrom` it — they read the
+owner password plus `POSTGRES_APP_PASSWORD`/`POSTGRES_AGENT_PASSWORD` by
+`secretKeyRef`. Note the chart-rendered Secret carries
+`POSTGRES_APP_PASSWORD`/`POSTGRES_AGENT_PASSWORD`, not `POSTGRES_PASSWORD`
+(the owner password is a separate Secret in plain-values mode).
 
 | Pattern | Secret lives | When to pick | Docs |
 |---|---|---|---|
@@ -20,9 +24,18 @@ Job reference.
 All patterns require the same **set of keys** in the final Kubernetes Secret.
 At minimum:
 
-- `ANTHROPIC_API_KEY` — Claude API key
-- `POSTGRES_PASSWORD` — used by the DB-init Job and all app pods
+- An LLM provider key — `ANTHROPIC_API_KEY` for Claude (the default);
+  `OPENAI_API_KEY`/`GEMINI_API_KEY` are the alternatives the chart renders
+- `POSTGRES_PASSWORD` — owner password, used by Postgres and the upgrade
+  Jobs only, in the default in-chart-Postgres mode
+- `POSTGRES_APP_PASSWORD` — required; app pods log in with it, mounted as
+  their `POSTGRES_PASSWORD` env var; must differ from the owner password
+- `POSTGRES_AGENT_PASSWORD` — required; agent-serve/agent-worker log in
+  with it; must differ from both other passwords
 - `JWT_SECRET_KEY` — required when `config.DEV_MODE=false`
+
+If the MCP runner / agent shell are enabled, the same Secret must also
+carry `MCP_RUNNER_TOKEN` / `SHELL_TOKEN`.
 
 Plus whichever integrations you use: `SPLUNK_PASSWORD`, `SLACK_BOT_TOKEN`,
 `VIRUSTOTAL_API_KEY`, etc. See [env.example](https://github.com/Vigil-SOC/vigil/blob/main/env.example) for the full list.
@@ -62,9 +75,15 @@ brew install kubeseal   # or download from github.com/bitnami-labs/sealed-secret
    stringData:
      ANTHROPIC_API_KEY: sk-ant-...
      POSTGRES_PASSWORD: "a-strong-password"
+     POSTGRES_APP_PASSWORD: "a-different-strong-password"
+     POSTGRES_AGENT_PASSWORD: "another-different-strong-password"
      JWT_SECRET_KEY: "generated-with-secrets.token_urlsafe-64"
      SLACK_BOT_TOKEN: xoxb-...
    ```
+
+   All three Postgres passwords must differ. Add `MCP_RUNNER_TOKEN` as
+   well if the MCP runner is enabled — the runner's own reference to it
+   is required for the runner to become ready.
 
    **Do not commit this file.**
 
@@ -90,9 +109,12 @@ brew install kubeseal   # or download from github.com/bitnami-labs/sealed-secret
 
 4. To rotate: re-run step 1 with new values, re-seal, re-apply. The chart
    does not need to be upgraded — the app pods pick up the new Secret on the
-   next restart (the chart annotates backend/daemon pods with a Secret
-   checksum so they restart automatically on `helm upgrade`; for out-of-band
-   Secret changes, trigger a rollout manually: `kubectl rollout restart -n vigil deploy`).
+   next restart. The checksum annotations track the chart-rendered
+   ConfigMap/Secret only, so they do not restart pods when a pre-created
+   Secret changes out-of-band. After re-applying, restart both the
+   Deployments and the daemon StatefulSet, e.g.
+   `kubectl rollout restart -n vigil deploy` and
+   `kubectl rollout restart -n vigil statefulset`.
 
 See [docs/examples/sealed-secret.yaml](/docs/examples/sealed-secret.yaml) for a
 reference template.
@@ -139,6 +161,8 @@ creation_rules:
    stringData:
      ANTHROPIC_API_KEY: sk-ant-...
      POSTGRES_PASSWORD: "a-strong-password"
+     POSTGRES_APP_PASSWORD: "a-different-strong-password"
+     POSTGRES_AGENT_PASSWORD: "another-different-strong-password"
      JWT_SECRET_KEY: "..."
    ```
 
@@ -193,7 +217,7 @@ because the values file itself is encrypted at rest.
 
 ## Picking between them
 
-- **ExternalSecrets Operator** (pattern 3 in the main doc) is best when
+- **ExternalSecrets Operator** (`secrets.externalSecret.enabled` in the main doc) is best when
   you already have AWS Secrets Manager, Vault, or GCP Secret Manager as the
   source of truth. Secrets rotate in the external store; the cluster pulls
   fresh values on the refresh interval.
@@ -204,6 +228,9 @@ because the values file itself is encrypted at rest.
 - **SOPS** (pattern 2 here) is best when you already standardize on
   encrypting config files and don't want a cluster-side decryption controller.
 
-All three work cleanly with Vigil's `secrets.existingSecret`. Never mix —
-pick one and stick with it for the full Vigil install.
+SealedSecrets and SOPS (kubectl-apply flow) feed `secrets.existingSecret`;
+ExternalSecrets instead uses `secrets.externalSecret.enabled`, which
+materialises the same Secret name; the SOPS + helm-secrets flow uses
+encrypted plain values. Pick one mechanism per install — do not set
+`existingSecret` and `externalSecret.enabled` together.
 {% endraw %}

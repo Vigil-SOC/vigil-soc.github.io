@@ -5,14 +5,13 @@ permalink: /docs/splunk-testing/
 ---
 
 {% raw %}
-This guide explains how to generate comprehensive test data for Splunk and test the Claude AI integration.
+This guide explains how to generate comprehensive test data for Splunk.
 
 ## Overview
 
 The testing framework includes:
 - **Test Data Generator**: Creates realistic security events
-- **Integration Tester**: Tests end-to-end Splunk + Claude workflow
-- **280+ Security Events**: Covering 7 attack categories
+- **280 Security Events**: Covering 7 attack categories
 
 ## Test Data Categories
 
@@ -80,33 +79,6 @@ python scripts/generate_splunk_test_data.py \
    - Create a new token
 2. Note the HEC URL and token
 
-### Method 3: Full Integration Test
-
-Test the complete workflow (generate data → create case → enrich with Splunk → analyze with Claude):
-
-```bash
-# 1. Generate test data and create case
-python scripts/test_splunk_claude_integration.py \
-    --generate-data \
-    --create-case
-
-# 2. Enrich the case with Splunk data and Claude analysis
-python scripts/test_splunk_claude_integration.py \
-    --enrich-case <case_id_from_step_1> \
-    --lookback-hours 24
-```
-
-**Prerequisites:**
-- Splunk integration configured in the UI (Settings → Integrations → Splunk),
-  or via env vars for headless test runs:
-  ```
-  SPLUNK_URL=https://your-splunk:8089
-  SPLUNK_USERNAME=admin
-  SPLUNK_PASSWORD=your_password
-  ```
-- An LLM provider configured in the UI (Settings → AI / LLM Providers)
-- Database running (`docker compose -f infra/docker/docker-compose.yml up -d postgres`)
-
 ## Script Reference
 
 ### generate_splunk_test_data.py
@@ -141,53 +113,6 @@ python scripts/generate_splunk_test_data.py \
     --no-verify-ssl
 ```
 
-### test_splunk_claude_integration.py
-
-Tests the complete Splunk + Claude integration workflow.
-
-**Usage:**
-```bash
-python scripts/test_splunk_claude_integration.py [options]
-```
-
-**Options:**
-- `--generate-data`: Generate new test data
-- `--send-to-splunk`: Send generated data to Splunk HEC
-- `--hec-url URL`: Splunk HEC URL
-- `--hec-token TOKEN`: Splunk HEC token
-- `--create-case`: Create test case and findings from data
-- `--enrich-case CASE_ID`: Enrich existing case with Splunk data
-- `--lookback-hours HOURS`: Hours to look back in Splunk (default: 168)
-- `--use-existing-data FILE`: Use existing test data JSON file
-
-**Examples:**
-
-```bash
-# Generate data and create case (offline test)
-python scripts/test_splunk_claude_integration.py \
-    --generate-data \
-    --create-case
-
-# Use existing data file
-python scripts/test_splunk_claude_integration.py \
-    --use-existing-data splunk_test_data.json \
-    --create-case
-
-# Enrich specific case
-python scripts/test_splunk_claude_integration.py \
-    --enrich-case CASE-2026-001 \
-    --lookback-hours 48
-
-# Full workflow with Splunk upload
-python scripts/test_splunk_claude_integration.py \
-    --generate-data \
-    --send-to-splunk \
-    --hec-url https://splunk:8088/services/collector \
-    --hec-token your-token \
-    --create-case \
-    --lookback-hours 24
-```
-
 ## Complete Workflow Example
 
 Here's a complete end-to-end testing workflow:
@@ -198,9 +123,8 @@ Here's a complete end-to-end testing workflow:
 # Ensure database is running
 docker compose -f infra/docker/docker-compose.yml up -d postgres
 
-# Configure Splunk credentials and an LLM provider via the web UI:
+# Configure Splunk credentials via the web UI:
 #   Settings → Integrations → Splunk
-#   Settings → AI / LLM Providers → Add provider
 # For headless/CI runs you can still export Splunk env vars:
 export SPLUNK_URL=https://your-splunk-server:8089
 export SPLUNK_USERNAME=admin
@@ -223,63 +147,18 @@ python scripts/generate_splunk_test_data.py \
     --no-verify-ssl
 ```
 
-### Step 3: Create Test Case
-
-```bash
-# Create case with findings from test data
-python scripts/test_splunk_claude_integration.py \
-    --use-existing-data splunk_test_data.json \
-    --create-case
-
-# Note the case ID from output (e.g., CASE-2026-001)
-```
-
-### Step 4: Enrich Case with Splunk + Claude
-
-```bash
-# Enrich the case
-python scripts/test_splunk_claude_integration.py \
-    --enrich-case CASE-2026-001 \
-    --lookback-hours 24
-
-# This will:
-# 1. Extract IOCs from the case
-# 2. Query Splunk for each IOC
-# 3. Send data to Claude for AI analysis
-# 4. Update case with enrichment notes
-# 5. Save results to files
-```
-
-### Step 5: Review Results
-
-The enrichment creates two files:
-
-1. **`enrichment_result_<case_id>.json`**: Full enrichment data including:
-   - Extracted indicators (IPs, domains, hashes, etc.)
-   - Splunk query results
-   - Event counts and statistics
-   - Claude analysis
-
-2. **`claude_analysis_<case_id>.txt`**: Full Claude AI analysis including:
-   - Key findings from Splunk data
-   - Correlations between events
-   - Timeline of attack activities
-   - Risk assessment
-   - Recommended next steps
-
-### Step 6: View in UI
+### Step 3: View in UI
 
 ```bash
 # Start the web interface
 ./start.sh
 
 # Navigate to:
-# http://localhost:3000
-# 
+# http://localhost:6988
+#
 # View:
 # - Cases → Select your test case
 # - Investigation tab → View graph and timeline
-# - AI Insights → See Claude analysis
 ```
 
 ## Testing Different Scenarios
@@ -337,7 +216,7 @@ from core.config import get_integration_config
 
 config = get_integration_config('splunk')
 splunk = SplunkService(
-    server_url=config['url'],
+    server_url=config['server_url'],
     username=config['username'],
     password=config['password']
 )
@@ -360,10 +239,7 @@ Possible causes:
 # In Splunk Web, run:
 index=main sourcetype=json | head 100
 
-# Or increase lookback time:
-python scripts/test_splunk_claude_integration.py \
-    --enrich-case CASE-2026-001 \
-    --lookback-hours 168  # 7 days
+# Or widen the time range of your Splunk search.
 ```
 
 ### Claude API Errors
@@ -390,8 +266,7 @@ Each generated event has a consistent structure:
   "sourcetype": "WinEventLog:Security",
   "source": "XmlWinEventLog:Security",
   "host": "WORKSTATION-10",
-  "signature": "Multiple Failed Logon Attempts",
-  "signature_id": "AUTH-001",
+  "signature": "An account failed to log on",
   "severity": "high",
   "urgency": "high",
   "src": "185.220.101.45",
@@ -400,7 +275,7 @@ Each generated event has a consistent structure:
   "dest_ip": "10.0.1.15",
   "user": "jsmith",
   "action": "failure",
-  "rule_name": "Brute Force Attack",
+  "rule_name": "Multiple Failed Logon Attempts",
   "rule_title": "Brute Force Attack Detected",
   "rule_description": "Multiple failed logon attempts detected",
   "category": "Authentication",
@@ -416,20 +291,16 @@ Each generated event has a consistent structure:
 
 The test data covers these MITRE ATT&CK tactics:
 
-| Tactic | Techniques | Event Count |
-|--------|------------|-------------|
-| Initial Access | T1566.001, T1190, T1133 | 40 |
-| Execution | T1059.001, T1059.003 | 30 |
-| Persistence | T1543.003, T1547.001 | 15 |
-| Privilege Escalation | T1548.002, T1134 | 15 |
-| Defense Evasion | T1562.001, T1070.004 | 30 |
-| Credential Access | T1110.003, T1003.001 | 50 |
-| Discovery | T1083, T1046, T1087.001 | 40 |
-| Lateral Movement | T1021.001, T1021.002 | 25 |
-| Collection | T1005, T1039 | 20 |
-| Command and Control | T1071.001, T1573 | 100 |
-| Exfiltration | T1041, T1048.003 | 20 |
-| Impact | T1486, T1490 | 30 |
+| Tactic | Technique | Event Count |
+|--------|-----------|-------------|
+| Credential Access | T1110.003 | 50 |
+| Execution | T1059.001 | 30 |
+| Command and Control | T1071.001 | 100 |
+| Exfiltration | T1041 | 20 |
+| Privilege Escalation | T1134 | 15 |
+| Lateral Movement | T1021.001 | 25 |
+| Discovery | T1046 | 40 |
+| **Total** | | **280** |
 
 ## Best Practices
 
@@ -439,25 +310,19 @@ The test data covers these MITRE ATT&CK tactics:
    Settings → Indexes → New Index → "test_security"
    ```
 
-2. **Time-bound Tests**: Use `--lookback-hours` to limit search scope
-   ```bash
-   --lookback-hours 24  # Last 24 hours only
-   ```
+2. **Time-bound Tests**: Limit the time range of your Splunk searches when testing.
 
 3. **Clean Up Test Data**: Remove test cases after testing
    ```bash
    # Delete test cases via API or UI
-   curl -X DELETE http://localhost:8000/api/cases/CASE-2026-001
+   curl -X DELETE http://localhost:6987/api/cases/<case_id>
    ```
 
-4. **Monitor Claude Usage**: Claude API has rate limits and costs
-   - Use `--use-existing-data` to avoid regenerating
-   - Test with smaller datasets first
+4. **Reuse Generated Data**: Reuse an existing generated JSON file instead of regenerating, and test with smaller datasets first.
 
-5. **Verify Results**: Always check the generated files
+5. **Verify Results**: Always check the generated file
    ```bash
-   cat enrichment_result_CASE-2026-001.json | jq '.splunk_data.summary'
-   cat claude_analysis_CASE-2026-001.txt | head -50
+   cat splunk_test_data.json | jq 'length'
    ```
 
 ## Next Steps
@@ -467,14 +332,14 @@ After successful testing:
 1. **Configure Real Data Sources**: Set up actual SIEM integrations
 2. **Create Custom Alerts**: Use the test data patterns to create detection rules
 3. **Train Your Team**: Use test cases for analyst training
-4. **Benchmark Performance**: Measure enrichment and analysis times
+4. **Benchmark Performance**: Measure generation and indexing times
 5. **Iterate**: Adjust test data to match your environment
 
 ## Support
 
 For issues or questions:
 - Check logs: `logs/backend.log`, `logs/daemon.log`
-- Review documentation: `docs/INTEGRATIONS.md`, `docs/API.md`
+- Review the site's integrations documentation
 - Open an issue on GitHub
 
 ---

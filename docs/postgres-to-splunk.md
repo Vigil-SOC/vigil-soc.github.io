@@ -39,16 +39,9 @@ First, you need to enable HEC in Splunk:
    - Click **Review** → **Submit**
    - **Copy the token value** - you'll need this!
 
-### 2. Configure Environment (Optional)
+### 2. Connection Settings Are CLI Arguments Only
 
-You can add these to your `.env` file for convenience:
-
-```bash
-# Splunk HEC Configuration
-SPLUNK_HEC_URL=https://your-splunk:8088/services/collector
-SPLUNK_HEC_TOKEN=your-hec-token-here
-SPLUNK_HEC_INDEX=deeptempo
-```
+The script does not read environment variables or a `.env` file. Pass the HEC URL, token, and index as command-line arguments (`--hec-url`, `--hec-token`, `--index`) on every run. The token value you pass must match the HEC token configured in Splunk.
 
 ### 3. Ensure Database is Running
 
@@ -60,9 +53,9 @@ docker compose -f infra/docker/docker-compose.yml up -d postgres
 
 ## Usage
 
-### Basic Usage - Export Everything
+### Basic Usage — Export Half (the script's built-in sample)
 
-Export half of all findings and cases to Splunk:
+Export half of all findings and cases to Splunk. The script always exports only half of the findings and cases; a full export is not supported by this script:
 
 ```bash
 python scripts/export_postgres_to_splunk.py \
@@ -120,10 +113,12 @@ Then manually upload to Splunk:
 | `--no-verify-ssl` | Disable SSL verification | False | No |
 | `--findings-only` | Export only findings | False | No |
 | `--cases-only` | Export only cases | False | No |
-| `--batch-size` | Events per batch | 100 | No |
+| `--batch-size` | Events per batch (currently ignored by the script — sends always batch at 100) | 100 | No |
 | `--save-to-file` | Save to file instead of sending | None | No |
 
 \* Not required if using `--save-to-file`
+
+Do not combine `--findings-only` with `--cases-only`.
 
 ## Data Format
 
@@ -137,6 +132,10 @@ Each finding is exported with:
 - `mitre_predictions`: MITRE ATT&CK technique predictions
 - `entity_context`: Related entities (IPs, users, hosts, etc.)
 - `ai_enrichment`: AI-generated analysis
+- `cluster_id`: Cluster the finding belongs to
+- `evidence_links`: Links to supporting evidence
+- `created_at`: When the finding was created
+- `updated_at`: When the finding was last updated
 - `event_type`: "finding"
 - `source_system`: "deeptempo_postgres"
 
@@ -153,7 +152,12 @@ Each case is exported with:
 - `mitre_techniques`: Associated MITRE techniques
 - `timeline`: Case timeline events
 - `activities`: Case activities
+- `notes`: Case notes
+- `resolution_steps`: Steps taken to resolve the case
 - `finding_ids`: Associated finding IDs
+- `finding_count`: Number of associated findings
+- `created_at`: When the case was created
+- `updated_at`: When the case was last updated
 - `event_type`: "case"
 - `source_system`: "deeptempo_postgres"
 
@@ -286,15 +290,12 @@ index=deeptempo sourcetype="deeptempo:case"
 
 ### Large Export Taking Too Long
 
-- Use smaller batch sizes: `--batch-size 50`
 - Export to file first and review: `--save-to-file`
 - Consider exporting findings and cases separately
 
 ## Performance Tips
 
-1. **Batch Size**: Adjust `--batch-size` based on your network and Splunk capacity
-   - Smaller batches (50-100): More reliable, slower
-   - Larger batches (500-1000): Faster, may timeout
+1. **Batch Size**: The script always sends in batches of 100 events; the `--batch-size` flag is currently ignored, so it cannot be tuned.
 
 2. **Network**: Ensure good network connectivity between your system and Splunk
 
