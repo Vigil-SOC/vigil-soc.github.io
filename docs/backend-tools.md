@@ -7,41 +7,54 @@ permalink: /docs/backend-tools/
 {% raw %}
 ## Overview
 
-The Vigil platform supports **backend tool integration** via Claude Agent SDK. This enables autonomous tool execution through the Claude API with no desktop dependency.
+Backend tools are Vigil's built-in Python tools. Their schemas are defined in
+`core/llm/tool_schemas.py` as `ALL_TOOLS`, and they are executed by the agent
+layer through `core/agents/tool_registry.py` — described in that module as
+"the built-in backend tools, and the one place they are executed". A tool name
+absent from the registry manifest is not a backend tool.
+
+There is no Claude Agent SDK tool path: the `claude-agent-sdk` dependency was
+dropped (see the project changelog), and `ClaudeService.chat()` performs a
+single completion only — in its own docstring, "No tools and no loop — both
+live in the agent layer."
 
 ## Architecture
 
 ```
 User Browser
     ↓
-Web UI (FastAPI)
+Web UI / agent run
     ↓
-Claude Agent SDK (Anthropic Servers)
-    ↓ (autonomous tool execution)
+Agent layer — core/agents/tool_registry.py
+(manifest over ALL_TOOLS + INTEGRATION_TOOLS)
+    ↓
 Backend Tools (Python)
     ↓
 Database / Detection Rules / Services
 ```
 
-### Key Benefits
-
-- ✅ **Agent SDK Integration** - Autonomous tool execution via Claude
-- ✅ **Web UI compatible** - All tools accessible via browser
-- ✅ **Production ready** - Suitable for multi-user deployments
-- ✅ **Lower latency** - Direct function calls through Agent SDK
-- ✅ **Easier deployment** - No separate server configuration
-
 ## Available Tools
+
+The lists below are the tool groups defined in `core/llm/tool_schemas.py` at
+v1.1.2. Treat the schema file, not this page, as the canonical inventory.
 
 ### Security Detection Tools
 
-Access to 7,200+ detection rules across Sigma, Splunk, Elastic, and KQL formats:
+Detection answers come from the configured detection rule sources, as
+`core/detections/inventory` syncs them into Postgres:
 
 - **analyze_coverage** - Analyze detection coverage for MITRE ATT&CK techniques
 - **search_detections** - Search detection rules by keywords
+- **link_detection_rule** - Link a detection rule
 - **identify_gaps** - Identify detection gaps for threat contexts
 - **get_coverage_stats** - Get overall coverage statistics
+- **detection_metrics** - Detection metrics
 - **get_detection_count** - Get detection counts by source format
+- **lint_detections** - Lint detection rules
+- **check_detection_candidate** - Check a detection candidate
+- **save_detection_rule** - Save a detection rule
+- **detection_rule_exception** - Detection rule exceptions
+- **reconstruct_run** - Reconstruct a run
 
 ### Finding & Case Tools
 
@@ -51,20 +64,28 @@ Interact with security findings and cases:
 - **search_findings** - Keyword search across findings
 - **get_findings_stats** - Finding statistics and aggregations
 - **get_finding** - Get detailed finding information
-- **nearest_neighbors** - Find similar findings via embedding search
+- **dismiss_finding** - Dismiss a finding
 - **list_cases** - List investigation cases
-- **get_case** - Get detailed case information
+- **read_case_shell** - Read a case shell
 - **create_case** - Create new investigation case
 - **add_finding_to_case** - Add finding to case
 - **update_case** - Update case status, priority, assignee, and metadata
+- **restrict_case** - Restrict case access
+- **change_case_readers** - Change who can read a case
 - **add_resolution_step** - Document a resolution step with description, action, and result
+- **list_completed_hunts** - List completed hunts
+- **list_learning_episodes** - List learning episodes
+- **export_learning_episodes** - Export learning episodes
+- **replay_hunt** - Replay a hunt
 
 ### MITRE ATT&CK Tools
 
-Generate and analyze ATT&CK Navigator layers:
-
-- **get_attack_layer** - Generate ATT&CK Navigator layer JSON
 - **get_technique_rollup** - Get technique statistics from findings
+
+### Threat Intel Tools
+
+- **lookup_indicators** - Look up threat indicators
+- **propose_feed_hunts** - Propose hunts from threat feeds
 
 ### Approval Workflow Tools
 
@@ -76,71 +97,55 @@ Manage autonomous response actions:
 - **reject_action** - Reject pending action
 - **get_approval_stats** - Get approval statistics
 
+### Memory Tools
+
+- **recall_entity** - Recall a remembered entity
+- **check_hunt_coverage** - Check hunt coverage
+
+### Skill Tools
+
+- **read_skill** - Read a skill from the skill library
+
+### Integration Tools
+
+Two further tools are chat's door to the connected MCP integrations. They are
+declared in `tool_schemas.py` but deliberately kept out of `ALL_TOOLS`, and
+are included in the tool registry's manifest alongside it:
+
+- **find_integration_tools** - Search the tools of the connected integrations by keyword
+- **call_integration_tool** - Call a tool of a connected integration
+
 ## Usage
 
-### Enable Backend Tools with Agent SDK
-
-When initializing the Claude service, enable Agent SDK and backend tools:
+Tool-driven work goes through the agent layer, not through `ClaudeService`
+directly. `ClaudeService` (in `core/llm/harness/claude.py`) takes a single
+optional constructor argument, `provider_api_key_ref`, and its `chat()`
+method returns one completion with no tool execution:
 
 ```python
 from core.llm.harness.claude import ClaudeService
 
-# Enable Agent SDK with backend tools (recommended for web UI)
-claude = ClaudeService(
-    use_backend_tools=True,
-    use_mcp_tools=False,
-    use_agent_sdk=True,
-    enable_thinking=False
-)
-```
-
-### Example Queries
-
-#### Security Detection Analysis
-
-```python
+claude = ClaudeService()
 response = claude.chat(
-    message="What's our detection coverage for PowerShell techniques T1059.001 and T1059.003?",
+    message="Summarize the current state of the platform",
     max_tokens=2048
 )
 ```
 
-#### Finding Investigation
-
-```python
-response = claude.chat(
-    message="Show me all high-severity findings from the last 24 hours",
-    max_tokens=2048
-)
-```
-
-#### Gap Analysis
-
-```python
-response = claude.chat(
-    message="Analyze our detection gaps for ransomware attacks and recommend priorities",
-    max_tokens=4096
-)
-```
-
-#### Case Management
-
-```python
-response = claude.chat(
-    message="Create a case for all findings related to IP 192.168.1.100",
-    max_tokens=2048
-)
-```
+Requests that need tools — detection coverage analysis, finding and case
+queries, gap analysis, approval actions — are handled by agent runs, which
+call the backend tools above via `core/agents/tool_registry.py`.
 
 ## Implementation Details
 
 ### Tool Execution Flow
 
-1. User sends message via web UI
-2. FastAPI backend forwards to Claude API with tool definitions
-3. Claude decides which tools to call based on user intent
-4. Backend executes tool functions directly (no MCP)
-5. Tool results returned to Claude for synthesis
+1. User sends a message via the web UI
+2. The agent layer runs with the tool registry manifest
+   (`ALL_TOOLS` plus the two integration tools)
+3. The model decides which tools to call based on user intent
+4. `core/agents/tool_registry.py` executes the tool calls
+5. Tool results are returned for synthesis
 6. Final response sent to user
 
 ### Tool Definitions
@@ -150,105 +155,84 @@ Tool schemas are defined in `core/llm/tool_schemas.py`:
 ```python
 from core.llm.tool_schemas import ALL_TOOLS
 
-# Contains core backend tools:
+# Contains the core backend tool groups:
 # - security detection tools
-# - findings/case tools
+# - finding/case tools
 # - MITRE ATT&CK tools
+# - threat intel tools
 # - approval tools
+# - memory tools
+# - skill tools
 ```
 
 ### Tool Routing
 
-Tool execution is handled in `core/llm/harness/claude.py`:
-
-```python
-async def _process_backend_tool_use(self, content: List) -> List[Dict]:
-    """Process tool use requests and call backend tools directly."""
-    # Routes tool calls to appropriate service methods
-    # No MCP protocol overhead
-```
+Tool execution is handled in `core/agents/tool_registry.py`, which builds its
+manifest over `ALL_TOOLS` and `INTEGRATION_TOOLS` imported from
+`core/llm/tool_schemas.py`.
 
 ## Configuration
 
-### Detection Rule Paths
+### Detection Rule Sources
 
-Set environment variables for detection rule locations:
+Detection tools answer from the rules held by every configured detection
+source (Sigma, Splunk, Elastic, KQL, and others), as
+`core/detections/inventory` syncs them into Postgres. Sources are configured
+in `detection_sources.json`; `core/detections/detection_rules_service.py`
+builds the `SIGMA_PATHS`, `SPLUNK_PATHS`, `ELASTIC_PATHS`, and `KQL_PATHS`
+variables from those configured sources when launching the
+Security-Detections-MCP server.
+
+To clone the public detection repositories locally, run:
 
 ```bash
-# In .env file
-SIGMA_PATHS="${HOME}/security-detections/sigma/rules"
-SPLUNK_PATHS="${HOME}/security-detections/security_content/detections"
-ELASTIC_PATHS="${HOME}/security-detections/detection-rules/rules"
-KQL_PATHS="${HOME}/security-detections/Hunting-Queries-Detection-Rules"
+./scripts/setup_detection_repos.sh
+```
+
+This clones `sigma/`, `security_content/`, `detection-rules/`, and
+`Hunting-Queries-Detection-Rules/`. The same step is available during dev
+setup only as an opt-in, because it is off by default:
+
+```bash
+SETUP_DETECTION_REPOS=1 ./setup_dev.sh
 ```
 
 ### Database Configuration
 
-Backend tools use the existing database configuration:
-
-```bash
-# In .env file
-DATABASE_URL="postgresql://deeptempo:deeptempo_secure_password_change_me@localhost:5432/deeptempo_soc"
-```
+The Python backend does not use `DATABASE_URL` — that variable is not
+consulted (it is the TypeScript agent's knob). The database connection comes
+from `POSTGRESQL_CONNECTION_STRING` read from the encrypted store (written
+via Settings → PostgreSQL), falling back to the `POSTGRES_*` variables. See
+`core/storage/connection.py`.
 
 ## Testing
 
-### Run Tests
+There is no dedicated backend-tools test file. To confirm the tool schemas
+load, import them:
 
 ```bash
-# Basic tool tests
-python tests/test_backend_tools.py
-
-# Comprehensive integration tests
-python tests/test_integration_backend_tools.py
+python -c "from core.llm.tool_schemas import ALL_TOOLS; print(len(ALL_TOOLS))"
 ```
 
-### Expected Results
+## Backend Tools and MCP
 
-- All backend tools should load successfully
-- Coverage analysis should work with 7,200+ rules
-- Finding/case queries should work with database
-- Approval workflow should work with pending actions
+Backend tools and MCP integrations are complementary, not alternatives:
 
-## Comparison: Agent SDK vs MCP
-
-| Feature | Agent SDK (Backend Tools) | MCP Servers |
-|---------|---------------------------|-------------|
-| **Deployment** | Single Python process | Requires desktop app + servers |
-| **Web UI** | ✅ Fully supported | ❌ Not accessible |
-| **Latency** | Lower (Agent SDK) | Higher (protocol overhead) |
-| **Configuration** | Simple (env vars) | Complex (MCP config) |
-| **Multi-user** | ✅ Production ready | ❌ Desktop only |
-| **Tool Count** | Core backend tools | Extended tools (via MCP) |
-| **Autonomy** | ✅ Autonomous execution | Manual tool use |
-
-## Migration from MCP
-
-### For Existing Users
-
-If you're currently using MCP servers with a desktop application:
-
-1. Agent SDK backend tools provide equivalent functionality
-2. You can keep MCP for advanced local workflows
-3. Web UI uses Agent SDK backend tools automatically
-4. No changes needed to existing MCP config
-
-### For New Deployments
-
-1. Skip MCP setup entirely
-2. Run setup_dev.sh to clone detection repos
-3. Set environment variables
-4. Agent SDK enabled by default with `use_agent_sdk=True`
+- Backend tools are the built-in tools in `ALL_TOOLS`, executed by the agent
+  layer via `core/agents/tool_registry.py`.
+- Connected MCP integrations are reached from chat through the
+  `find_integration_tools` / `call_integration_tool` pair, and MCP servers
+  also run server-side — the code ships an MCP runner deployable under
+  `services/mcp_runner/`. MCP is not desktop-only and is accessible from the
+  web UI through those integration tools.
 
 ## Troubleshooting
 
 ### Tools Not Loading
 
-```python
-# Check tool count
-claude = ClaudeService(use_backend_tools=True)
-print(f"Loaded: {len(claude.backend_tools)} tools")
-# Should show 23
+```bash
+# Check the tool schemas import and see what loaded
+python -c "from core.llm.tool_schemas import ALL_TOOLS; print(len(ALL_TOOLS))"
 ```
 
 ### Detection Rules Not Found
@@ -256,7 +240,7 @@ print(f"Loaded: {len(claude.backend_tools)} tools")
 ```bash
 # Ensure detection repos are cloned
 ls -la ~/security-detections/
-# Should show: sigma/, splunk/, elastic/, kql/
+# Should show: sigma/, security_content/, detection-rules/, Hunting-Queries-Detection-Rules/
 
 # Re-run setup if missing
 ./scripts/setup_detection_repos.sh
@@ -268,37 +252,17 @@ ls -la ~/security-detections/
 # Check PostgreSQL is running
 docker ps | grep postgres
 
-# Check connection string
-echo $DATABASE_URL
+# The backend reads POSTGRESQL_CONNECTION_STRING from the encrypted store
+# (or POSTGRES_* variables); DATABASE_URL is not consulted.
 
-# Test connectivity
-python -c "from core.storage.connection import get_db; import asyncio; asyncio.run(get_db())"
+# Test connectivity via the session factory
+python -c "from core.storage.connection import get_db_session; s = get_db_session(); print(s)"
 ```
 
-## Performance
-
-### Detection Rule Loading
-
-- **First Load**: ~5-10 seconds (7,200+ rules)
-- **Subsequent**: Cached in memory
-- **Memory**: ~200MB for rule index
-
-### Tool Execution
-
-| Tool Type | Avg Latency |
-|-----------|------------|
-| Detection search | 100-500ms |
-| Coverage analysis | 200-1000ms |
-| Database queries | 10-50ms |
-| Attack layer gen | 200-500ms |
-
-### Optimization
-
-- Detection rules are lazy-loaded
-- Database queries use indexes
-- Results are streamed when possible
-
 ## Future Enhancements
+
+The following are aspirational ideas, not shipped features; no code
+counterpart has been verified for them:
 
 - [ ] Add caching layer for detection queries
 - [ ] Implement Redis for cross-request caching
@@ -312,5 +276,4 @@ python -c "from core.storage.connection import get_db; import asyncio; asyncio.r
 - [Detection Engineering Guide](/docs/detection-engineering/)
 - [API Reference](/docs/api/)
 - [Integration Guide](/docs/integrations/)
-- [Web UI Documentation](https://github.com/Vigil-SOC/vigil/blob/main/docs/WEB_UI.md)
 {% endraw %}

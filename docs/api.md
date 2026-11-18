@@ -5,16 +5,23 @@ permalink: /docs/api/
 ---
 
 {% raw %}
+## Scope
+
+This page documents the MCP server tools in `tools/mcp/vigil.py` for
+findings, cases, approvals, and technique rollups, plus the related
+ATT&CK REST endpoints. It does not document the separate backend tools
+in `core/llm/tool_schemas.py`; where the two surfaces differ — notably
+for approvals — that is called out below.
+
 ## Data Model
 
 ### Finding
 
-Primary security observation with embeddings and MITRE predictions.
+Primary security observation with MITRE predictions.
 
 ```json
 {
-  "finding_id": "f-2024-01-15-001",
-  "embedding": [0.123, -0.456, ...],
+  "finding_id": "f-20260209-001",
   "mitre_predictions": {"T1071.001": 0.85, "T1048.003": 0.72},
   "anomaly_score": 0.92,
   "entity_context": {
@@ -25,10 +32,15 @@ Primary security observation with embeddings and MITRE predictions.
   },
   "timestamp": "2024-01-15T14:32:18Z",
   "data_source": "flow",
-  "severity": "high",
-  "status": "new"
+  "severity": "high"
 }
 ```
+
+The fields above follow `core/storage/schemas/finding.py`
+(`FindingSchema`). A finding has no stored `status` field: its state is
+derived as `open` (not dismissed and in no closed case), `dismissed`,
+or `resolved` (in a closed case). The `finding_id` above is an example
+value, not a prescribed ID format.
 
 ### Case
 
@@ -36,9 +48,9 @@ Investigation grouping related findings.
 
 ```json
 {
-  "case_id": "case-2024-01-15-001",
+  "case_id": "case-xxx",
   "title": "Potential C2 Beaconing",
-  "finding_ids": ["f-2024-01-15-001", "f-2024-01-15-002"],
+  "finding_ids": ["f-20260209-001"],
   "status": "investigating",
   "priority": "high",
   "assignee": "analyst@example.com",
@@ -48,18 +60,19 @@ Investigation grouping related findings.
 }
 ```
 
-### Severity Calculation
+Case fields follow `core/storage/schemas/case.py`. Valid case
+statuses are `new`, `open`, `investigating`, and `closed`
+(`core/cases/case_status.py`).
 
-```
-combined = (anomaly_score * 0.6) + (max_mitre_confidence * 0.4)
+### Severity
 
->= 0.8: critical
->= 0.6: high
->= 0.4: medium
-<  0.4: low
-```
+Severity is not computed from `anomaly_score` and MITRE confidence.
+During SIEM ingestion, `normalize_severity()` in
+`core/ingestion/siem_ingestion_service.py` maps the raw source severity
+string to one of `critical`, `high`, `medium`, `low`, or `info`,
+defaulting to `medium` when no value matches.
 
-## MCP Tools - DeepTempo Findings
+## MCP Tools - Findings
 
 ### `get_finding`
 
@@ -69,60 +82,62 @@ combined = (anomaly_score * 0.6) + (max_mitre_confidence * 0.4)
 
 ### `list_findings`
 
+Parameters are flat; there is no `filters` wrapper. `limit` defaults
+to 20 and is capped at 25.
+
 ```json
 {
-  "filters": { "severity": "high", "data_source": "flow" },
-  "limit": 50,
+  "severity": "high",
+  "data_source": "flow",
+  "state": "open",
   "sort_by": "timestamp",
-  "sort_order": "desc"
+  "sort_order": "desc",
+  "offset": 0,
+  "limit": 20
 }
 ```
 
-### `nearest_neighbors`
+`state` is one of `open`, `dismissed`, or `resolved`. Other optional
+parameters are `cluster_id` and `min_anomaly_score`; `sort_by` is one
+of `timestamp`, `anomaly_score`, or `severity`.
 
-Find similar findings by embedding.
+### `get_technique_rollup`
+
+MITRE technique aggregation across findings.
 
 ```json
 {
-  "query": "f-xxx",
-  "k": 10,
-  "filters": {
-    "data_source": "flow",
-    "min_anomaly_score": 0.5,
-    "techniques": ["T1071"]
-  }
+  "min_confidence": 0.5,
+  "time_range": "24h"
 }
 ```
 
-### `technique_rollup`
-
-MITRE technique aggregation.
-
-```json
-{
-  "time_window": { "start": "2024-01-15T00:00:00Z", "end": "2024-01-15T23:59:59Z" },
-  "min_confidence": 0.5
-}
-```
+`time_range` is one of `24h`, `7d`, `30d`, or `all` (the default).
+`min_confidence` defaults to 0.
 
 Returns:
 
 ```json
 {
+  "total_techniques": 1,
   "techniques": [
     {
       "technique_id": "T1071.001",
       "technique_name": "Application Layer Protocol: Web Protocols",
-      "finding_count": 15,
-      "avg_confidence": 0.82
+      "tactic": "command-and-control",
+      "count": 15,
+      "severities": {"critical": 0, "high": 15, "medium": 0, "low": 0}
     }
-  ]
+  ],
+  "excluded_occurrences": 0
 }
 ```
 
 ## MCP Tools - Case Management
 
 ### `create_case`
+
+Only `title` is required.
 
 ```json
 {
@@ -135,14 +150,32 @@ Returns:
 
 ### `update_case`
 
+Parameters are flat; there is no `updates` wrapper.
+
 ```json
 {
   "case_id": "case-xxx",
-  "updates": {
-    "status": "in_progress",
-    "add_findings": ["f-zzz"],
-    "add_tags": ["ransomware"]
-  }
+  "status": "investigating",
+  "priority": "high",
+  "assignee": "analyst@example.com",
+  "add_note": "Investigation note"
+}
+```
+
+Parameters are `case_id` (required) plus optional `title`,
+`description`, `status`, `priority`, `assignee`, and `add_note`.
+`status` must be one
+of `new`, `open`, `investigating`, or `closed`.
+
+### `add_finding_to_case`
+
+Adding a finding to an existing case is a separate tool, not part of
+`update_case`.
+
+```json
+{
+  "case_id": "case-xxx",
+  "finding_id": "f-zzz"
 }
 ```
 
@@ -150,7 +183,7 @@ Returns:
 
 ```json
 {
-  "status": "in_progress",
+  "status": "investigating",
   "priority": "high",
   "limit": 50
 }
@@ -160,8 +193,7 @@ Returns:
 
 ```json
 {
-  "case_id": "case-xxx",
-  "include_findings": true
+  "case_id": "case-xxx"
 }
 ```
 
@@ -169,10 +201,15 @@ Returns:
 
 ### `create_approval_action`
 
+`description` is required. `action_type` is one of `isolate_host`,
+`block_ip`, `block_domain`, `quarantine_file`, `disable_user`, or
+`custom`, and `confidence` is a number between 0 and 1.
+
 ```json
 {
   "action_type": "isolate_host",
   "title": "Isolate compromised host",
+  "description": "Isolate the host pending investigation",
   "target": "192.168.1.100",
   "confidence": 0.85,
   "reason": "Confirmed ransomware activity",
@@ -189,62 +226,66 @@ Returns:
 }
 ```
 
-## MCP Tools - Attack Layer
+`status` is one of `pending`, `approved`, `rejected`, `executed`, or
+`failed`.
 
-### `get_attack_layer`
+The backend tools in `core/llm/tool_schemas.py` expose a distinct
+approval surface — `list_pending_approvals`, `get_approval_action`,
+`approve_action`, `reject_action`, and `get_approval_stats` — separate
+from the MCP pair above.
 
-Returns ATT&CK Navigator layer JSON.
+## ATT&CK REST Endpoints
 
-### `get_technique_rollup`
+Findings for a technique are available over REST, not as an MCP tool:
+`GET /api/attack/techniques/{technique_id}/findings`, from the attack
+router in `core/threat_intel/attack_router.py`. It accepts
+`min_confidence` and `time_range` (`24h`, `7d`, `30d`, or `all`).
 
-```json
-{ "min_confidence": 0.5 }
+```text
+GET /api/attack/techniques/T1071.001/findings
 ```
 
-### `get_findings_by_technique`
+There is no ATT&CK Navigator layer generator tool: no
+`get_attack_layer` or `create_attack_layer` tool exists.
 
-```json
-{ "technique_id": "T1071.001" }
-```
+## Rate Limiting
 
-### `create_attack_layer`
+There are no per-tier rate limits for findings, evidence, or raw log
+export. The API uses a shared slowapi `Limiter`
+(`services/api/middleware/rate_limit.py`, backed by Redis with an
+in-memory fallback), and limits are set per route where they apply —
+for example, several auth routes in `services/api/routers/auth.py` are
+limited to `5/minute`, and the token refresh route to `30/minute`.
+
+## Errors
+
+API error responses use a `detail` / `code` envelope, optionally with
+a `trace_id`:
 
 ```json
 {
-  "name": "Investigation Layer",
-  "finding_ids": ["f-xxx", "f-yyy"]
+  "detail": "Finding not found",
+  "code": "NOT_FOUND"
 }
 ```
 
-## Access Tiers
-
-| Tier | Description | Rate Limit |
-|------|-------------|------------|
-| 1 | Findings, embeddings, aggregations | 100/min |
-| 2 | Evidence snippets (redacted) | 20/min |
-| 3 | Raw log export (disabled default) | 5/min |
-
-## Error Codes
+Codes emitted by the API include:
 
 | Code | Description |
 |------|-------------|
-| `NOT_FOUND` | Resource not found |
-| `INVALID_PARAMETER` | Invalid parameter |
-| `ACCESS_DENIED` | Insufficient permissions |
-| `RATE_LIMITED` | Too many requests |
+| `NOT_FOUND` | Resource not found (default code of `NotFoundError` in `core/exceptions.py`) |
+| `INTERNAL_ERROR` | Unhandled internal error |
+| `BUDGET_EXCEEDED` | Virtual-key budget is spent |
+| `ACCOUNT_LOCKED` | Account locked after repeated failed sign-ins |
+| `AUDIT_PAUSED` | Audit trail is paused |
 
-Error response format:
-
-```json
-{
-  "error": {
-    "code": "NOT_FOUND",
-    "message": "Finding not found"
-  }
-}
-```
+The handlers are in `services/api/errors.py`.
 
 ## Entity Context by Data Source
+
+`entity_context` is a free-form JSONB field
+(`core/storage/models/finding.py`); there is no fixed per-source
+schema. The shapes below are illustrative examples only.
 
 ### Flow
 
@@ -283,10 +324,13 @@ Error response format:
 }
 ```
 
-## JSON Schemas
+## Schemas
 
-Available in `data/schemas/`:
-- `finding.schema.json`
-- `case.schema.json`
-- `attack-layer.schema.json`
+There is no `data/schemas/` directory and no published
+`finding.schema.json`, `case.schema.json`, or
+`attack-layer.schema.json`. The serialisation sources are the Python
+schemas in the code repository:
+
+- `core/storage/schemas/finding.py`
+- `core/storage/schemas/case.py`
 {% endraw %}

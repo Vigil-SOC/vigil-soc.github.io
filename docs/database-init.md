@@ -5,135 +5,128 @@ permalink: /docs/database-init/
 ---
 
 {% raw %}
-These `*.sql` files are the canonical schema initialization scripts. The
-docker-compose stack reads them directly from this directory; the Helm
-chart reads from a **copy** under `infra/helm/vigil/files/database-init/`
-(Helm can only load files from inside the chart directory).
+The `*.sql` files under `infra/database/init/` are **legacy** schema
+scripts. They are not how a Vigil database is built or changed at this
+release, on either deploy path. They are retained because the upgrade
+path still reads them when adopting a 0.7.0 or 0.8.0 install, and
+because dev and test tooling uses them as a reference — see below.
 
-## Execution order — two different rules
+## How the schema is actually applied
 
-The two deploy paths order these files differently. When you add a new
-file, you need to satisfy both.
+`python -m core.upgrade`, run from the backend image as the database
+owner, is the only schema writer. The Helm values file states this
+directly, and the code repo's upgrading guide repeats it: it is the one
+thing that changes Vigil's database schema.
 
-- **docker-compose (local dev)** — the postgres image runs every file
-  it finds under `/docker-entrypoint-initdb.d` in **lexicographic
-  filename order**. So `01_*.sql` runs before `04_*.sql` runs before
-  `16_*.sql`. The `NN_` prefix on each filename **is** the ordering
-  mechanism here. Pick a prefix that sorts correctly relative to any
-  files your script depends on. (Note: zero-padded prefixes like `003_`
-  sort *before* `01_` lexicographically.)
-- **Helm chart** — the `db-init` Job iterates over
-  `infra/helm/vigil/values.yaml`'s `dbInit.sqlFiles` list in the **order
-  written there**. Filename prefixes are decorative for this path; the
-  list is authoritative. Files in `infra/helm/vigil/files/database-init/`
-  that aren't listed are bundled into the ConfigMap but never run.
+- **Fresh installs** are built from
+  `core/upgrade/versions/0001_baseline.sql` plus the numbered revisions
+  that follow it under `core/upgrade/versions/`. Revisions are chained
+  by their `down_revision` links, and the applied revision is tracked
+  in the `alembic_version` table.
+- **docker-compose** runs the upgrade as a one-shot service before the
+  API, daemon, workers and agent processes start. The postgres service
+  mounts no init directory, and its compose comment is explicit: "First
+  boot must not apply infra/database/init."
+- **Helm** runs the same command from hook Jobs defined in
+  `infra/helm/vigil/templates/upgrade.yaml` — a pre-upgrade check and
+  apply, and a post-install Job that takes an empty database to head.
+  There is no chart bundle copy of the init files, no `dbInit.sqlFiles`
+  value, and no `db-init` Job. `infra/helm/vigil/files/` holds only the
+  Bifrost config and the Helm upgrade helper.
 
-## When you add a new init SQL file here
+## What the init files are still for
 
-You must do all three of the following — CI catches step 1, but **not**
-steps 2 and 3:
+- **Adoption of 0.7.0 / 0.8.0 installs.** `core/upgrade/adopt.py`
+  repairs known drift in a legacy database and then stamps the
+  baseline. As part of that it applies the init files the old Helm
+  chart skipped — the `HELM_SKIPS` set in that module:
+  `05_case_management_extended.sql`, `28_case_closure_actor.sql`,
+  `39_case_findings_finding_index.sql` and `34_drop_skills.sql` — and
+  looks the files up under `database/init` inside the backend image.
+  The directory is copied into that image for this reason
+  (`infra/docker/Dockerfile.backend`:
+  `COPY infra/database/init/ ./database/init/`).
+- **Dev and test tooling.** `scripts/agent_testdb.sh` applies selected
+  files to a scratch database, and
+  `scripts/generate_schema_snapshot.py` applies the directory
+  tolerantly when generating a schema snapshot.
 
-1. **Copy the file into the chart bundle**:
-   ```bash
-   cp infra/database/init/NEWFILE.sql infra/helm/vigil/files/database-init/
-   ```
-   The `Helm Chart / Lint and Template` workflow runs
-   `diff -r infra/database/init infra/helm/vigil/files/database-init` on every PR and
-   will fail if these two directories drift.
+Because adoption reads these files, treat edits to them as load-bearing
+for legacy installs even though no fresh deployment runs them.
 
-2. **Add the filename to `infra/helm/vigil/values.yaml`** under
-   `dbInit.sqlFiles` in the correct position for the Helm execution
-   order (see above). Without this step, the chart bundles the file
-   into the ConfigMap but the `db-init` Job never runs it — `helm
-   install` succeeds and the schema is silently incomplete.
+## Adding a schema change
 
-3. **Verify with `helm template`** that the rendered dbInit Job script
-   has an `apply` line for your new file. Match the Job script's apply
-   line specifically — a bare `grep NEWFILE.sql` will match the
-   ConfigMap data key and the SQL file's own header comment too, both
-   of which are emitted regardless of whether the file is in
-   `dbInit.sqlFiles`, so it will green-light a forgotten step 2:
-   ```bash
-   helm template release-check infra/helm/vigil \
-     --set secrets.anthropicApiKey=test \
-     --set secrets.postgresPassword=test \
-     | grep -E '^[[:space:]]*apply "NEWFILE\.sql"'
-   ```
-   No matches → the file is in the ConfigMap but the Job won't run it.
-
-## Reserved filenames — do not use
-
-**Don't name a file `003_add_ai_enrichment.sql` or `003_ai_decision_logs.sql`.**
-
-Earlier versions of `infra/helm/vigil/values.yaml` listed these as ghost
-entries in `dbInit.sqlFiles` — files that didn't exist on disk. The
-chart's `db-init` Job ran psql against them, got "file not found,"
-treated that as a benign warning (it has to, because some real
-migrations legitimately fail when SQLAlchemy hasn't created their
-target tables yet), then unconditionally inserted the filename into
-`_vigil_schema_versions` to mark it "applied." So every v0.1.x Helm
-deployment now has rows in that table claiming those two filenames
-have been applied.
-
-If a future PR ever ships a real file with one of those exact names,
-the Job will check `_vigil_schema_versions`, see the ghost row, and
-**SKIP** the file on every pre-existing deployment. The schema change
-silently never runs in production.
-
-Pick any other prefix. The rest of this directory uses two-digit
-`NN_` (`01_`, `04_`, …, `16_`); follow that convention.
+Do **not** add a file here expecting a deployment to run it — nothing
+on a current deploy path will. A schema change at this release is a new
+revision under `core/upgrade/versions/`, chained onto the current head
+via `down_revision` and applied by `python -m core.upgrade`. The code
+repo's [upgrading guide](https://github.com/Vigil-SOC/vigil/blob/main/docs/upgrading.md)
+is the authoritative description of that process.
 
 ## When you modify an existing init SQL file
 
-Same drill — copy the updated file to `infra/helm/vigil/files/database-init/`
-so the chart bundle stays in sync. The `diff -r` lint check will fail
-otherwise.
+You are changing what adoption of a 0.7.0 / 0.8.0 install applies, and
+what the dev/test scripts above consume — not what a fresh install
+gets. Keep the `NN_` naming convention: the directory's prefixes run
+from `01_` to `47_`, and some prefixes are shared by two files (for
+example the two `07_` files, `07_custom_agents.sql` and
+`07_skills.sql`), so a prefix alone does not identify a file.
 
-## What this path does *not* cover
+There is no chart bundle to keep in sync and no values list to update.
+The `Helm Chart` workflow (`.github/workflows/helm-chart.yml`) still
+triggers on changes under `infra/database/init/**`, but it only lints,
+templates and validates the chart; its one file-parity check compares
+the Bifrost config, not these SQL files.
 
-These files are not the whole schema. Several tables are created only by
-`Base.metadata.create_all()` at app startup and have **no `CREATE TABLE`
-anywhere in this directory or the chart bundle**:
+## What this directory does *not* cover
+
+These files are not the whole schema, and never were the only source
+of tables. Within this directory, for example:
 
 | Table | Created by |
 |---|---|
-| `cases`, `findings`, `case_evidence`, `case_tasks`, `case_watchers`, `investigations` | `create_all` only |
 | `users`, `roles` | `06_auth_tables.sql` |
-| `skills`, `custom_agents`, `workflow_runs`, `custom_workflows` | `07_*`, `08_*`, `12_*` |
+| `custom_agents` | `07_custom_agents.sql` |
+| `skills` | `07_skills.sql` |
+| `custom_workflows` | `08_custom_workflows.sql` |
+| `workflow_runs` | `12_workflow_runs.sql` |
 
-**Do not write an `ALTER TABLE` in a numbered file here for a table in the
-first row.** The dbInit Job runs before the app has ever started, so the
-table does not exist yet and the statement hard-fails.
+Tables such as `cases`, `findings`, `case_evidence`, `case_tasks`,
+`case_watchers` and `investigations` have no `CREATE TABLE` in this
+directory. On a fresh install they are created by
+`core/upgrade/versions/0001_baseline.sql`, which contains `CREATE
+TABLE` statements for `public.cases`, `public.findings`,
+`public.investigations` and `public.case_findings` among others.
+`Base.metadata.create_all()` also still runs at app startup
+(`core/storage/connection.py`).
 
-Note that `grep`-ing for a table name is misleading: `cases` and `findings`
-appear in 9–10 files in this directory, but every hit is a string literal —
-SLA descriptions in `05_case_management_extended.sql`, permission JSON keys
-in `06_auth_tables.sql`. None of them is DDL.
+Note that `grep`-ing for a table name in this directory is misleading:
+`cases` and `findings` appear in 11 files here, but every hit is a
+string literal — SLA descriptions in `05_case_management_extended.sql`,
+permission JSON keys in `06_auth_tables.sql`. None of them is DDL.
 
-Adding a *column* to any table in the first row is the harder case, because
-`create_all` is `checkfirst=True`: it creates missing tables and never alters
+## Schema drift
+
+Adding a *column* to a model is the harder case, because `create_all`
+is `checkfirst=True`: it creates missing tables and never alters
 existing ones, so the column never reaches a database provisioned by an
-earlier release. Startup reports this at ERROR and exposes the state under
-`schema` in `/api/health` (`DB_STRICT_SCHEMA=true` makes it fatal), but
-reporting is not fixing — see
-[#562](https://github.com/Vigil-SOC/vigil/issues/562) for what each deploy
-path actually does today, and `tests/integration/test_schema_drift_upgrade.py`,
-which pins that behaviour.
+earlier release. Startup reports this at ERROR and exposes the state
+under `schema` in `/api/health` (`DB_STRICT_SCHEMA=true` makes it
+fatal), but reporting is not fixing — see
+[#562](https://github.com/Vigil-SOC/vigil/issues/562) for what each
+deploy path actually does today.
 
-The check compares column **names**. A changed type, a new `NOT NULL` or a
-changed foreign key is drift it cannot see, so `state: ok` means "every column
-the models name exists", not "the schema matches the models".
-
-## Why this isn't automated
-
-A pre-commit hook or `make` target that auto-syncs the bundle would
-remove the footgun entirely. Filed as a follow-up — until then, the
-manual three-step process is what we have.
+The check compares column **names**. A changed type, a new `NOT NULL`
+or a changed foreign key is drift it cannot see, so `state: ok` means
+"every column the models name exists", not "the schema matches the
+models".
 
 ## See also
 
-- [`infra/helm/vigil/files/database-init/README.md`](https://github.com/Vigil-SOC/vigil/blob/main/infra/infra/helm/vigil/files/database-init/README.md)
-  — chart-side notes on the same convention.
-- [`.github/workflows/helm-chart.yml`](https://github.com/Vigil-SOC/vigil/blob/main/infra/.github/workflows/helm-chart.yml)
-  — the CI check that enforces directory parity.
+- [Upgrading an existing install](https://github.com/Vigil-SOC/vigil/blob/main/docs/upgrading.md)
+  — the code repo's guide to `python -m core.upgrade`, the baseline
+  and revisions, and the 0.7.0 / 0.8.0 adoption path.
+- [`.github/workflows/helm-chart.yml`](https://github.com/Vigil-SOC/vigil/blob/main/.github/workflows/helm-chart.yml)
+  — the chart CI workflow, which triggers on changes under
+  `infra/database/init/**`.
 {% endraw %}
