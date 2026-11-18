@@ -11,71 +11,80 @@ Specialized AI agents for different security operations tasks.
 
 All agents have access to tools through two integration methods:
 
-### Agent SDK (Recommended - Web UI)
+### Backend Tools (Web UI)
 - **Backend Tools** via API function calling
 - Security detections, case management, approvals, MITRE ATT&CK
-- **Zero desktop dependency** - Works entirely through the API
+- Works entirely through the API in the web UI
 - Production-ready for multi-user deployments
 - Enabled by default in web UI
+
+Built-in agents are defined by plugin manifests in `core/agents/manifests/`,
+built into profiles by `core.agents.manager.profile_from_manifest`. Each
+manifest's `needs:` list is the agent's tool grant.
 
 ### MCP Tools (Optional - Advanced Use)
 - **Extended MCP Tools** for specialized integrations
 - Requires additional MCP server configuration
 - Best for advanced local workflows or specialized integrations
 
-> **Default Behavior**: Agents automatically use backend tools via Agent SDK in the web UI with no additional configuration needed.
+> **Default Behavior**: Agents automatically use backend tools via API function calling in the web UI with no additional configuration needed.
 
 ## Quick Reference
 
-| Agent | Speed | Thinking | Use When |
-|-------|-------|----------|----------|
-| Triage | Fast | No | Prioritizing alert queue |
-| Investigator | Thorough | Yes | Deep-dive analysis |
-| Threat Hunter | Balanced | Yes | Proactive threat hunting |
-| Correlator | Balanced | Yes | Linking related alerts |
-| Responder | Fast | No | Immediate action items |
-| Reporter | Balanced | No | Documentation, reports |
-| MITRE Analyst | Balanced | Yes | ATT&CK technique mapping |
-| Forensics | Thorough | Yes | Artifact analysis |
-| Threat Intel | Balanced | Yes | IOC enrichment |
-| Compliance | Balanced | No | Policy/regulation checks |
-| Malware Analyst | Thorough | Yes | Malware analysis |
-| Network Analyst | Balanced | Yes | Traffic analysis |
-| Auto-Responder | Balanced | Yes | Autonomous actions |
+| Agent | Use When |
+|-------|----------|
+| Triage | Prioritizing alert queue |
+| Investigator | Deep-dive analysis |
+| Threat Hunter | Proactive threat hunting |
+| Correlator | Linking related alerts |
+| Responder | Immediate action items |
+| Reporter | Documentation, reports |
+| MITRE Analyst | ATT&CK technique mapping |
+| Forensics | Artifact analysis |
+| Threat Intel | IOC enrichment |
+| Compliance | Policy/regulation checks |
+| Malware Analyst | Malware analysis |
+| Network Analyst | Traffic analysis |
+| Auto-Responder | Autonomous actions |
 
 ## Workflows
 
-These are executable multi-agent playbooks defined in the [`/workflows/`](/workflows/) directory. Each workflow has a `WORKFLOW.md` file with YAML frontmatter metadata and detailed phase-by-phase instructions.
+These are executable playbooks bundled in the `core/workflows/definitions/`
+directory of the code repository. Each workflow is a directory containing a
+`WORKFLOW.md` file with YAML frontmatter metadata and instructions.
 
 Workflows can be executed from the **Workflows** page in the UI or via the `/api/workflows/{id}/execute` API endpoint.
 
-| Workflow | Agents | Use Case | Workflow File |
-|----------|--------|----------|---------------|
-| **Incident Response** | Triage -> Investigator -> Responder -> Reporter | Active incident handling | [`workflows/incident-response/WORKFLOW.md`](/workflows/incident-response/WORKFLOW.md) |
-| **Full Investigation** | Investigator -> MITRE Analyst -> Correlator -> Responder -> Reporter | Deep-dive analysis with ATT&CK mapping | [`workflows/full-investigation/WORKFLOW.md`](/workflows/full-investigation/WORKFLOW.md) |
-| **Threat Hunt** | Hunt Lead over Threat Hunter, Network Analyst, Threat Intel | Proactive hypothesis-driven hunting | [`workflows/threat-hunt/WORKFLOW.md`](/workflows/threat-hunt/WORKFLOW.md) |
-| **Forensic Analysis** | Forensics -> Malware Analyst -> Network Analyst -> Reporter | Post-incident forensics with chain of custody | [`workflows/forensic-analysis/WORKFLOW.md`](/workflows/forensic-analysis/WORKFLOW.md) |
+| Workflow | Run Kind | Use Case | Definition |
+|----------|----------|----------|------------|
+| **Cloud Incident** | `investigate` | Cloud security incidents across AWS, Azure, and GCP | `core/workflows/definitions/cloud-incident/WORKFLOW.md` |
+| **Forensic Analysis** | `investigate` | Post-incident forensics with chain-of-custody documentation | `core/workflows/definitions/forensic-analysis/WORKFLOW.md` |
+| **Full Investigation** | `investigate` | Deep-dive analysis with ATT&CK mapping | `core/workflows/definitions/full-investigation/WORKFLOW.md` |
+| **Incident Response** | `investigate` | Active incident handling | `core/workflows/definitions/incident-response/WORKFLOW.md` |
+| **Root Cause Analysis** | `root_cause` | Trace a confirmed compromise back to its origin | `core/workflows/definitions/root-cause-analysis/WORKFLOW.md` |
+| **Shadow Adjudication** | `adjudicate` | Shadow second opinion on a finding intake has admitted; executes nothing | `core/workflows/definitions/shadow-adjudication/WORKFLOW.md` |
+| **Threat Hunt** | `hunt` | Proactive hypothesis-driven hunting | `core/workflows/definitions/threat-hunt/WORKFLOW.md` |
 
-**Threat Hunt is the one that is not a phase chain.** It declares `run_kind: hunt`
+**Threat Hunt is not a phase chain.** It declares `run_kind: hunt`
 in its frontmatter, which routes it to the hypothesis loop: the definition states
 `hypotheses`, `attack_techniques` and `data_domains`, and a Hunt Lead decides each
-iteration what to do next from what the evidence has done to each belief. Its
-`phases:` block is a roster of who may be dispatched, not an order — the workers'
-prompts and tool grants live in `services/agent/arch/threathunt.yaml`. The other
-four definitions are compose playbooks and walk their phases in order. A hunt run
-reports hypotheses and their standing where a compose run reports phase rows.
+iteration what to do next from what the evidence has done to each belief. The
+shipped `hypotheses` list is empty — the caller states the hypothesis, and the
+run is refused without one. The hunt logic lives in TypeScript under
+`services/agent/plugins/hunt/`. Shadow Adjudication (`run_kind: adjudicate`)
+uses the same hypothesis loop, with a lead framed as an adjudicator. The
+remaining definitions use `run_kind: investigate`, except Root Cause Analysis,
+which uses `run_kind: root_cause`.
 
 ### Adding Custom Workflows
 
-Create a new directory under `workflows/` with a `WORKFLOW.md` file:
+Custom workflows are database-backed, not files on disk. Create one with
+`POST /api/workflows/custom`; update it with
+`PUT /api/workflows/custom/{workflow_id}` and delete it with
+`DELETE /api/workflows/custom/{workflow_id}`.
 
-```
-workflows/
-  my-custom-workflow/
-    WORKFLOW.md    # YAML frontmatter + markdown workflow definition
-```
-
-The backend discovers workflows automatically on startup. Use `POST /api/workflows/reload` to pick up changes without restart.
+Bundled definitions in `core/workflows/definitions/` are read when the
+workflows service initialises. There is no reload endpoint.
 
 ## Agent Capabilities
 
@@ -96,9 +105,6 @@ The backend discovers workflows automatically on startup. Use `POST /api/workflo
 - Anomaly detection
 - Pattern recognition
 - APT discovery
-- **Pattern intelligence from 7,200+ detection rules**
-- **Field usage learning and correlation**
-- **Detection pattern extraction**
 
 ### Correlator Agent
 - Multi-stage attack detection
@@ -123,10 +129,8 @@ The backend discovers workflows automatically on startup. Use `POST /api/workflo
 - Kill chain analysis
 - TTP mapping
 - Framework contextualization
-- **Detection coverage analysis** (71+ new tools)
+- **Detection coverage analysis**
 - **Gap identification and prioritization**
-- **Detection template generation**
-- **Tribal knowledge documentation**
 
 ### Forensics Agent
 - Artifact analysis
@@ -166,37 +170,44 @@ The backend discovers workflows automatically on startup. Use `POST /api/workflo
 - Approval workflow integration
 - Autonomous containment
 - Human oversight for low-confidence
-- Cloudflare enforcement: proposes `WAF_BLOCK` (cf_waf_block_ip), `GATEWAY_BLOCK` (cf_gateway_block_domain), `ACCESS_REVOKE` (cf_access_revoke_session). All cf_* write actions route through `services/approval_service.py`; auto-approval requires confidence ≥ 0.90.
+- Cloudflare enforcement: proposes `WAF_BLOCK` (cf_waf_block_ip), `GATEWAY_BLOCK` (cf_gateway_block_domain), `ACCESS_REVOKE` (cf_access_revoke_session). All cf_* write actions go through the approval pipeline in `core/response/approval_service.py`; the agent does not call them directly — the approval gate requires a human decision (see Approval Workflow Integration below).
 
 ## Approval Workflow Integration
 
-All agents can submit actions to the approval queue:
+All agents can submit actions to the approval queue. Confidence bands are
+defined in `core/response/config.py` (`confidence_threshold` 0.90,
+`review_threshold` 0.85, `monitor_threshold` 0.70) and are rendered into
+agent prompts as routing guidance. They do not release an action: the
+approval gate (`approval_requirement` in `core/response/config.py`) requires
+a human decision for every approval row, whatever its confidence.
 
 | Confidence | Behavior |
 |------------|----------|
-| >= 0.90 | Auto-approved, executed |
-| 0.85-0.89 | Auto-approved with flag |
-| 0.70-0.84 | Requires manual approval |
-| < 0.70 | Monitor only |
+| >= 0.90 | Requires approval |
+| 0.85-0.89 | Requires approval (review) |
+| 0.70-0.84 | Requires approval |
+| < 0.70 | Monitor only — recommendation is to keep monitoring rather than act |
 
-## Backend Tools by Agent (Agent SDK)
+## Backend Tools by Agent
 
-All agents use these tools via Claude API function calling:
+Each agent's backend tools are the `needs:` list in its manifest under
+`core/agents/manifests/`, used via API function calling:
 
-| Agent | Primary Backend Tools |
+| Agent | Backend Tools (manifest `needs:`) |
 |-------|----------------------|
-| Triage | `list_findings`, `get_finding`, `create_case` |
-| Investigator | All backend tools, `nearest_neighbors`, detection search |
-| Threat Hunter | `nearest_neighbors`, detection search, pattern intelligence |
-| Correlator | `nearest_neighbors`, `technique_rollup`, `attack_layer` |
-| Responder | `create_approval_action`, `list_approval_actions`, template generation |
-| Reporter | `create_attack_layer`, case export |
-| MITRE Analyst | `technique_rollup`, `get_findings_by_technique`, coverage analysis, gap identification |
-| Forensics | `search_findings`, evidence tools, detection search |
-| Threat Intel | Detection search, IOC analysis tools |
-| Malware Analyst | Detection search, pattern analysis, sandbox detonation (CAPE, Hybrid Analysis, Any.Run) |
-| Network Analyst | Detection search, traffic pattern tools |
-| Auto-Responder | `correlate_and_create_action`, approval tools, detection validation |
+| Triage | `list_findings`, `search_findings`, `get_finding`, `create_case`, `recall_entity`, `read_skill`, `shell` |
+| Investigator | `list_findings`, `search_findings`, `get_finding`, `create_approval_action`, `vstrike_ui_legend_apply`, `vstrike_ui_rightpanel_focus`, `recall_entity`, `read_skill`, `shell` |
+| Threat Hunter | `list_findings`, `search_findings`, `create_approval_action`, `recall_entity`, `read_skill`, `shell` |
+| Correlator | `list_findings`, `search_findings`, `create_case`, `get_technique_rollup`, `recall_entity`, `read_skill`, `shell` |
+| Responder | `get_finding`, `update_case`, `create_approval_action`, `recall_entity`, `read_skill`, `shell` |
+| Reporter | `list_cases`, `list_findings`, `search_findings`, `recall_entity`, `read_skill`, `list_learning_episodes`, `export_learning_episodes`, `shell` |
+| MITRE Analyst | `list_findings`, `search_findings`, `get_finding`, `list_cases`, `update_case`, `get_technique_rollup`, `analyze_coverage`, `identify_gaps`, `search_detections`, `check_detection_candidate`, `save_detection_rule`, `detection_rule_exception`, `reconstruct_run`, `atomic_red_team_execute`, `telemetry_search`, `recall_entity`, `read_skill`, `shell` |
+| Forensics | `get_finding`, `recall_entity`, `read_skill`, `shell` |
+| Threat Intel | `get_finding`, `list_findings`, `search_findings`, `cf_lookup_ip_threat`, `cf_lookup_domain_threat`, `check_hunt_coverage`, `propose_feed_hunts`, `recall_entity`, `read_skill`, `shell` |
+| Compliance | `list_findings`, `search_findings`, `get_finding`, `list_cases`, `list_completed_hunts`, `recall_entity`, `read_skill`, `shell` |
+| Malware Analyst | `get_finding`, `cape_search_hash`, `cape_submit_file`, `cape_submit_url`, `cape_get_report`, `cape_get_iocs`, `cape_task_status`, `cape_list_tasks`, `ha_search_hash`, `ha_get_report`, `anyrun_search_hash`, `anyrun_get_report`, `url_analyze`, `recall_entity`, `read_skill`, `shell` |
+| Network Analyst | `list_findings`, `search_findings`, `get_finding`, `cf_lookup_ip_threat`, `cf_lookup_domain_threat`, `vstrike_network_graph_get`, `vstrike_ui_rightpanel_focus`, `recall_entity`, `read_skill`, `shell` |
+| Auto-Responder | `get_finding`, `create_approval_action`, `list_approval_actions`, `cf_waf_block_ip`, `cf_waf_unblock_ip`, `cf_gateway_block_domain`, `cf_access_revoke_session`, `recall_entity`, `read_skill`, `shell` |
 
 ### Optional MCP Tools
 
@@ -204,16 +215,19 @@ For advanced workflows requiring external integrations (Splunk, VirusTotal, Shod
 
 ### Detection Engineering Tools (Security-Detections-MCP)
 
-All agents have access to specialized detection engineering tools:
+Detection engineering tools are granted per manifest, not to all agents.
+Of the built-in agents, only the MITRE Analyst's manifest grants the
+Security-Detection family:
 
-| Category | Available To | Focus |
-|----------|--------------|-------|
-| Coverage Analysis | MITRE Analyst, Investigator, Responder | Technique mapping & gap identification |
-| Detection Search | All Agents | Cross-platform rule search |
-| Pattern Intelligence | Threat Hunter, MITRE Analyst | Detection pattern analysis |
-| Template Generation | MITRE Analyst, Responder | Rule generation and scaffolding |
-| Tribal Knowledge | All Agents | Detection notes and operational context |
-| Analytics & Reporting | MITRE Analyst, Reporter | Metrics, coverage, and reports |
+| Tool | Focus |
+|------|-------|
+| `search_detections` | Cross-platform rule search |
+| `analyze_coverage` | Technique coverage analysis |
+| `identify_gaps` | Gap identification |
+| `check_detection_candidate` | Candidate detection checks |
+| `save_detection_rule` | Rule creation |
+| `detection_rule_exception` | Rule exceptions |
+| `reconstruct_run` | Run reconstruction |
 
 See [DETECTION_ENGINEERING.md](/docs/detection-engineering/) for detailed tool descriptions and workflows.
 
@@ -223,6 +237,6 @@ See [DETECTION_ENGINEERING.md](/docs/detection-engineering/) for detailed tool d
 2. **Switch freely** - Change agents mid-conversation
 3. **Start with Triage** - When unsure where to begin
 4. **End with Reporter** - Document findings
-5. **Use thinking agents** - For complex analysis (Investigator, Hunter, Forensics)
-6. **Use fast agents** - For quick decisions (Triage, Responder)
+5. **Use specialist agents** - For complex analysis (Investigator, Hunter, Forensics)
+6. **Use Triage or Responder** - For quick decisions
 {% endraw %}
