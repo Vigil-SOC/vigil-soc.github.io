@@ -34,7 +34,7 @@ First, you need to enable HEC in Splunk:
 3. **Create a New HEC Token**
    - Click **New Token**
    - Give it a name (e.g., "DeepTempo Export")
-   - Select source type: `json` or create custom source types like `deeptempo:finding` and `deeptempo:case`
+   - Select source type: `json` (the token's sourcetype does not decide the indexed sourcetype — the export script stamps `deeptempo:finding` / `deeptempo:case` on every event itself)
    - Select the target index (e.g., `main` or create a dedicated index like `deeptempo`)
    - Click **Review** → **Submit**
    - **Copy the token value** - you'll need this!

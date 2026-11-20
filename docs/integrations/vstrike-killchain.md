@@ -10,10 +10,10 @@ permalink: /docs/integrations/vstrike-killchain/
 > for a new MCP tool, `ui-killchain-replay`, that would let Vigil drive
 > kill-chain replays through the VStrike UI. The tool definition, step
 > schema, and defaults below are the proposed VStrike-side specification;
-> they are not a description of behaviour shipped in Vigil 1.1.2. The
+> they are not a description of behaviour shipped in Vigil 1.1.4. The
 > shipped status is stated in the next section.
 
-## Shipped status at Vigil 1.1.2
+## Shipped status at Vigil 1.1.4
 
 What exists on the Vigil side:
 
@@ -32,7 +32,7 @@ What exists on the Vigil side:
   (`core/integrations/vstrike/client.py:618-622`, on a `-32601` /
   "method not found" / "tool not found" / "unknown tool" error.)
 
-What does **not** exist at 1.1.2:
+What does **not** exist at 1.1.4:
 
 - No Vigil REST route for kill-chain replay — see the complete REST
   route list below.
@@ -55,7 +55,7 @@ When a Vigil analyst opens a case enriched by VStrike, every finding's
 `entity_context.vstrike` carries an `attack_path` (an ordered list of
 asset IDs from initial access to the target) plus `adjacent_assets` (the
 MITRE technique on each edge) —
-`core/integrations/vstrike/schemas.py:36,45-49`, with the per-edge
+`core/integrations/vstrike/schemas.py:33,46-49`, with the per-edge
 technique on `VStrikeAdjacentAsset.edge_technique` (`schemas.py:26-30`).
 There is currently no way to replay that kill chain across those nodes
 as an animated sequence.
@@ -97,11 +97,11 @@ via `/mcp-login`. Relevant client methods:
 
 | MCP tool | Vigil client method | Status |
 |---|---|---|
-| `ui-network-load` | `load_network_in_ui` (`client.py:567-574`), called with `{"networkId": network_id}` | Existing pattern this request borrows from |
+| `ui-network-load` | `load_network_in_ui` (`client.py:568-574`), called with `{"networkId": network_id}` | Existing pattern this request borrows from |
 | `ui-killchain-replay` | `killchain_replay_in_ui` (`client.py:576-622`) | Client method implemented; zero callers; depends on the VStrike server shipping the tool |
 | `network-list` | `list_networks` (`client.py:562-565`) | Existing |
-| `node-search` | `node_search` (`client.py:642`) | Existing |
-| `node-drift-get` | `node_drift_get` (`client.py:656`) | Existing |
+| `node-search` | `node_search` (`client.py:634`) | Existing |
+| `node-drift-get` | `node_drift_get` (`client.py:648`) | Existing |
 
 There is no `node-list` tool referenced by the Vigil client.
 
@@ -181,7 +181,7 @@ These don't block shipping the tool, but they affect what the user sees:
    finished" message back over its existing WebSocket? Bidirectional
    channel — nice-to-have, not a blocker. No Vigil component currently
    exists to consume such an event (there is no `EventTimeline`
-   component in `clients/web/src`, `core/`, or `services/` at 1.1.2),
+   component in `clients/web/src`, `core/`, or `services/` at 1.1.4),
    so consuming it would require new Vigil-side work; without it, a
    dwell-sum estimate on Vigil's side remains an option.
 

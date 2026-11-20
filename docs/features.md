@@ -101,6 +101,9 @@ AI analysis stored with the finding.
 
 ### Enrichment Contents
 
+The stored enrichment is a free-form record; the fields below describe the
+on-demand analysis output illustratively, not a fixed schema.
+
 | Field | Description |
 |-------|-------------|
 | Threat Summary | Clear overview of the threat |
@@ -131,7 +134,7 @@ Auto-Responder agent for automated containment.
 2. Pull alerts from EDR (e.g. CrowdStrike) (endpoint)
 3. Correlate by IP, time, behavior
 4. Calculate confidence score
-5. Queue action for approval based on threshold
+5. Queue action for approval — every action waits for a human decision, whatever its confidence (the thresholds are routing bands, not approval gates)
 
 ### Confidence Calculation
 

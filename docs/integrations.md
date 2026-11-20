@@ -45,7 +45,7 @@ Backend tools are automatically enabled for web UI users. See [Backend Tools Gui
 
 > **Note**: MCP servers are optional and primarily used for advanced integrations requiring external services (Splunk, VirusTotal, etc.). Web UI users get full functionality through the in-process backend tools described above.
 
-Each connector in `mcp-config.json` is checked weekly against a real instance by the [live connector checks](/docs/github-workflows/#5-connectors-liveyml---live-connector-checks).
+Each connector in `mcp-config.json` is checked weekly by the [live connector checks](/docs/github-workflows/#5-connectors-liveyml---live-connector-checks); connectors without a configured live instance report "no live check" rather than a result against a real instance.
 {% endraw %}
 {% assign matrix = site.data.connector_matrix %}
 {% assign rows = matrix.connectors | sort: "server" %}
@@ -171,7 +171,9 @@ SPLUNK_PASSWORD="your_password"
 Settings > Integrations > Splunk:
 - Server URL: `https://splunk.example.com:8089`
 - Username
+- Password
 - Verify SSL
+- CA Certificate Path
 
 ### MCP Tools (in-repo `splunk-selfhosted`)
 
@@ -184,6 +186,15 @@ Settings > Integrations > Splunk:
 | `splunk_nl_search` | Generate and execute |
 
 The in-repo server has no tool for listing indexes.
+
+Searches here only read. Any SPL containing a side-effecting command —
+in a pipe stage or a subsearch — is refused, including `delete`,
+`collect`, `summaryindex`, `mcollect`, `meventcollect`, `tscollect`,
+`outputlookup`, `outputcsv`, `outputtext`, `outputtelemetry`,
+`sendemail`, `sendalert`, `script`, `run`, `runshellscript`, `dump`,
+`map`, `fit`, `dbxoutput` and `dbxquery`. The refusal reads:
+"Refused: '<command>' can change Splunk or send data out; searches here
+only read". This applies to both `splunk_execute` and `splunk_nl_search`.
 
 ## Elastic Security
 
@@ -201,8 +212,11 @@ ELASTIC_SIEM_API_KEY="your_api_key"
 ```
 
 Settings > Integrations > Elastic Security (SIEM):
-- Elasticsearch URL
-- Kibana URL (required for detection alerts)
+- Elasticsearch URL (the only required field; the UI id for this
+  integration is `elastic-siem`, while the MCP server is `elastic`)
+- Kibana URL (required only for Kibana Security API calls; alert
+  ingestion without a Kibana URL reads the configured index pattern
+  directly)
 - API Key or Username/Password
 - Alert Index Pattern (default: `.alerts-security.alerts-default`)
 
@@ -289,7 +303,14 @@ THREAT_FEED_POLL_INTERVAL="900"
 ```
 
 Operates independently of the Cloudflare WAF/Zero Trust integration —
-customers can subscribe to either or both.
+customers can subscribe to either or both. Cloudforce One has no MCP
+server and no vendor slice: it is a daemon poller configured from the
+Settings UI.
+
+## Darktrace
+
+Darktrace is a push-only webhook integration (no MCP server). It has its
+own page: [Darktrace](/docs/integrations/darktrace/).
 
 ## Sandbox Analysis
 

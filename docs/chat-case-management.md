@@ -114,7 +114,7 @@ Assistant: ✓ Added resolution step to case-2026-01-21-abc12345
 
 ## Available Tools
 
-The Vigil chat assistant (the configured LLM) has access to these comprehensive MCP tools for case management:
+The Vigil chat assistant (the configured LLM) has access to these comprehensive MCP tools for case management. This is the case-management subset of the chat tool set, not the whole of it: the same server also serves approval-action tools (`get_approval_action`, `approve_action`, `reject_action`), run tools (`start_run`, `list_runs`, `get_run`, `send_directive`), insider-lead tools (`propose_lead_hunt`, `insider_leads`), detection-proposal tools, and `dismiss_finding`:
 
 ### Finding Management
 - `add_finding_to_case(case_id, finding_id)` - Add a single finding
@@ -298,7 +298,8 @@ Chat Assistant (configured LLM, natural language understanding)
     ↓
 MCP Tool Selection
     ↓
-vigil MCP Server (tools/mcp/vigil.py)
+vigil MCP Server (tools/mcp/vigil.py) — every call is permission-checked
+(`@requires`) and bound to the acting principal by the surface
     ↓
 Database (PostgreSQL)
     ↓
@@ -311,17 +312,20 @@ You can add more case management tools by:
 
 1. Adding new functions to `tools/mcp/vigil.py`
 2. Using the local `@tool(...)` decorator (a wrapper over `mcp.tool()`)
-3. Following the existing patterns for error handling and JSON responses
-4. Restarting the MCP server to load new tools
+3. Gating the tool with `@requires(<permission>)`, as every existing tool is
+4. Following the existing patterns for error handling and JSON responses
+5. Restarting the backend — the server is served in-process by the backend at `/mcp`, not as a separately restarted server
+
+Note: adding a tool to the frozen tool set is a contract change and requires regenerating the frozen-tools snapshot.
 
 ## Troubleshooting
 
 ### "Case not found"
-- Verify the case ID format: `case-YYYY-MM-DD-xxxxxxxx`
+- Verify the case ID format (IDs are producer-assigned; `case-YYYY-MM-DD-xxxxxxxx` is an example format, not a prescribed one)
 - Use `list_cases()` to see available cases
 
 ### "Finding not found"  
-- Verify the finding ID format: `f-YYYYMMDD-xxxxxxxx`
+- Verify the finding ID format (IDs are producer-assigned; `f-YYYYMMDD-xxxxxxxx` is an example format, not a prescribed one)
 - Use `list_findings()` to see available findings
 
 ### Changes not appearing

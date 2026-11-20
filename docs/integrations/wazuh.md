@@ -10,8 +10,9 @@ integration is read-only: loaded rules, agents and their log collection,
 and logtest of a sample event against the ruleset.
 
 Alerts do **not** come through this integration. Wazuh alerts are ingested
-by pointing the Elastic Security or [OpenSearch](/docs/integrations/opensearch/)
-integration at the Wazuh indexer (`wazuh-alerts-4.x-*`).
+by pointing the Elastic Security integration at the Wazuh indexer
+(`wazuh-alerts-4.x-*`); the [OpenSearch](/docs/integrations/opensearch/)
+integration does not transform Wazuh alerts.
 
 ## Tools
 

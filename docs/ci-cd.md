@@ -21,7 +21,7 @@ Complete guide to the CI/CD pipeline for Vigil.
 ## Overview
 
 Vigil uses **GitHub Actions** for CI/CD. The `.github/workflows/` directory
-contains 14 workflow files at the current release:
+contains 21 workflow files at the current release:
 
 1. **ci-cd.yml**: Main pipeline for PRs and pushes
 2. **release.yml**: Publishes release images on version tags
@@ -33,6 +33,20 @@ contains 14 workflow files at the current release:
 8. **medic.yml**, **medic-bundled-check.yml**, **medic-bundled-ratchet.yml**,
    **medic-helm.yml**, **medic-nightly.yml**, **medic-pack-refresh.yml**,
    **medic-pack-release.yml**: Medic checks, bundles, and pack releases
+9. **backport.yml**: Copies `backport`-labelled fixes onto the release branch
+10. **beta.yml**: Daily signed beta images of `main`
+11. **beta-cleanup.yml**: Deletes beta images older than 14 days
+12. **build-images.yml**: Reusable image build used by `release.yml` and `beta.yml`
+13. **release-branch.yml**: Cuts `release/X.Y.x` at each minor tag
+14. **release-guard.yml**: Guards fix releases (no schema change, ≤300 lines)
+15. **scale-weekly.yml**: Weekly scale-limit run
+
+Image publishing also happens outside `release.yml`: `beta.yml` runs
+daily at 06:00 UTC, builds via `build-images.yml` (channel `beta`),
+cosign-signs, and tags `<next-minor>.0-beta.<date>.<run>` plus a moving
+`beta` tag (never `latest`/`stable`/`sha-`); `beta-cleanup.yml` deletes
+beta images older than 14 days. The stable channel's tags include a
+`stable` tag alongside the version, `X.Y`, `sha-…` and `latest` tags.
 
 This page covers the three workflows most contributors interact with —
 `ci-cd.yml`, `release.yml` (with `release-please.yml`), and `nightly.yml`.
@@ -88,8 +102,8 @@ to a staging or production VM.
 **File**: `.github/workflows/ci-cd.yml`
 
 **Triggers**:
-- Pull requests to `main` or `develop`
-- Pushes to `main` or `develop`
+- Pull requests to `main` or `release/**`
+- Pushes to `main` or `release/**`
 - Manual: `workflow_dispatch`
 
 **Jobs**:
@@ -119,12 +133,9 @@ to a staging or production VM.
 
 **Jobs**:
 1. `version` - Resolve the `vX.Y.Z` version from the pushed tag
-2. `build-backend` - Build & push `ghcr.io/vigil-soc/vigil-backend` (also reused by the llm-worker)
-3. `build-daemon` - Build & push `ghcr.io/vigil-soc/vigil-daemon`
-4. `build-mcp-runner` - Build & push `ghcr.io/vigil-soc/vigil-mcp-runner`
-5. `build-agent` - Build & push `ghcr.io/vigil-soc/vigil-agent`
-6. `smoke-test` - Pull the published images and verify they start
-7. `update-release` - Append the image digests to the GitHub Release notes
+2. `build` - Build & push all four images via the reusable `build-images.yml` (channel `stable`; the smoke test runs inside it)
+3. `sign` - Keyless cosign signing of the published images
+4. `update-release` - Append the image digests to the GitHub Release notes, and build and attach the support tarball
 
 > **No deployment runs here.** `release.yml` publishes images only; it does
 > not SSH anywhere or deploy. The GitHub Release object itself is created by
@@ -321,7 +332,8 @@ vars.RELEASE_PLEASE_APP_ID          # GitHub App ID used by release-please.yml
 secrets.RELEASE_PLEASE_PRIVATE_KEY  # GitHub App private key for release-please.yml
 ```
 These are also used by `connectors-live.yml`, `medic-pack-refresh.yml`,
-and `medic-pack-release.yml`.
+and `medic-pack-release.yml`. The App token is also minted by
+`backport.yml` and `release-branch.yml`.
 
 #### Live connector tests
 `connectors-live.yml` consumes vendor secrets for its live test suites
@@ -330,7 +342,7 @@ configured for that workflow).
 
 #### Notifications (optional)
 ```
-SLACK_WEBHOOK_URL       # Optional: failure notifications only (nightly.yml, connectors-live.yml)
+SLACK_WEBHOOK_URL       # Optional: failure notifications only (nightly.yml, connectors-live.yml, scale-weekly.yml)
 ```
 
 No workflow consumes SSH/VM secrets, an Anthropic API key, or a Sentry DSN.
@@ -466,6 +478,7 @@ notifications, because there are no deployments.
 - Nightly security audit failure (`nightly.yml`, only when
   `SLACK_WEBHOOK_URL` is set)
 - Live connector test failure (`connectors-live.yml` notify job)
+- Scale run notification (`scale-weekly.yml`, via `slackapi/slack-github-action`)
 
 ### GitHub Status Checks
 
@@ -587,8 +600,8 @@ The repo's flow is `main`-centric:
 7. Releases are cut from `main` by `release-please` (see Creating a
    Release above)
 
-(`develop` is still accepted as a trigger branch by `ci-cd.yml` and
-`helm-chart.yml`, but it is not the integration branch in this flow.)
+(`ci-cd.yml` triggers on `main` and `release/**`; there is no `develop`
+trigger branch.)
 
 ### 4. Emergency Hotfixes
 
@@ -605,8 +618,12 @@ git commit -m "fix: Resolve critical bug"
 git push origin hotfix/critical-bug
 ```
 
-Create a PR directly to `main`. After it merges, the fix ships in the
-next release cut by `release-please` — do not hand-push a version tag;
+Create a PR directly to `main`. Minors are released by merging `main`'s
+standing release PR by hand. For a fix to a shipped release, label the
+merged fix `backport`: `backport.yml` cherry-picks it onto the
+`release/X.Y.x` branch that `release-branch.yml` cut at the minor tag,
+under `release-guard.yml` (a fix release may not change the schema and
+must stay within 300 changed lines). Do not hand-push a version tag;
 hand-pushed tags are not the release mechanism, and `release.yml` only
 accepts release-please `vX.Y.Z` tags.
 

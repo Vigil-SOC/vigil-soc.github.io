@@ -175,7 +175,7 @@ The system automatically calculates health status:
 - **🟢 healthy**: < 75% of time elapsed
 - **🟡 warning**: 75-89% of time elapsed
 - **🟠 critical**: 90-99% of time elapsed
-- **🔴 breached**: 100%+ of time elapsed (deadline passed)
+- **🔴 breached**: the case is breached — the effective (pause-adjusted) deadline has passed. Percent-elapsed values are capped at 100 and frozen while paused or completed, so breached is a deadline test, not a "100%+ elapsed" reading
 
 ## Pausing and Resuming SLA
 
@@ -469,5 +469,5 @@ For issues or questions:
 
 ---
 
-**Last Updated**: November 17, 2026
+**Version**: 1.1.4 | **Last Updated**: November 19, 2026
 {% endraw %}

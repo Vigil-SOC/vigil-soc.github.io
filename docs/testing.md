@@ -5,7 +5,7 @@ permalink: /docs/testing/
 ---
 
 {% raw %}
-Guide to the test suites that exist in the Vigil repository at 1.1.2.
+Guide to the test suites that exist in the Vigil repository at 1.1.4.
 
 ## Table of Contents
 
@@ -32,20 +32,26 @@ and are mostly live or evaluation suites that exercise a real stack:
 - **Medic evaluation tests** (`tests/medic_eval/`): fault-injection and
   evaluation cells, including the `tests/medic_eval/inject/` cell suites,
   run against a Compose evaluation stack.
+- **Scale tests** (`tests/scale/`): a weekly run (`run.py`, `stack.py`,
+  `compose.scale.yml`) that measures four limits of one install — open
+  findings with the console still responsive, open cases at once,
+  `/api/v1` requests per second, and alerts per minute at intake —
+  against a real Compose stack.
 
 The agent service (`services/agent/`) keeps test fixtures and replay data
 under `services/agent/tests/` (fixtures and support files, not a separate
 documented runner on this page).
 
-There is no end-to-end suite for the web UI and no performance test suite in
-`tests/`; neither is part of the current testing strategy.
+There is no end-to-end suite for the web UI. The scale suite above is
+the performance measurement in `tests/`; it is a weekly trend run with
+no targets, not a pull-request gate.
 
 ### Test Frameworks
 
 **Backend**: pytest, configured by `tests/pytest.ini`, with the shared
 fixtures in `tests/conftest.py`.
 **Frontend**: `clients/web` has no test framework, no test scripts and no
-test files at 1.1.2 — its `package.json` scripts are only `dev`, `build`,
+test files at 1.1.4 — its `package.json` scripts are only `dev`, `build`,
 `lint`, `preview` and `generate:api`.
 
 ---
@@ -153,6 +159,7 @@ Add a test to the suite it belongs to:
 | Live connector checks | `tests/live/` | One probe per connector, against a real instance; skipped without `VIGIL_LIVE_CONNECTORS=1` |
 | Medic Compose | `tests/medic_compose/` | Live Compose stack tests (`test_compose_live.py`, `test_enable_live.py`, `test_key_group_live.py`, `test_last_seen_live.py`, `test_start_path_live.py`) |
 | Medic evaluation | `tests/medic_eval/` and `tests/medic_eval/inject/` | Evaluation and fault-injection cells (`test_config_cells.py`, `test_helm_config_cells.py`, `test_host_native_cells.py`, `test_pipeline_cells.py`, `test_stub_cells.py`, `test_survival_checks.py`) |
+| Scale | `tests/scale/` | Weekly measurement of four install limits against a real Compose stack (`run.py`, `stack.py`, `compose.scale.yml`); run by `scale-weekly.yml` |
 
 Real files in those directories are the working examples for each suite —
 start from the closest existing test rather than from a template.
@@ -284,7 +291,7 @@ lifespan does run and populates `app.state`; overrides still win.
 ### Overriding elsewhere
 
 Outside a request there is no `Depends`, so pass the instance in — using the
-constructors as they actually are at 1.1.2:
+constructors as they actually are at 1.1.4:
 
 ```python
 # core/workflows/workflows_service.py: __init__(workflows_dir=None,
@@ -470,7 +477,7 @@ def test_complex_logic():
 
 ## CI/CD Integration
 
-Test execution in GitHub Actions at 1.1.2 is split by suite, not run as a
+Test execution in GitHub Actions at 1.1.4 is split by suite, not run as a
 single unit-plus-integration job:
 
 - `.github/workflows/ci-cd.yml` runs lint, generated-types, Docker,
@@ -483,8 +490,12 @@ single unit-plus-integration job:
   run the Medic Compose tests under `tests/medic_compose/`.
 - `.github/workflows/nightly.yml` is a security audit only (`pip-audit`)
   plus a Slack notification; it runs no test suite and no performance tests.
+- `.github/workflows/scale-weekly.yml` runs the scale suite
+  (`tests/scale/`) weekly, on Mondays at 08:00 UTC.
+- `.github/workflows/erasure-nightly.yml` runs the parallel-erasure check
+  daily at 05:00 UTC.
 
-See [CI_CD_GUIDE.md](/docs/ci-cd/) for details.
+See the [CI/CD guide](/docs/ci-cd/) for details.
 
 ---
 

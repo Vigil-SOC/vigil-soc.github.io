@@ -29,7 +29,7 @@ Product and operator docs live here. The [Vigil](https://github.com/Vigil-SOC/vi
 - [Deployment guide](/docs/deployment/)
 - [Helm values](/docs/helm/)
 - [Helm chart](/docs/helm-chart/)
-- [Helm secrets](/docs/helm-secrets/)
+- [Helm secrets](/docs/helm-secrets/) (examples: [sealed-secret.yaml](/docs/examples/sealed-secret.yaml), [sops-config.yaml](/docs/examples/sops-config.yaml))
 - [Production security](/docs/production-security/)
 - [State and secrets](/docs/state/)
 - [Kafka ingestion](/docs/kafka-ingestion/)
@@ -55,8 +55,12 @@ Product and operator docs live here. The [Vigil](https://github.com/Vigil-SOC/vi
 
 ## Integrations
 
+- [Amazon Security Lake](/docs/integrations/amazon-security-lake/)
 - [Darktrace](/docs/integrations/darktrace/)
+- [OpenCTI](/docs/integrations/opencti/)
+- [OpenSearch](/docs/integrations/opensearch/)
 - [VStrike kill chain MCP](/docs/integrations/vstrike-killchain/)
+- [Wazuh](/docs/integrations/wazuh/)
 
 ## ADRs
 

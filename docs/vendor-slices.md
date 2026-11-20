@@ -62,7 +62,11 @@ remains in application code, in `core/threat_intel/threat_feed_service.py`.
 To trust a private or inspecting CA, set **`SSL_CERT_FILE`** (a bundle file) or
 **`SSL_CERT_DIR`** (a directory) in the backend's environment. `REQUESTS_CA_BUNDLE`
 and `CURL_CA_BUNDLE` are honored as aliases for the `requests` era, translated to
-the name httpx actually reads. Unset, httpx uses certifi.
+the name httpx actually reads. Unset, httpx uses certifi. The four names are a
+strict precedence list — `SSL_CERT_FILE`, `SSL_CERT_DIR`, `REQUESTS_CA_BUNDLE`,
+`CURL_CA_BUNDLE` — and the first one set wins outright: if that first path does
+not exist, no bundle is forwarded and the later variables are never tried, so a
+stale `SSL_CERT_FILE` shadows a valid `REQUESTS_CA_BUNDLE`.
 
 `core/integrations/mcp/child_env.py` resolves this and every spawn site merges
 it into the child environment. Forwarding has to be explicit: `mcp.client.stdio`

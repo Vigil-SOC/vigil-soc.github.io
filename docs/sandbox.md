@@ -53,8 +53,15 @@ All env vars live in `env.example`. Minimum for CAPE:
 
 ```bash
 CAPE_SANDBOX_ENABLED=true
-CAPE_SANDBOX_URL=http://cape.internal:8000
+CAPE_SANDBOX_URL=http://cape.internal:8000   # example — env.example ships http://localhost:8000
 CAPE_SANDBOX_API_KEY=<token>
+```
+
+Hybrid Analysis and Any.Run are enabled with their own flags:
+
+```bash
+HYBRID_ANALYSIS_ENABLED=true
+ANYRUN_ENABLED=true
 ```
 
 Joe Sandbox has its own variables:

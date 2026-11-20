@@ -13,6 +13,11 @@ cluster automatically: the release workflow (`.github/workflows/release.yml`)
 only builds and publishes images when release-please creates a `vX.Y.Z`
 tag. An operator runs the Compose or Helm commands below.
 
+Releases also publish channel tags: the stable channel adds `latest`,
+`stable`, `X.Y` and `sha-…` tags, and a daily signed beta build of `main`
+publishes `<next-minor>.0-beta.<date>.<run>` plus a moving `beta` tag
+(beta images are deleted after 14 days).
+
 ## Table of Contents
 
 - [Overview](#overview)
@@ -35,7 +40,7 @@ Vigil can be deployed in several configurations:
 3. **Docker Compose**: Container-based deployment using
    `infra/docker/docker-compose.yml`
 4. **Kubernetes**: Via the Helm chart in `infra/helm/vigil/`
-   (chart version 1.1.2, `appVersion` 1.1.2, requires Kubernetes
+   (chart version 1.1.4, `appVersion` 1.1.4, requires Kubernetes
    `>=1.25.0-0`). See [Helm Values](/docs/helm/).
 
 This guide focuses on **VM deployment with Docker Compose**.
@@ -47,7 +52,7 @@ This guide focuses on **VM deployment with Docker Compose**.
 > **Operator guidance only.** The sizing and multi-VM topology in this
 > section are generic guidance. No sizing, load-balancer, or Postgres
 > replication setup is defined in the Compose file, the Helm values, or
-> the README at release 1.1.2. Adapt them to your own measurements.
+> the README at release 1.1.4. Adapt them to your own measurements.
 > Note that the SOC daemon is a singleton, profile-gated service
 > (`soc-daemon` runs only with the Compose `daemon` profile); it is not
 > a free-standing tier in the documented stacks.
@@ -222,7 +227,7 @@ The Compose stack builds local images (for example the backend is
 pull the published release images. The default set runs the database,
 cache, gateway, backup, API, and agent layer. Opt-in profiles add
 more: `daemon`, `dev`, `observability`, `splunk`, `kafka`, `elastic`,
-and `misp`.
+`misp`, `medic` (the Medic services), and `wazuh-sandbox`.
 
 For a quick local start, the repository README also documents
 `./start.sh`, which starts PostgreSQL, Redis, and Bifrost in Docker
@@ -240,13 +245,13 @@ and publishes four images to GHCR. Image tags are pushed without the
 - `ghcr.io/vigil-soc/vigil-agent:<tag>` — TypeScript agent (worker + serve)
 - `ghcr.io/vigil-soc/vigil-mcp-runner:<tag>` — MCP servers
 
-For example, for release 1.1.2:
+For example, for release 1.1.4:
 
 ```bash
-docker pull ghcr.io/vigil-soc/vigil-backend:1.1.2
-docker pull ghcr.io/vigil-soc/vigil-daemon:1.1.2
-docker pull ghcr.io/vigil-soc/vigil-agent:1.1.2
-docker pull ghcr.io/vigil-soc/vigil-mcp-runner:1.1.2
+docker pull ghcr.io/vigil-soc/vigil-backend:1.1.4
+docker pull ghcr.io/vigil-soc/vigil-daemon:1.1.4
+docker pull ghcr.io/vigil-soc/vigil-agent:1.1.4
+docker pull ghcr.io/vigil-soc/vigil-mcp-runner:1.1.4
 ```
 
 Publishing an image does not deploy it. Pulling or referencing a new
@@ -304,7 +309,7 @@ BIFROST_URL=http://bifrost:8080
 
 # Monitoring
 SENTRY_DSN=https://your-sentry-dsn
-RELEASE_VERSION=v1.1.2
+RELEASE_VERSION=v1.1.4
 ```
 
 ### Docker Compose Configuration
@@ -501,7 +506,7 @@ docker compose --env-file .env -f infra/docker/docker-compose.yml up -d --build
 
 # Verify
 docker compose --env-file .env -f infra/docker/docker-compose.yml ps
-curl http://localhost:6987/api/health
+curl http://localhost:6987/api/health/ready
 ```
 
 ### Certificate Renewal (Let's Encrypt)
@@ -612,8 +617,8 @@ fail2ban for SSH protection.
 ## Rollback Procedures
 
 Image tags are pushed without the `v` prefix (git tags still use
-`v`). For example, release `v1.1.2` publishes image tag `1.1.2`, and
-the previous release example below is `1.1.1`.
+`v`). For example, release `v1.1.4` publishes image tag `1.1.4`, and
+the previous release example below is `1.1.3`.
 
 ### Quick Rollback
 
@@ -624,14 +629,14 @@ stack builds local images and does not pull the published ones.
 
 ```bash
 # Published-image deployments: select the previous version
-export IMAGE_TAG=1.1.1  # image tags are pushed without the v prefix (git tags still use v)
+export IMAGE_TAG=1.1.3  # image tags are pushed without the v prefix (git tags still use v)
 
 # Compose deployments: check out the previous release and recreate
-git checkout v1.1.1
+git checkout v1.1.3
 docker compose --env-file .env -f infra/docker/docker-compose.yml up -d --build
 
 # Verify
-curl http://localhost:6987/api/health
+curl http://localhost:6987/api/health/ready
 ```
 
 ### Complete Rollback with Database
@@ -645,7 +650,7 @@ because the stack is stopped.
 scripts/vigil-compose.sh restore --test
 
 # 2. Revert code to the previous release
-git checkout v1.1.1
+git checkout v1.1.3
 
 # 3. Restore the snapshot (the tool stops the app services itself,
 #    keeps Postgres and Redis up, and takes a safety dump first)
@@ -656,7 +661,7 @@ docker compose --env-file .env -f infra/docker/docker-compose.yml up -d --build
 
 # 5. Verify
 docker compose --env-file .env -f infra/docker/docker-compose.yml ps
-curl http://localhost:6987/api/health
+curl http://localhost:6987/api/health/ready
 ```
 
 ---

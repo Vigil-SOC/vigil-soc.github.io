@@ -12,14 +12,15 @@ Vigil splits configuration into two stores:
 1. **`.env`** — bootstrap-only settings the backend needs before the DB is
    reachable (URLs, ports, dev flags). Nothing sensitive belongs here.
 2. **The encrypted secret store** at `~/.vigil/secrets.enc` — every API key,
-   token, and password. Written by the web UI (Settings → AI / LLM Providers
+   token, and password. Written by the web UI (Settings → AI models
    and Settings → Integrations) or by `set_secret()` programmatically. The
    master key sits next to it at `~/.vigil/master.key`.
 
-LLM provider keys (Anthropic, OpenAI, Gemini) are managed entirely through
+LLM provider keys for the UI-configurable provider types (Anthropic,
+OpenAI, Ollama, Vertex, OpenRouter) are managed entirely through
 the UI — they land in the encrypted store and are pushed to Bifrost via its
 admin API in the same request. Ollama is configured by URL and has no API
-key. See [STATE.md](/docs/state/) for the full secret
+key. (Gemini is a Bifrost-seeded provider, not a configurable provider type.) See [STATE.md](/docs/state/) for the full secret
 inventory.
 
 ## `.env`
@@ -47,7 +48,7 @@ chmod 600 .env
 
 ### What does NOT go in `.env`
 
-- `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` — Settings → AI / LLM Providers (Ollama is configured by URL, not by an API key)
+- `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` — Settings → AI models (Ollama is configured by URL, not by an API key)
 - `SPLUNK_PASSWORD`, `FALCON_CLIENT_SECRET`, `VIRUSTOTAL_API_KEY`, etc. — Settings → Integrations (`CROWDSTRIKE_CLIENT_SECRET` is the env-file name; the Settings UI stores the CrowdStrike client secret as `FALCON_CLIENT_SECRET`)
 - Any password, token, or private key
 
@@ -81,8 +82,9 @@ The full stack (including postgres, redis, and bifrost) is defined in
 docker compose -f infra/docker/docker-compose.yml up -d
 ```
 
-Published images are under `ghcr.io/vigil-soc/` — for example
-`ghcr.io/vigil-soc/vigil-backend:<tag>` for the backend. There is no
+Published images are under `ghcr.io/vigil-soc/`. Releases publish four
+signed images: `ghcr.io/vigil-soc/vigil-backend`, `vigil-daemon`,
+`vigil-agent` and `vigil-mcp-runner`. There is no
 single-container `vigil` image; the backend requires the other services
 in the Compose stack.
 
@@ -103,7 +105,12 @@ Helm chart values, including `secrets.anthropicApiKey`.
 
 ```bash
 kubectl create secret generic vigil-secrets \
-  --from-literal=DATABASE_URL="postgresql://deeptempo:<password>@postgres:5432/deeptempo_soc"
+  --from-literal=DATABASE_URL="postgres://<user>:<password>@<host>:5432/<db>" \
+  --from-literal=POSTGRES_HOST="<host>" \
+  --from-literal=POSTGRES_PORT="5432" \
+  --from-literal=POSTGRES_DB="<db>" \
+  --from-literal=POSTGRES_USER="<user>" \
+  --from-literal=POSTGRES_PASSWORD="<password>"
 ```
 
 Note: `DATABASE_URL` is the TypeScript agent's knob. For the Python

@@ -22,7 +22,7 @@ or file location so it can be audited mechanically.
 | Refresh Token TTL | (fixed in code) | `7` days | `7` days | Fixed; the retired `JWT_REFRESH_EXPIRATION_DAYS` setting is ignored. Actual session length is capped by the sign-in limits below. |
 | Cookie Secure Flag | `VIGIL_COOKIE_SECURE` | `true` | `true` | Cookies only sent over HTTPS. |
 | Cookie SameSite | `VIGIL_COOKIE_SAMESITE` | `strict` | `strict` | Prevents cross-origin cookie send. |
-| PostgreSQL Passwords | `POSTGRES_PASSWORD`, `POSTGRES_APP_PASSWORD`, `POSTGRES_AGENT_PASSWORD` | Compose change-me placeholders | Strong random, all three different | Owner, app role, and agent role passwords respectively. |
+| PostgreSQL Passwords | `POSTGRES_PASSWORD`, `POSTGRES_APP_PASSWORD`, `POSTGRES_AGENT_PASSWORD` | Compose change-me placeholders | Strong random, all three different | Owner, app role, and agent role passwords respectively. Fail-closed: when `DEV_MODE=false` the backend refuses a shipped/published default password and refuses a missing password at startup. |
 | LLM Budget Unlimited | `LLM_BUDGET_UNLIMITED` | `false` | `false` | Keep cost guardrails active. |
 
 `JWT_SECRET_KEY` is the root secret for the auth key ring: per-purpose keys
@@ -213,6 +213,26 @@ database. Redis is used by the rate limiter, not by revocation.
 
 ---
 
+## Require Single Sign-On (SSO)
+
+When **Require single sign-on** is on, password sign-in and
+password-reset links are refused for non-break-glass users. The setting
+stays in force even when SSO itself is unusable — for example when the
+client secret is unreadable or the `auth.sso` settings row is invalid —
+so a fault never lets passwords back in.
+
+The only ways back are:
+
+- Re-save the client secret so SSO works again, or
+- Run the host command `python -m core.auth.require_sso_off` inside the
+  backend's environment. It asks for a reason, sets `require_sso` off,
+  and records the change on the audit trail; it is not an API route.
+
+Break-glass accounts are unaffected and can always sign in with a
+password.
+
+---
+
 ## Migration Notes
 
 ### Existing MFA Secrets
@@ -241,7 +261,8 @@ session.close()
 ### New Database Column
 
 The `mfa_recovery_codes` column (JSONB, default `[]`) must be added to
-existing deployments. For fresh installs it's in `06_auth_tables.sql`.
+existing deployments. For fresh installs it is in the upgrade baseline
+(`core/upgrade/versions/0001_baseline.sql`), applied by `python -m core.upgrade`.
 For existing databases:
 
 ```sql

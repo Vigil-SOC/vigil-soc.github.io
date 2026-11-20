@@ -7,15 +7,20 @@ permalink: /docs/architecture/
 {% raw %}
 ## Overview
 
-Vigil's tool-calling work runs in **one TypeScript agent loop**:
-`services/agent/core/stream.ts`. The FastAPI backend enqueues agent runs,
+Vigil's tool-calling work runs in **one TypeScript agent loop**, split
+across two files: `services/agent/core/loop.ts` (the `Harness` interface
+and `commitTurn`) and `services/agent/core/stream.ts` (`streamTurn`; the
+budget lives in `budget.ts` and the prompt-injection scan in
+`security.ts`, both wired in by the loop). The FastAPI backend enqueues agent runs,
 the loop calls LLM providers through the **Bifrost** gateway, and tools are
 dispatched through the backend tool registry and the **MCP registry** for
 connected integrations. Python provides one-shot completions, not a second
 loop — see "One loop, and where it is" below.
 
-MCP is part of the current architecture, not a predecessor to it: connected
-MCP servers are registered in the MCP registry at startup, and chat reaches
+MCP is part of the current architecture, not a predecessor to it: startup
+constructs an empty MCP registry and MCP tools connect lazily when an agent
+actually needs them (eager connection is preserved only outside DEV_MODE
+unless overridden), with registration following connection; chat reaches
 their tools through the integration-door tools described under Tool
 Categories. No desktop application is required; the web UI is the client.
 
@@ -85,7 +90,7 @@ Categories. No desktop application is required; the web UI is the client.
 - Port: 6988
 
 ### Backend
-- FastAPI (Python 3.10+)
+- FastAPI (Python 3.12)
 - LLM traffic via the Bifrost gateway
 - Backend tools
 - Port: 6987
@@ -203,8 +208,8 @@ the connected MCP integrations:
 
 ## Configuration
 
-LLM provider credentials (Anthropic / OpenAI / Ollama) are configured in
-the web UI under **Settings → AI / LLM Providers** and stored in the
+LLM provider credentials (Anthropic / OpenAI / Ollama / Vertex / OpenRouter) are configured in
+the web UI under **Settings → AI models** and stored in the
 encrypted secret store at `~/.vigil/secrets.enc`. The backend pushes them
 to Bifrost over its admin API in the same request. See
 [CONFIGURATION.md](/docs/configuration/) and [STATE.md](/docs/state/) for the
@@ -235,8 +240,10 @@ the `POSTGRES_*` settings.
 ### One loop, and where it is
 
 There is exactly **one tool-calling loop** in Vigil, and it is TypeScript:
-`services/agent/core/stream.ts`. It owns the budget, the approval gate, the
-prompt-injection scan and the turn cap, so anything that reasons with tools gets
+`services/agent/core/loop.ts` defines the `Harness` interface and
+`commitTurn`, and `services/agent/core/stream.ts` exports `streamTurn`.
+Together they own the budget (in `budget.ts`), the approval gate, the
+prompt-injection scan (in `security.ts`) and the turn cap, so anything that reasons with tools gets
 all four by construction rather than by remembering to.
 
 Python holds **no** loop. `ClaudeService.chat()` is a one-shot completion for
@@ -295,7 +302,9 @@ database and API, including:
 - PostgreSQL
 - Redis
 - Backend API
-- Agent, worker and daemon services
+- Agent, worker and daemon services (the daemon's compose service is
+  `soc-daemon`)
+- Medic (`medic`, `medic-dockerproxy`, `medic-gateway`)
 - MCP runner
 - Bifrost gateway
 
@@ -340,7 +349,9 @@ docker logs -f <backend-container>  # Backend API logs
   admin API (see Configuration above)
 
 ### Tool Permissions
-- No dangerous operations exposed
+- Gated write/dangerous operations exist (e.g. Cloudflare enforcement,
+  detection-rule writes, case mutation, a `shell` grant); they are not
+  ungated — response actions require approval
 - Approval required for response actions
 - Rate limiting on API endpoints
 - Authentication required (configurable)

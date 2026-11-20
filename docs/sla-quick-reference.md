@@ -11,6 +11,7 @@ permalink: /docs/sla-quick-reference/
 
 ```bash
 # Create case → SLA auto-assigned from the active default policy for its priority, if one exists
+# (prefer the versioned spelling /api/v1/cases for external scripts; /api/cases is its legacy mount)
 curl -X POST http://localhost:6987/api/cases \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <token>" \
@@ -169,8 +170,11 @@ There is no per-case `CaseSLA` component. SLA policies are managed in the settin
 ## 🧪 Testing
 
 ```bash
-# Test API
-curl http://localhost:6987/api/sla-policies/
+# Test API (the endpoint requires authentication and the cases.read
+# permission — without the header this is only a reachability check and
+# returns an auth error, not a policy list)
+curl http://localhost:6987/api/sla-policies/ \
+  -H "Authorization: Bearer <token>"
 ```
 
 ## 📚 Full Documentation

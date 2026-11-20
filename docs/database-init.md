@@ -43,6 +43,9 @@ thing that changes Vigil's database schema.
   `05_case_management_extended.sql`, `28_case_closure_actor.sql`,
   `39_case_findings_finding_index.sql` and `34_drop_skills.sql` — and
   looks the files up under `database/init` inside the backend image.
+  Adoption also conditionally applies a fifth init file,
+  `34_mcp_credentials.sql`, when the `mcp_credentials` table is absent —
+  edits to that file are load-bearing too.
   The directory is copied into that image for this reason
   (`infra/docker/Dockerfile.backend`:
   `COPY infra/database/init/ ./database/init/`).

@@ -30,7 +30,7 @@ Configure in **Settings → Integrations → OpenSearch**:
 | Username / Password | Basic auth; the security plugin authenticates with basic auth. Use a user holding a read role on the findings indices. |
 | OpenSearch Dashboards URL | Optional. Used only to include the Dashboards version in the connection test. |
 | Findings Index Pattern | Default `.opensearch-sap-*-findings-*`. The index pattern the Security Analytics findings are read from. |
-| Verify SSL Certificate | Whether to verify the server certificate. |
+| Verify SSL Certificate | Whether to verify the server certificate. Default on (unset verifies). |
 | CA Certificate Path | Optional. A PEM trusted for this integration only, in place of the default store — the private CA that signed the server certificate. Ignored when SSL verification is off. |
 
 Settings writes these to the environment as `OPENSEARCH_OPENSEARCH_URL`,
@@ -42,8 +42,9 @@ The MCP server stays dormant until the OpenSearch URL resolves.
 
 ## Wazuh indexer
 
-The same integration reads a Wazuh indexer: point the OpenSearch URL at
-the indexer, set the index pattern to `wazuh-alerts-4.x-*`, and Wazuh
-alerts are ingested as findings. The Wazuh manager itself is covered by
-the separate [Wazuh](/docs/integrations/wazuh/) integration.
+This integration does **not** ingest Wazuh alerts: its ingestion is
+Security-Analytics-findings-shaped only. Wazuh alerts are ingested as
+findings by pointing the Elastic Security integration at the Wazuh
+indexer. The Wazuh manager itself is covered by the separate
+[Wazuh](/docs/integrations/wazuh/) integration.
 {% endraw %}

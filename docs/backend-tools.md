@@ -36,7 +36,7 @@ Database / Detection Rules / Services
 ## Available Tools
 
 The lists below are the tool groups defined in `core/llm/tool_schemas.py` at
-v1.1.2. Treat the schema file, not this page, as the canonical inventory.
+v1.1.4. Treat the schema file, not this page, as the canonical inventory.
 
 ### Security Detection Tools
 
@@ -265,7 +265,7 @@ The following are aspirational ideas, not shipped features; no code
 counterpart has been verified for them:
 
 - [ ] Add caching layer for detection queries
-- [ ] Implement Redis for cross-request caching
+- [ ] Use Redis for detection-query result caching (Redis already ships in the stack for the ARQ queue and rate limiting)
 - [ ] Add more detection rule sources (YARA, Snort)
 - [ ] Expand approval workflow tools
 - [ ] Add bulk operations for findings/cases

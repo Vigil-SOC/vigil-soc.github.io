@@ -386,7 +386,7 @@ Use it:
 |---------|-------------|----------|
 | **Login Required** | ✅ Yes | ❌ No |
 | **JWT Validation** | ✅ Enforced | ❌ Bypassed |
-| **Permissions Check** | ✅ RBAC enforced | ✅ All granted |
+| **Permissions Check** | ✅ RBAC enforced | ✅ Granted (frontend grants all; the backend grants only the built-in Admin role's catalog permissions and denies a name not in the catalog) |
 | **User Identity** | ✅ Real users | ⚠️ Mock "dev-user" |
 | **Audit Trail** | ✅ Accurate | ⚠️ All as "dev-user" |
 | **Security** | ✅ Secure | ❌ INSECURE |
@@ -434,8 +434,9 @@ npm run dev
 # - Backend auth also bypassed automatically!
 
 # 4. When done, disable for testing
-# Stop the dev server first, then change .env and restart it
-sed -i 's/DEV_MODE=true/DEV_MODE=false/' .env
+# Stop the dev server first, then change the root .env and restart it
+# (the working directory is still clients/web — edit the repo-root .env)
+sed -i 's/DEV_MODE=true/DEV_MODE=false/' ../../.env
 npm run dev
 
 # 5. Test actual login flow
