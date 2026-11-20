@@ -8,6 +8,8 @@ tags: [threat-hunting, agents, harness, architecture, engineering, research, pro
 excerpt: "When and how to use code for controls - how my experience in building models led us to design an apparently new approach"
 ---
 
+> **Update — 2026-11-19:** Two small notes on this 0.5.0-era post. First, an inconsistency we never resolved in the text: the harness diagram below lists six hunt-lead decisions, while the body lists nine (adding EXPAND, HANDOFF_IR, and CHECKPOINT) — the post does not say which set 0.5.0 shipped, so treat the exact decision set as unsettled. Second, the description of Vigil in the introduction as "the leading" open source AI SOC is the project's own characterisation, not a measured ranking.
+
 Those of you that know about DeepTempo or about me realize I’m a deep learning researcher and former product lead from industry. For example, while working with the Allen Institute in Seattle, I built multi-modal transformer models from the ground up.  Since joining DeepTempo as a founding AI engineer over two years ago, I’ve been working very closely with some of the most attacked organizations in the world, including tier one global service providers. From them \- and from my colleagues \- I’ve learned an enormous amount about the real world in cyber security.
 
 In this blog I explain how we came to a new approach in building the updated harness within Vigil, the leading OpenSource AI SOC. Please provide any and all feedback. Thank you to our contributors and users who found time while hunting for nation state actors to educate me and our team on the intricacies of their role.

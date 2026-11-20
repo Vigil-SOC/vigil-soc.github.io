@@ -38,9 +38,10 @@ It does not cover the services you choose to connect to Vigil, such as a model p
 
 - the large language model provider or providers you configure, which receive the prompts and context Vigil's agents send them;
 - integrations you enable in Settings, such as detection, ticketing, or threat-intelligence services;
+- a detection-rule source you configure, when Vigil syncs rules from it, which it reaches through that source's GitHub or GitHub Enterprise API;
 - an OpenTelemetry collector, only when you set an exporter endpoint;
 - an error-reporting service, only when you set a Sentry DSN;
-- the Vigil MCP surface at `/mcp`, which is closed until an operator opens it and which accepts only credentials you mint.
+- the Vigil MCP surface at `/mcp`, which is closed until an operator opens it and which accepts credentials you mint in the instance or, when the operator enables MCP OAuth, a token the instance issues after you sign in and consent.
 
 Data sent to those services is sent on your behalf to the party you chose, under that party's terms and privacy policy.
 
@@ -50,7 +51,7 @@ Data sent to those services is sent on your behalf to the party you chose, under
 
 ## 4. The Vigil SOC plugin for Claude Code
 
-**What it is.** The plugin is a set of skill files and one MCP server entry. It contains no executable code of its own and runs no server. When installed, Claude Code asks you for two values: the address of your Vigil instance and a credential you minted in that instance.
+**What it is.** The plugin is a set of skill files and one MCP server entry. It contains no executable code of its own and runs no server. When installed, Claude Code asks you for two values: the address of your Vigil instance and a credential you minted in that instance. If your instance has MCP OAuth enabled, you can instead sign in with OAuth and let the instance issue the token after you consent.
 
 **What data it handles.** When you use a plugin skill, Claude Code sends requests to the `/mcp` surface of the Vigil instance at the address you entered, authenticated with your credential, and receives results such as findings, cases, indicators, comments, run status, approval actions, and audit entries. Those results may contain personal data held in your security data, such as user names, email addresses, IP addresses, and host names. That data belongs to your organization and is governed by section 3.
 
@@ -69,7 +70,7 @@ The plugin sends nothing to the Vigil project, to DeepTempo, or to vigilsoc.org.
 
 ## 5. The website vigilsoc.org
 
-vigilsoc.org is a documentation and community site hosted on GitHub Pages. It has no user accounts, no forms that collect personal data, and no analytics or tracking cookies. GitHub, as the hosting provider, may keep standard server logs, including IP addresses and user agents, for security and operational purposes under GitHub's own privacy statement. Pages load fonts from Google Fonts and the home page loads GitHub's button script, so those providers receive the same request data when a page is opened.
+vigilsoc.org is a documentation and community site hosted on GitHub Pages. It has no user accounts and no analytics or tracking cookies. GitHub, as the hosting provider, may keep standard server logs, including IP addresses and user agents, for security and operational purposes under GitHub's own privacy statement. Pages load fonts from Google Fonts and the home page loads GitHub's button script, so those providers receive the same request data when a page is opened. The community page embeds a calendar from Luma for event RSVPs: when that page is opened, Luma receives the same request data (your IP address and user agent), and if you RSVP, Luma's registration form collects the details you enter, under Luma's own privacy policy.
 
 ## 6. Data we do receive
 

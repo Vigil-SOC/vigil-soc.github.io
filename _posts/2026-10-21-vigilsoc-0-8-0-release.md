@@ -14,6 +14,8 @@ VigilSOC 0.8.0 is officially live on GitHub. This is one of our most significant
 
 Whether you run Vigil as an interactive dashboard or a 24/7 headless daemon, 0.8.0 makes navigating findings, reviewing agent approvals, and managing investigations faster and more intuitive.
 
+> **Update — 2026-11-19:** The "high-confidence auto-approvals" wording in this post reflects the behaviour of its time. Since 1.1.x, no confidence band auto-approves: a confidence never marks a finding approved, every approval waits for a person, and the thresholds only route work for review.
+
 ## What's New in 0.8.0
 
 The centerpiece of this release is [PR #2048](https://github.com/Vigil-SOC/vigil/pull/2048), a top-to-bottom redesign of Vigil's web interface and its core UX primitives.

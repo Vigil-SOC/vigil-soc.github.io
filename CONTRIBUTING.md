@@ -2,6 +2,8 @@
 
 The blog at [vigilsoc.org/blog/](https://vigilsoc.org/blog/) is community-driven. Posts are plain markdown files submitted via pull request — no CMS, no build system to learn, no editorial gatekeeping beyond a quick review.
 
+This guide covers blog posts. For the documentation and other site pages that live in this same repository, see [Contributing documentation or site pages](#contributing-documentation-or-site-pages) below.
+
 ## How to submit a post
 
 ### 1. Fork and clone
@@ -86,6 +88,14 @@ bundle exec jekyll serve
 Then open [http://localhost:4000/blog/](http://localhost:4000/blog/).
 
 You'll need Ruby and Bundler installed. The `Gemfile` in the repo pins the `github-pages` gem so your local build matches production exactly.
+
+## Contributing documentation or site pages
+
+The documentation under `docs/` and the other pages of vigilsoc.org live in this repository too, and are contributed the same way: fork, edit, and open a pull request against `main`.
+
+- Docs pages are Markdown files in `docs/` with front matter at the top — `layout: docs`, a `title`, and a `permalink` (for example `/docs/agents/`). Match the front matter of a neighbouring page.
+- Keep claims about the product accurate to the current release of [Vigil](https://github.com/Vigil-SOC/vigil): check paths, counts, and behaviour against that repository rather than against an older page.
+- The local preview above renders the whole site, documentation included, so you can check a docs change at its permalink before submitting.
 
 ## Questions?
 
