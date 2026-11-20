@@ -206,6 +206,65 @@ the connected MCP integrations:
 9. Web UI displays the streamed result
 ```
 
+## Access and Enrichment Flows
+
+### Vigil's own MCP surface, and OAuth on it
+
+The flow above is Vigil calling tools. Vigil also **serves** its
+own MCP server (`tools/mcp/vigil.py`) to outside callers at `/mcp`,
+served by the backend (`services/api/mcp_surface.py`). The surface
+is stateless — every request is authenticated and bound to its
+principal on its own — and it is off by default: closed answers
+404, unauthenticated answers 401. Callers authenticate with a
+personal API token, or with OAuth: Vigil runs an authorization
+server at the **host root** (discovery at
+`/.well-known/oauth-authorization-server`, plus `/register`,
+`/authorize`, `/token`, `/revoke` — at the root even under
+`VIGIL_CONTEXT_PATH`), with a console consent page, and accepts the
+resulting OAuth bearer tokens alongside `vgl_api_` tokens. OAuth
+has its own switch (`vigil_mcp_oauth_enabled`,
+`core/config.py:229`; `core/auth/oauth_server.py`,
+`core/integrations/mcp/surface.py`). See
+[MCP OAuth](/docs/mcp-oauth/).
+
+### Ask Vigil dock runs
+
+The Ask Vigil dock (`clients/web/src/shell/Chat.tsx`) is a run
+entry point, not only a chat box: `/hunt <hypothesis>` enqueues the
+threat-hunt workflow and `/investigate <finding or context>` the
+incident-response workflow. The run is placed on a case (opened, or
+the open case holding the alert), the dock follows that case, and
+the Case page renders the run live — current step, items waiting
+on a person, and a Keep-going control for a hunt stopped at a
+limit.
+
+### Insider leads
+
+The daemon also starts hunts without a person asking. A finding is
+an **insider lead** when its `data_source` is in the lead list's
+sources or its title matches one of its rule names; the list is one
+SystemConfig row (`workflows.insider_leads` —
+`core/workflows/insider_lead.py`) holding sources, rule names,
+readers and teams, edited from the threat-hunt workflow's panel.
+The daemon's trigger (`services/daemon/orchestrator.py`) starts a
+hunt on the account the finding names, on a **restricted** case
+readable only by the starter and the list's readers/teams
+(`core/workflows/start_case.py`). No row, an unreadable row, or no
+matchers means the trigger is off.
+
+### Entity facts
+
+Triage enriches a finding's user/host entities before reasoning:
+one projection per source in `core/integrations/entity_facts.py`
+(Entra and Okta for users, Falcon for hosts) fetches identity and
+EDR facts, held 24 hours by default so repeat findings reuse them.
+At run start the agent layer reads them via `read_entity_facts`
+(`core/agents/tool_registry.py`); the same held rows are exposed
+read-only at **Settings › Entity facts**, `GET /api/v1/entity-facts`
+and `get_entity_facts` on `/mcp`, all under `findings.read`. Facts
+inform the triage prompt only — no gate, ceiling or verdict
+branches on them.
+
 ## Configuration
 
 LLM provider credentials (Anthropic / OpenAI / Ollama / Vertex / OpenRouter) are configured in

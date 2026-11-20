@@ -14,6 +14,7 @@ Product and operator docs live here. The [Vigil](https://github.com/Vigil-SOC/vi
 - [Integrations](/docs/integrations/)
 - [Features](/docs/features/)
 - [API](/docs/api/)
+- [MCP OAuth](/docs/mcp-oauth/)
 - [Detection engineering](/docs/detection-engineering/)
 - [Chat-driven case management](/docs/chat-case-management/)
 - [Chat case quick reference](/docs/chat-case-quick-reference/)
