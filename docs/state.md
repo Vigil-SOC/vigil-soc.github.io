@@ -29,7 +29,7 @@ checkouts don't nuke stored credentials.
 available, otherwise `dotenv` (override with
 `SECRETS_BACKEND=env|dotenv|keyring`).
 
-**Editing a secret.** Use the LLM Providers UI (Settings → AI Config →
+**Editing a secret.** Use the LLM Providers UI (Settings → AI models →
 Providers) or the `set_secret()` helper from `core.secrets` /
 `core.secrets_manager`.
 Never write secrets into `.env` by hand; that file is for non-secret
@@ -132,10 +132,18 @@ empty, and the actual key *values* are pushed at runtime.
 
 ## Docker volumes
 
+The core volumes are:
+
 - `postgres_data` — Postgres data.
 - `redis_data` — Redis (ARQ queue + rate limiting).
-- `bifrost_data` — Bifrost's internal state (if any persistent).
+- `bifrost_data` — Bifrost's persistent state: its seeded-then-live
+  config store and `logs.db` at `/app/data`.
 - `prometheus_data` — Prometheus data.
+
+The compose file declares 23 named volumes in total; the others include
+`vigil_home`, `vigil_investigations`, `detection_rules`, `medic_data`,
+`grafana_data`, `elastic_data`, `kafka_data`, `backup_repo` and
+`upgrade_state`.
 
 ## Quick reference
 

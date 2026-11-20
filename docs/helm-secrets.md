@@ -21,18 +21,26 @@ owner password plus `POSTGRES_APP_PASSWORD`/`POSTGRES_AGENT_PASSWORD` by
 | **ExternalSecrets Operator** (`secrets.externalSecret.enabled`) | AWS SM / Vault / GCP SM | Secrets already in an external store | [HELM.md — Secrets](/docs/helm/#secrets) |
 | **SealedSecrets / SOPS** | Git, encrypted | GitOps without an external secret store | **This doc** |
 
-All patterns require the same **set of keys** in the final Kubernetes Secret.
-At minimum:
+All patterns require the same **set of keys**. The app Secret carries,
+at minimum:
 
 - An LLM provider key — `ANTHROPIC_API_KEY` for Claude (the default);
   `OPENAI_API_KEY`/`GEMINI_API_KEY` are the alternatives the chart renders
-- `POSTGRES_PASSWORD` — owner password, used by Postgres and the upgrade
-  Jobs only, in the default in-chart-Postgres mode
 - `POSTGRES_APP_PASSWORD` — required; app pods log in with it, mounted as
   their `POSTGRES_PASSWORD` env var; must differ from the owner password
 - `POSTGRES_AGENT_PASSWORD` — required; agent-serve/agent-worker log in
   with it; must differ from both other passwords
 - `JWT_SECRET_KEY` — required when `config.DEV_MODE=false`
+- `AGENT_INTERNAL_TOKEN` — required whenever the agent Deployments are
+  enabled (the default); the agent surface fails closed when it is unset
+- `BIFROST_ADMIN_PASSWORD` (`secrets.bifrostAdminPassword`) — the Bifrost
+  gateway's admin password
+
+Supplied separately, not as a key of the app Secret:
+
+- `POSTGRES_PASSWORD` — owner password, used by Postgres and the upgrade
+  Jobs only, in the default in-chart-Postgres mode; it flows via its own
+  Secret (see the intro above), not via the app Secret
 
 If the MCP runner / agent shell are enabled, the same Secret must also
 carry `MCP_RUNNER_TOKEN` / `SHELL_TOKEN`.

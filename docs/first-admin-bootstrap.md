@@ -12,10 +12,14 @@ deliberately leaves the `users` table empty so the operator chooses the
 first admin's credentials, and so no known default password exists in any
 deployment. There is no initialization script that creates an admin user.
 
-## What database init does seed
+## What the schema does seed
 
-On first database init, `infra/database/init/06_auth_tables.sql` creates
-the `roles` and `users` tables and inserts the 5 system roles:
+On a fresh install, the upgrade baseline
+(`core/upgrade/versions/0001_baseline.sql`, applied by
+`python -m core.upgrade`) creates the `roles` and `users` tables and
+inserts the 5 system roles. (`infra/database/init/06_auth_tables.sql`
+carries the same rows as the legacy/adoption copy; no fresh deploy path
+runs it.)
 
 - **Viewer** — Read-only access to findings and cases
 - **Analyst** — Full access to findings and cases, limited integrations
@@ -77,8 +81,10 @@ any further accounts.
 ### After a database reset or volume recreation
 
 First setup, a database reset, and a deleted-and-recreated Docker volume
-all return the instance to the same empty state. Re-run database init
-(which restores the 5 system roles and no users), start the API, take the
+all return the instance to the same empty state. Let the upgrade path run
+again — the Compose `upgrade` one-shot service or the Helm hook Jobs apply
+the baseline via `python -m core.upgrade`, which restores the 5 system
+roles and no users — start the API, take the
 new setup code from its startup log, and create the first admin via
 `POST /api/auth/bootstrap` as above.
 {% endraw %}

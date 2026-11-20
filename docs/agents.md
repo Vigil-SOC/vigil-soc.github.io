@@ -9,12 +9,14 @@ Specialized AI agents for different security operations tasks.
 
 ## Tool Access
 
-All agents have access to tools through two integration methods:
+All agents have access to tools through the one TypeScript agent loop
+(see [Architecture](/docs/architecture/)). Tool-driven work is executed
+through `core/agents/tool_registry.py`, which builds each agent's grant
+from its manifest over the backend tools (`ALL_TOOLS`) plus the two
+integration-door tools. There is no API-function-calling path.
 
-### Backend Tools (Web UI)
-- **Backend Tools** via API function calling
+### Backend Tools
 - Security detections, case management, approvals, MITRE ATT&CK
-- Works entirely through the API in the web UI
 - Production-ready for multi-user deployments
 - Enabled by default in web UI
 
@@ -22,12 +24,13 @@ Built-in agents are defined by plugin manifests in `core/agents/manifests/`,
 built into profiles by `core.agents.manager.profile_from_manifest`. Each
 manifest's `needs:` list is the agent's tool grant.
 
-### MCP Tools (Optional - Advanced Use)
-- **Extended MCP Tools** for specialized integrations
-- Requires additional MCP server configuration
-- Best for advanced local workflows or specialized integrations
+### MCP Tools
+- MCP integrations are part of the current architecture, reached from
+  chat through `find_integration_tools` / `call_integration_tool`
+- Vigil also ships its own MCP server (`tools/mcp/vigil.py`) and an MCP
+  runner service (`services/mcp_runner/`)
 
-> **Default Behavior**: Agents automatically use backend tools via API function calling in the web UI with no additional configuration needed.
+> **Default Behavior**: Agents use their manifest-granted tools through the agent loop with no additional configuration needed.
 
 ## Quick Reference
 
@@ -146,7 +149,7 @@ workflows service initialises. There is no reload endpoint.
 - Cloudflare context: cites `finding.enrichment.threat_indicators` (Cloudforce One STIX hits) as ground-truth edge-observed indicators; quotes `finding.evidence.cloudy_summary` verbatim with provenance when present. MCP tools: `cf_lookup_ip_threat`, `cf_lookup_domain_threat`.
 
 ### Compliance Agent
-- NIST, ISO, PCI-DSS, HIPAA, GDPR, SOC 2
+- NIST CSF, ISO 27001, CIS Controls, PCI-DSS, HIPAA, GDPR, SOC 2
 - Policy validation
 - Control assessment
 - Audit preparation
@@ -169,7 +172,7 @@ workflows service initialises. There is no reload endpoint.
 - Confidence-based automation
 - Approval workflow integration
 - Autonomous containment
-- Human oversight for low-confidence
+- Human oversight for all actions (the approval gate requires a human decision at every confidence)
 - Cloudflare enforcement: proposes `WAF_BLOCK` (cf_waf_block_ip), `GATEWAY_BLOCK` (cf_gateway_block_domain), `ACCESS_REVOKE` (cf_access_revoke_session). All cf_* write actions go through the approval pipeline in `core/response/approval_service.py`; the agent does not call them directly — the approval gate requires a human decision (see Approval Workflow Integration below).
 
 ## Approval Workflow Integration
@@ -188,12 +191,15 @@ a human decision for every approval row, whatever its confidence.
 | 0.70-0.84 | Requires approval |
 | < 0.70 | Monitor only — recommendation is to keep monitoring rather than act |
 
-## Backend Tools by Agent
+## Tools Granted by Agent
 
-Each agent's backend tools are the `needs:` list in its manifest under
-`core/agents/manifests/`, used via API function calling:
+Each agent's tools are the `needs:` list in its manifest under
+`core/agents/manifests/`. The lists mix backend tools (the 40 in
+`ALL_TOOLS`) with integration/MCP tools (for example `create_approval_action`,
+the `cf_*`, `cape_*`, `ha_*`, `anyrun_*` and `vstrike_*` entries and
+`shell`), which are not backend tools:
 
-| Agent | Backend Tools (manifest `needs:`) |
+| Agent | Tools granted (manifest `needs:`) |
 |-------|----------------------|
 | Triage | `list_findings`, `search_findings`, `get_finding`, `create_case`, `recall_entity`, `read_skill`, `shell` |
 | Investigator | `list_findings`, `search_findings`, `get_finding`, `create_approval_action`, `vstrike_ui_legend_apply`, `vstrike_ui_rightpanel_focus`, `recall_entity`, `read_skill`, `shell` |
@@ -201,7 +207,7 @@ Each agent's backend tools are the `needs:` list in its manifest under
 | Correlator | `list_findings`, `search_findings`, `create_case`, `get_technique_rollup`, `recall_entity`, `read_skill`, `shell` |
 | Responder | `get_finding`, `update_case`, `create_approval_action`, `recall_entity`, `read_skill`, `shell` |
 | Reporter | `list_cases`, `list_findings`, `search_findings`, `recall_entity`, `read_skill`, `list_learning_episodes`, `export_learning_episodes`, `shell` |
-| MITRE Analyst | `list_findings`, `search_findings`, `get_finding`, `list_cases`, `update_case`, `get_technique_rollup`, `analyze_coverage`, `identify_gaps`, `search_detections`, `check_detection_candidate`, `save_detection_rule`, `detection_rule_exception`, `reconstruct_run`, `atomic_red_team_execute`, `telemetry_search`, `recall_entity`, `read_skill`, `shell` |
+| MITRE Analyst | `list_findings`, `search_findings`, `get_finding`, `list_cases`, `update_case`, `get_technique_rollup`, `analyze_coverage`, `identify_gaps`, `search_detections`, `check_detection_candidate`, `save_detection_rule`, `detection_rule_exception`, `reconstruct_run`, `atomic_red_team_execute`, `telemetry_search`, `github_create_branch`, `github_create_or_update_file`, `github_create_pull_request`, `opencti_opencti_search_entities`, `opencti_opencti_get_related`, `recall_entity`, `read_skill`, `shell` |
 | Forensics | `get_finding`, `recall_entity`, `read_skill`, `shell` |
 | Threat Intel | `get_finding`, `list_findings`, `search_findings`, `cf_lookup_ip_threat`, `cf_lookup_domain_threat`, `check_hunt_coverage`, `propose_feed_hunts`, `recall_entity`, `read_skill`, `shell` |
 | Compliance | `list_findings`, `search_findings`, `get_finding`, `list_cases`, `list_completed_hunts`, `recall_entity`, `read_skill`, `shell` |
@@ -209,9 +215,9 @@ Each agent's backend tools are the `needs:` list in its manifest under
 | Network Analyst | `list_findings`, `search_findings`, `get_finding`, `cf_lookup_ip_threat`, `cf_lookup_domain_threat`, `vstrike_network_graph_get`, `vstrike_ui_rightpanel_focus`, `recall_entity`, `read_skill`, `shell` |
 | Auto-Responder | `get_finding`, `create_approval_action`, `list_approval_actions`, `cf_waf_block_ip`, `cf_waf_unblock_ip`, `cf_gateway_block_domain`, `cf_access_revoke_session`, `recall_entity`, `read_skill`, `shell` |
 
-### Optional MCP Tools
+### External MCP Integrations
 
-For advanced workflows requiring external integrations (Splunk, VirusTotal, Shodan, etc.), see the MCP configuration guide in [INTEGRATIONS.md](/docs/integrations/).
+For workflows requiring external integrations (Splunk, VirusTotal, Shodan, etc.), see the MCP configuration guide in [INTEGRATIONS.md](/docs/integrations/).
 
 ### Detection Engineering Tools (Security-Detections-MCP)
 
@@ -230,6 +236,12 @@ Security-Detection family:
 | `reconstruct_run` | Run reconstruction |
 
 See [DETECTION_ENGINEERING.md](/docs/detection-engineering/) for detailed tool descriptions and workflows.
+
+## Custom Agents
+
+Operators can also define custom agents. Custom agents are stored in the
+database (not as manifests on disk), carry `custom-`-prefixed ids, and
+appear in the Agents UI alongside the built-ins above.
 
 ## Usage Tips
 

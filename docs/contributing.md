@@ -150,11 +150,11 @@ rejects. `./setup_dev.sh` does both steps for you.
 
 ### Testing
 
-Run the test suite before submitting:
-
-```bash
-pytest tests/
-```
+Run the tests relevant to your change before submitting. Note that
+`pytest tests/` collects mostly live/evaluation suites that skip
+without their opt-in environment, and CI runs no pytest job in
+`ci-cd.yml` — see the [Testing guide](/docs/testing/) for each suite's
+own command and opt-in flags.
 
 Pytest configuration lives in `tests/pytest.ini`.
 
@@ -192,8 +192,10 @@ Signed-off-by: Your Name <your@email.com>
 - `test:` — adding or fixing tests
 - `perf:` — performance improvement
 
-Releases currently always bump patch, regardless of commit type, per
-`"versioning": "always-bump-patch"` in `.github/release-please-config.json`.
+Releases from `main` currently always bump minor, regardless of commit
+type, per `"versioning": "always-bump-minor"` in
+`.github/release-please-config.json`; patch bumps happen only for fix
+releases on `release/**`.
 
 **Common scopes for Vigil:** `agents`, `workflows`, `mcp`, `frontend`,
 `daemon`, `helm`, `api`, `db`.

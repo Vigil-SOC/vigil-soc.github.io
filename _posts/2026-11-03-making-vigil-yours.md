@@ -65,7 +65,7 @@ Many teams carry years of SOAR playbooks: XSOAR YAML, Splunk SOAR JSON, Tines st
 
 ### Pointing Vigil at your rules
 
-Detection rules are in repositories too. `./scripts/setup_detection_repos.sh` clones SigmaHQ, Splunk ESCU, Elastic detection-rules and the community KQL set, which means roughly 7,000 rules. The paths live in environment variables (`SIGMA_PATHS`, `SPLUNK_PATHS`, `ELASTIC_PATHS`, `KQL_PATHS`, `STORY_PATHS`), so point them at your own repositories, the same way you pointed the skills root at your own folder. Rules then serve across use cases: coverage assessment, hunt hypotheses, correlation inside an investigation. [Release 0.7](/blog/2026/10/08/vigilsoc-0-7-0-release/) added Sigma lint and replay and SIEM federation; [the 1.0 release post](/blog/2026/10/30/vigilsoc-1-0-0-release/) sketches the roadmap, and 1.1 and 1.2 carry a good deal more [detection engineering](/docs/detection-engineering/).
+Detection rules are in repositories too. `./scripts/setup_detection_repos.sh` clones SigmaHQ, Splunk ESCU, Elastic detection-rules and the community KQL set — several thousand rules in total, with the exact count moving as the upstream sets change. The paths live in environment variables (`SIGMA_PATHS`, `SPLUNK_PATHS`, `ELASTIC_PATHS`, `KQL_PATHS`, `STORY_PATHS`), so point them at your own repositories, the same way you pointed the skills root at your own folder. Rules then serve across use cases: coverage assessment, hunt hypotheses, correlation inside an investigation. [Release 0.7](/blog/2026/10/08/vigilsoc-0-7-0-release/) added Sigma lint and replay and SIEM federation; [the 1.0 release post](/blog/2026/10/30/vigilsoc-1-0-0-release/) sketches the roadmap, and 1.1 and 1.2 carry a good deal more [detection engineering](/docs/detection-engineering/).
 
 ## Configuration
 
@@ -73,12 +73,12 @@ Authoring rules, workflows and agents changes what Vigil knows. Configuration ch
 
 **Models.** Providers and keys are set under **Settings → AI models**: Anthropic, OpenAI, Google Vertex and Ollama. Each component can carry its own assignment, so a cheap local model can run basic triage while a frontier model acts as the lead investigator. `DEFAULT_MODEL` fills any gap. The open source Bifrost sits in front of each call as a gateway, with a spend budget.
 
-**Declared intent.** `INTENT.md` at the repo root records what the daemon may do unattended, as machine-readable frontmatter over an operator's note. Every key is an existing knob:
+**Declared intent.** `INTENT.md` at the repo root records what the daemon may do unattended, as machine-readable frontmatter over an operator's note. The file is a declaration, not a control: nothing in it is enforced, and at startup the daemon only logs where the effective settings differ from what it declares. Every key is an existing knob:
 
 - `triage.auto_triage` and `enrich.auto_enrich`: run AI triage and threat intel enrichment on new findings without being asked.
 - `respond.auto_response`: let the daemon execute response actions on its own.
-- `respond.confidence_threshold` (0.90), `review_threshold` (0.85), `monitor_threshold` (0.70): the bands that decide whether a finding is acted on, offered to AutoOps intake, or merely watched.
-- `act.reversible` and `act.irreversible`: unattended outside action, off until a person raises the ceiling. `four_eyes` adds a two-person rule.
+- `respond.confidence_threshold` (0.90), `review_threshold` (0.85), `monitor_threshold` (0.70): the bands that route a finding — whether it is offered to AutoOps intake or merely watched, and how it is prioritised. The bands route and prioritise; they do not approve anything. A confidence never marks a finding approved, and every action waits for a person.
+- `act.reversible` and `act.irreversible`: unattended outside action, off until a person raises the ceiling. `four_eyes` declares a two-person rule: it is stored on the ceiling and not currently enforced, so do not rely on it as a working control.
 - `investigate.enabled`: the autonomous orchestrator, with `max_cost_per_investigation`, `max_total_hourly_cost` and `max_runtime_per_investigation` as budgets.
 
 Set `ORCHESTRATOR_DRY_RUN` to watch what would happen before it does. Set `DAEMON_FORCE_APPROVAL` to hold every action for a person. Raise `ORCHESTRATOR_MAX_AGENTS` above three when approvals are clogging the slots. Moving toward full autonomy is a sequence of these changes, made in Settings or the environment and declared in `INTENT.md`, so each one is recorded under version control and each one reversible; at startup the daemon logs any setting that differs from what the file declares.
@@ -87,7 +87,7 @@ Set `ORCHESTRATOR_DRY_RUN` to watch what would happen before it does. Set `DAEMO
 
 Suppose the content and the knobs are not enough. Three things come next.
 
-**Read the roadmap.** The pace of change has picked up now that Vigil's foundation is largely set. [The 1.0 post](/blog/2026/10/30/vigilsoc-1-0-0-release/) lists what is in flight: native OpenCTI integration, expanded threat intel chains, zero-start enrichment, federated detection and multi-SOC orchestration. [The project board on GitHub](https://github.com/orgs/Vigil-SOC/projects/1) shows what is being groomed and built this week and upcoming milestones. Check before you build; the thing you need may be a release away.
+**Read the roadmap.** The pace of change has picked up now that Vigil's foundation is largely set. [The 1.0 post](/blog/2026/10/30/vigilsoc-1-0-0-release/) lists what was in flight at 1.0: native OpenCTI integration (since shipped, with read-only lookups), expanded threat intel chains, zero-start enrichment, federated detection and multi-SOC orchestration. [The project board on GitHub](https://github.com/orgs/Vigil-SOC/projects/1) shows what is being groomed and built this week and upcoming milestones. Check before you build; the thing you need may be a release away.
 
 **Talk to the community.** [Office hours](https://luma.com/vigilcommunity) are scheduled on Luma and maintainers attend. [Discord](https://discord.gg/SBtSHzMYFZ) has `#general` and `#releases`. Bring a concrete scenario. The people answering wrote the code, and a question posed well often turns into an issue groomed by the next morning.
 
@@ -115,4 +115,4 @@ As Vigil's community continues to grow, more and more cyber engineers are lookin
 
 This blog sets out ways to customize Vigil, many of which do not require additional code being contributed upstream to Vigil.
 
-Start with content, which is files in folders: author it in Vigil, import it from others, or point Vigil at the repositories you already keep. Don't forget configuration when you want different models or more autonomy, and remember to record each change in `INTENT.md`. When that is not enough, and new code is indeed the answer, read the roadmap, come to office hours, build on the loop, the ledger and the memory, and write the epic. The factory will take it from there, and the result will be a better upstream, which benefits us all.
+Start with content, which is files in folders: author it in Vigil, import it from others, or point Vigil at the repositories you already keep. Don't forget configuration when you want different models or more autonomy, and remember to record each change in `INTENT.md` — as a declaration the daemon reports divergences from, not a setting that enforces itself. When that is not enough, and new code is indeed the answer, read the roadmap, come to office hours, build on the loop, the ledger and the memory, and write the epic. The factory will take it from there, and the result will be a better upstream, which benefits us all.

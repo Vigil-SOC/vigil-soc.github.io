@@ -9,7 +9,8 @@ Vigil can retain a bounded preview of the source records that produced a
 finding. The preview lives at `finding.entity_context.source_evidence`, so it
 does not require a database migration. Finding list responses retain only the
 envelope metadata with `payload_included: false`;
-`GET /api/findings/{finding_id}` returns the payload.
+`GET /api/findings/{finding_id}` returns the payload (frozen spelling:
+`GET /api/v1/findings/{finding_id}`; the unversioned path is its legacy mount).
 
 ## Contract
 

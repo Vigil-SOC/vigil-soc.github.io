@@ -135,10 +135,13 @@ your secrets manager — same pattern as the provider API keys above.
 
 Vigil benefits from two independent caching layers. They're **complementary**, not redundant:
 
+The hit-rate and savings figures below are upstream/illustrative
+estimates, not measurements from this repository.
+
 | Layer | What it caches | Hit rate in practice | Savings | Run by |
 |---|---|---|---|---|
-| Anthropic native prompt caching (GH #84 PR-C) | Request prefix (system prompt + tool schemas) | Most calls within a session | ~90% on cached input tokens | Anthropic |
-| Bifrost semantic cache (optional) | Full responses, keyed on embedding similarity | Only semantically similar retries | 100% on hit | Bifrost + Redis vector store |
+| Anthropic native prompt caching (GH #84 PR-C) | Request prefix (system prompt + tool schemas) | Most calls within a session | ~90% on cached input tokens (estimate) | Anthropic |
+| Bifrost semantic cache (optional) | Full responses, keyed on embedding similarity | Only semantically similar retries | 100% on hit (estimate) | Bifrost + Redis vector store |
 
 **Anthropic prefix caching.** On the SDK client path, `clients.py`
 describes Bifrost's `/anthropic` passthrough as preserving

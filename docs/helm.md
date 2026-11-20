@@ -262,6 +262,14 @@ The Secret must provide keys matching env var names. At minimum:
   agent-serve and agent-worker)
 - `JWT_SECRET_KEY` (when `DEV_MODE=false`)
 
+The chart also carries the Bifrost admin password:
+`secrets.bifrostAdminPassword` (rendered as `BIFROST_ADMIN_PASSWORD`).
+Agent pods do not receive it — they load only the app-Secret keys they
+read. When rendering with `helm template` or GitOps, set it explicitly:
+a generated value cannot be preserved by lookup. Set it in
+`secrets.bifrostAdminPassword` when you run an external Bifrost gateway
+that has an admin password.
+
 Where those components are used, the Secret must also carry
 `MCP_RUNNER_TOKEN` (MCP runner) and `SHELL_TOKEN` (agent shell).
 

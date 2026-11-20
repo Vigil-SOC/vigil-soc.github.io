@@ -45,55 +45,149 @@ API-contract version `"1"`, not the application version.
 
 ## How a Release Happens
 
-Releases are driven by [release-please](https://github.com/googleapis/release-please).
-Maintainers do not hand-bump versions or hand-tag releases — both are
-automated.
+Releases are driven by [release-please](https://github.com/googleapis/release-please)
+from two kinds of branch. Maintainers do not hand-bump versions or
+hand-tag releases — both are automated. `.github/workflows/release.yml`
+builds, signs and publishes the four GHCR images for any `vX.Y.Z`
+tag, whichever branch it was cut from.
 
-1. Every push to `main` runs `.github/workflows/release-please.yml`.
-2. Every release is a patch by default. The release-please config
-   (`.github/release-please-config.json`) sets
-   `"versioning": "always-bump-patch"`, so commit prefixes do not
-   decide the bump. To ensure a release PR is opened or updated even
-   when merged PR titles carry no conventional prefix, the workflow
-   itself adds an empty commit to `main` — `chore: release X.Y.Z` with
-   a `Release-As: X.Y.Z` trailer — computing the next patch version
-   from `.github/.release-please-manifest.json`. It skips this step
-   only when the head commit is already a release commit or a release
-   PR labelled `autorelease: pending` is already open.
-3. For a minor or major release, a maintainer runs the workflow
-   manually via `workflow_dispatch` and selects the `bump` input
-   (`patch`, `minor`, or `major`; default `patch`). Minor and major
-   bumps come from that manual dispatch, not from landing a `feat:` or
-   `feat!:` commit.
-4. release-please opens (or updates) a single **release PR** titled
-   `chore(main): release X.Y.Z`. The PR bumps every file listed under
-   "What Gets Versioned" above and updates `CHANGELOG.md`. Because the
-   config sets `"changelog-type": "github"`, the changelog is a flat
-   "What's Changed" list of PR titles and authors, with no per-type
-   sections and no "Other" section.
-5. The release PR stays open and accumulates more commits as they merge.
-   This is the grouping mechanism — every commit since the last release
-   lives in one PR until you ship.
-6. When ready, a maintainer merges the
-   release PR. The merge causes release-please to push tag `vX.Y.Z` and
-   create a GitHub Release.
-7. The tag push triggers `.github/workflows/release.yml`, which builds
-   and publishes artifacts.
+| Branch | Releases | How |
+|---|---|---|
+| `main` | Minors (`1.2.0`, `1.3.0`, …) and majors | A maintainer merges `main`'s release PR |
+| `release/X.Y.x` | Fix releases (`X.Y.1`, `X.Y.2`, …) | A maintainer merges that branch's release PR |
 
-Human decisions per release are **when to merge the release PR** and,
-for a minor or major release, **running the workflow manually and
-selecting that bump**.
+A merge to `main` makes no release. Daily betas of `main` are a
+separate path (see "Daily beta images" below).
+
+The release-please config (`.github/release-please-config.json`)
+sets `"versioning": "always-bump-minor"`, so commit prefixes do not
+decide the bump. The workflow (`.github/workflows/release-please.yml`)
+runs on push to `main` and `release/**` and itself adds an empty
+`Release-As:` commit to the branch: on `main` it forces the next
+minor; on a release branch it pins the next patch (see "Fix
+releases").
+
+### A minor release, by hand
+
+`main` always has one open release PR, titled for the next minor
+(`chore(main): release 1.3.0`). It collects the changelog as PRs
+merge and stays open until a maintainer decides it is time. The PR
+bumps every file listed under "What Gets Versioned" above and
+updates `CHANGELOG.md`. Because the config sets
+`"changelog-type": "github"`, the changelog is a flat "What's
+Changed" list of PR titles and authors, with no per-type sections
+and no "Other" section.
+
+To release, merge the release PR. That tags `v1.3.0`, which:
+
+1. runs `release.yml` to build and publish the images, and
+2. runs `.github/workflows/release-branch.yml`, which creates
+   `release/1.3.x` at the tag's commit and deletes every other
+   `release/*` branch.
+
+There is exactly one release branch at a time, so the previous line
+stops getting fixes the moment the new minor ships.
+
+### A major release
+
+Run the **release-please** workflow from `main` with `major`
+(**Actions → release-please → Run workflow**), then merge the PR it
+opens or updates. Manual dispatch is the major path only: the
+workflow's `bump` input offers `minor` / `major` (default `minor`)
+— there is no `patch` dispatch choice, because patch is forced
+automatically on release branches.
+
+### Fix releases
+
+A fix release carries no database migration and no schema change.
+Every fix merges to `main` first. Nothing merges from `main` into
+the release branch, or back.
+
+A commit landing on `release/X.Y.x` makes release-please open a
+release PR on that branch for `X.Y.(Z+1)`. Merging it tags
+`vX.Y.(Z+1)` and `release.yml` builds it. The release PR bumps only
+the patch: the workflow adds a `Release-As: X.Y.(Z+1)` commit to
+the branch, which pins the version whatever `main`'s versioning
+setting says.
+
+The release branch carries its own
+`.github/.release-please-manifest.json`, which starts at `X.Y.0`.
+After a fix release, `main`'s manifest and `VERSION` still read
+`X.Y.0`; that is expected. Betas are numbered from `main`'s
+`VERSION`.
+
+CI (the CI/CD Pipeline, and the Helm chart check for chart changes)
+runs on pushes to and pull requests into `release/**`, as it does
+for `main`.
+
+#### Backporting a fix
+
+Add the `backport` label to a PR that merged into `main`, or label
+it before it merges: the copy starts when the PR is merged and
+labelled, whichever happens last. `.github/workflows/backport.yml`
+then:
+
+- cherry-picks the PR's squash commit onto `release/X.Y.x` with
+  `git cherry-pick -x` (the copy names the original commit, and
+  keeps its title for the release changelog), and opens
+  `Backport #N: <title>` into that branch with the release-please
+  App token, so CI runs on it;
+- opens it as a **draft with the conflict markers committed** if
+  the commit does not apply cleanly, and does nothing more. It
+  fails CI by design until someone resolves the conflicts and
+  marks it ready;
+- comments on the PR and stops if no release branch exists yet,
+  and stops if a `backport/N-*` branch already exists (the label
+  was added twice).
+
+Only that one commit is copied. A fix that depends on earlier
+commits that are not on the release branch conflicts; resolve it
+by hand or leave it on `main`.
+
+#### Release guard
+
+`.github/workflows/release-guard.yml` runs on every PR into
+`release/**`, backports or not, and fails when the PR:
+
+- changes anything under `core/upgrade/versions/` or
+  `core/upgrade/head_schema.json` (no migration or schema change
+  in a fix release), or
+- changes more than 300 lines, added plus deleted (too big to be
+  a fix).
+
+Release PRs go through the same check; they only touch the
+manifest and changelog.
+
+### Daily beta images
+
+`.github/workflows/beta.yml` publishes a daily (06:00 UTC, plus
+manual dispatch) signed build of `main`, tagged
+`<next-minor>.0-beta.<date>.<run>` plus a moving `beta` tag. It is
+skipped when `main`'s head is unchanged since the current beta, or
+when CI did not finish green on `main`'s head. Betas are images
+only: no git tag, no GitHub Release, and never the `latest`,
+`stable`, `X.Y` or `sha-` tags — `release.yml` owns those. A beta
+may include database migrations, which have no downgrade.
+
+`.github/workflows/beta-cleanup.yml` deletes beta images older
+than 14 days, weekly. It never deletes the image the `beta` tag
+points to, and never touches stable images.
+
+Stable-channel tags (from the shared
+`.github/workflows/build-images.yml`) are `<version>`, `X.Y`,
+`sha-<short>`, `latest` and `stable`; the beta channel gets only
+`<version>` and `beta`.
 
 ## Forcing a specific version
 
-Forcing a version is no longer an exotic override: on ordinary pushes
-the workflow itself auto-generates a `Release-As:` commit for the next
-patch version (see "How a Release Happens" above), and minor/major
-bumps are selected via the workflow's `workflow_dispatch` `bump`
-input. A hand-written `Release-As:` trailer is still the way to force
-a specific version outside that scheme — to unstick a stalled release
-PR, to reserve a milestone version, or to skip a number on purpose.
-Push an empty commit to `main` with a `Release-As:` trailer:
+Forcing a version is no longer an exotic override: on ordinary
+pushes the workflow itself auto-generates a `Release-As:` commit
+(the next minor on `main`, the next patch on a release branch —
+see "How a Release Happens" above). A hand-written `Release-As:`
+trailer is still the way to force a specific version outside that
+scheme — to unstick a stalled release PR, to reserve a milestone
+version, or to skip a number on purpose. Push an empty commit with
+a `Release-As:` trailer:
 
 ```bash
 git commit --allow-empty \
@@ -102,9 +196,9 @@ git commit --allow-empty \
 git push origin main
 ```
 
-The next release-please run reads the trailer and forces the release
-PR to use that exact version, regardless of the patch version the
-workflow would otherwise compute. The override is one-shot —
+The next release-please run reads the trailer and forces the
+release PR to use that exact version, regardless of the version
+the workflow would otherwise compute. The override is one-shot —
 subsequent merged commits go back to normal accounting.
 
 ## Chart Version vs appVersion
@@ -157,7 +251,17 @@ the manifest is not bumped, the next automated run reads its stale
 value, thinks the manual release never happened, and opens a release PR
 that overwrites it.
 
-1. Open a PR bumping the version to the new release (e.g. `1.0.1`) in
+The steps below are the **minor-from-`main`** variant. A manual **fix**
+release is different: cut it from `release/X.Y.x`, bump only that
+branch's own manifest and versioned files to `X.Y.(Z+1)`, and tag from
+the branch — never bump `main`'s manifest for a fix, and never put a
+migration or schema change in it (the release guard's limits in "Fix
+releases" above are the rule, even by hand). After a manual minor tag,
+expect `release-branch.yml` to create `release/X.Y.x` at the tag and
+delete the other `release/*` branches, exactly as for an automated
+minor.
+
+1. Open a PR bumping the version to the new release (e.g. `1.1.0`) in
    all of the following:
    - `VERSION`
    - `scripts/vigil-support/VERSION`
@@ -178,8 +282,8 @@ that overwrites it.
 3. Tag and push:
    ```bash
    git checkout main && git pull
-   git tag -s v1.0.1 -m "Release v1.0.1"
-   git push origin v1.0.1
+   git tag -s v1.1.0 -m "Release v1.1.0"
+   git push origin v1.1.0
    ```
 4. The tag push triggers `release.yml` (build and publish the four
    GHCR images, smoke-test, update the Release notes).
@@ -193,8 +297,6 @@ that overwrites it.
 
 Tracked separately, not part of the current release flow:
 
-- **Hotfix branches** — now that `1.0.0+` is GA and we may need to ship fixes for
-  older majors, document a `release/X.Y` branch procedure.
 - **Re-deploy an old tag** — add a `workflow_dispatch` trigger with a
   `tag` input to `release.yml`, so a previously-released version can be
   rebuilt without moving the tag.

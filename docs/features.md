@@ -101,6 +101,9 @@ AI analysis stored with the finding.
 
 ### Enrichment Contents
 
+The stored enrichment is a free-form record; the fields below describe the
+on-demand analysis output illustratively, not a fixed schema.
+
 | Field | Description |
 |-------|-------------|
 | Threat Summary | Clear overview of the threat |
@@ -131,7 +134,7 @@ Auto-Responder agent for automated containment.
 2. Pull alerts from EDR (e.g. CrowdStrike) (endpoint)
 3. Correlate by IP, time, behavior
 4. Calculate confidence score
-5. Queue action for approval based on threshold
+5. Queue action for approval — every action waits for a human decision, whatever its confidence (the thresholds are routing bands, not approval gates)
 
 ### Confidence Calculation
 
@@ -175,17 +178,40 @@ Note: `isolate_host` execution is not wired to an EDR executor. The isolation ex
 
 `get_findings_by_technique` is not a backend tool; it is a REST route: `GET /api/attack/techniques/{technique_id}/findings`.
 
-## Chat Interface
+## Chat Interface — Ask Vigil
 
-AI-powered investigation assistant.
+The chat surface is the **Ask Vigil** dock: an AI-powered
+investigation assistant.
 
 ### Features
 
 - Streaming responses
 - MCP tool integration
-- Chat history
+- Chat history (saved conversations)
+- `@` to attach a case, and file drop — a hunt started from an
+  attached document can carry that document's proposed hypothesis
+  subjects and approval with it
+
+### Starting a run from the dock
+
+The dock has two built-in slash commands (also available in the
+command bar):
+
+- `/hunt <hypothesis>` — starts the threat-hunt workflow
+- `/investigate <finding or context>` — starts the incident-response
+  workflow
+
+The run is placed on a case — opening one, or reusing the open case
+holding the alert — and the dock follows that case. While the run
+is live, its Case page shows a live run block: the run's current
+step, anything waiting on a person (a paused run's questions,
+proposed actions), and — for a hunt stopped at a limit — a
+**Keep going** control. See
+[Chat-driven case management](/docs/chat-case-management/).
 
 ### Quick Commands
+
+Free-text prompts (not a registered command set):
 
 - "Investigate finding f-xxx"
 - "Create case for this finding"
@@ -193,6 +219,55 @@ AI-powered investigation assistant.
 - "What MITRE techniques are detected?"
 - "Enrich this IOC"
 - "Generate board brief"
+
+## Insider Leads
+
+A finding that names an account can start an insider hunt on that
+account's data movement. Which findings count is operator-set, on
+the threat-hunt workflow's insider lead list: a finding is a lead
+when its data source is in the list's sources, or its title matches
+one of its rule names. With no sources and no rule names, automatic
+start is off — there is no separate switch.
+
+Each lead opens a **restricted** case: the starter plus the readers
+and teams configured on the lead list are who may read it. Adding a
+source, rule name, reader or team widens which findings start an
+insider hunt and who reads its cases, so a person must make that
+change.
+
+## Entity Facts
+
+When triage looks at a finding, Vigil asks the identity provider
+and the EDR who its users and hosts are — name, title, groups,
+manager, account state, and the host's platform and containment —
+from Entra, Okta and Falcon. The answers are held for 24 hours by
+default (10,000 rows at most), so the next finding about the same
+user or host does not ask again. Facts go into the triage prompt
+and its stored result; nothing branches on them — they never feed
+a gate, a ceiling or a verdict.
+
+What Vigil holds is visible, read-only, to anyone with
+`findings.read`:
+
+- **Settings › Entity facts** — per source: rows held, oldest and
+  newest fetch, hit rate and last failure, plus the newest 100 rows
+  with their age
+- `GET /api/v1/entity-facts` — the same, as JSON
+- `get_entity_facts` on `/mcp` — the same payload
+
+There are no edit or delete controls; rows leave by their time to
+live or when their case closes.
+
+## External MCP Access and OAuth
+
+Vigil's own MCP server is served at `/mcp` for outside callers —
+stateless, authenticated per request, and off by default. Callers
+use a personal API token, or **OAuth**: the client discovers
+Vigil's authorization server, registers itself, and a person
+approves it on Vigil's consent page, after which the client holds
+a grant that works like one of that person's API tokens. OAuth is
+off by default and has its own switch. See
+[API](/docs/api/) and [MCP OAuth](/docs/mcp-oauth/).
 
 ## Desktop Notifications
 

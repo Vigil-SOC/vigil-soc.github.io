@@ -34,6 +34,17 @@ You don't need to use specific syntax. Just describe what you want in natural la
 ✓ "Add these three findings to the APT case"
 ```
 
+### 3. Slash Commands That Start Runs
+
+The Ask Vigil dock has two built-in slash commands (also available in the command bar):
+
+- `/hunt <hypothesis>` - Starts the threat-hunt workflow on a case
+- `/investigate <finding or context>` - Starts the incident-response workflow on a case
+
+The server places the run on a case — opening one, or reusing the open case holding the alert — and the case is opened for you. A hunt started from a document attached to the dock can carry that document's proposed hypothesis subjects and approval with it.
+
+While the run is live, its Case page shows a "Now" block: the run's current step and what it is doing, anything waiting on a person (a paused run's questions, proposed actions), and — for a hunt stopped at a limit — a **Keep going** control that lets the hunt carry on from where it stopped.
+
 ## Example Workflows
 
 ### Workflow 1: Building a Case During Investigation
@@ -103,7 +114,7 @@ Assistant: ✓ Added resolution step to case-2026-01-21-abc12345
 
 ## Available Tools
 
-The Vigil chat assistant (the configured LLM) has access to these comprehensive MCP tools for case management:
+The Vigil chat assistant (the configured LLM) has access to these comprehensive MCP tools for case management. This is the case-management subset of the chat tool set, not the whole of it: the same server also serves approval-action tools (`get_approval_action`, `approve_action`, `reject_action`), run tools (`start_run`, `list_runs`, `get_run`, `send_directive`), insider-lead tools (`propose_lead_hunt`, `insider_leads`), detection-proposal tools, and `dismiss_finding`:
 
 ### Finding Management
 - `add_finding_to_case(case_id, finding_id)` - Add a single finding
@@ -165,6 +176,7 @@ The Vigil chat assistant (the configured LLM) has access to these comprehensive 
 ### Case Closure
 - `close_case(case_id, closure_category, root_cause, lessons_learned, recommendations, executive_summary, false_positive_reason, closure_notes, false_positive_cause)` - Close case with full metadata
   - Closure categories: `resolved`, `false_positive`, `duplicate`, `unable_to_resolve`
+  - **Autonomy hold:** an agent/model close is first checked against the autonomy ceiling. Where the ceiling does not let a model close cases on its own, the close is held: nothing is written, the case stays open, a "Left open for a person" activity is logged on the case, and the tool returns that as an error result — it is not a success and not a tool failure. A re-close of an already-closed case is held the same way. The same gate applies to closing through `create_case(..., status="closed")` and `update_case(..., status="closed")`.
 
 ### Case Retrieval
 - `list_cases(status, severity, priority, limit)` - List all cases
@@ -286,7 +298,8 @@ Chat Assistant (configured LLM, natural language understanding)
     ↓
 MCP Tool Selection
     ↓
-vigil MCP Server (tools/mcp/vigil.py)
+vigil MCP Server (tools/mcp/vigil.py) — every call is permission-checked
+(`@requires`) and bound to the acting principal by the surface
     ↓
 Database (PostgreSQL)
     ↓
@@ -299,17 +312,20 @@ You can add more case management tools by:
 
 1. Adding new functions to `tools/mcp/vigil.py`
 2. Using the local `@tool(...)` decorator (a wrapper over `mcp.tool()`)
-3. Following the existing patterns for error handling and JSON responses
-4. Restarting the MCP server to load new tools
+3. Gating the tool with `@requires(<permission>)`, as every existing tool is
+4. Following the existing patterns for error handling and JSON responses
+5. Restarting the backend — the server is served in-process by the backend at `/mcp`, not as a separately restarted server
+
+Note: adding a tool to the frozen tool set is a contract change and requires regenerating the frozen-tools snapshot.
 
 ## Troubleshooting
 
 ### "Case not found"
-- Verify the case ID format: `case-YYYY-MM-DD-xxxxxxxx`
+- Verify the case ID format (IDs are producer-assigned; `case-YYYY-MM-DD-xxxxxxxx` is an example format, not a prescribed one)
 - Use `list_cases()` to see available cases
 
 ### "Finding not found"  
-- Verify the finding ID format: `f-YYYYMMDD-xxxxxxxx`
+- Verify the finding ID format (IDs are producer-assigned; `f-YYYYMMDD-xxxxxxxx` is an example format, not a prescribed one)
 - Use `list_findings()` to see available findings
 
 ### Changes not appearing

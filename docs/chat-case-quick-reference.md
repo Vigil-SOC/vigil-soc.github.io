@@ -7,6 +7,13 @@ permalink: /docs/chat-case-quick-reference/
 {% raw %}
 ## Quick Commands
 
+### Starting Runs (slash commands)
+
+| What You Type | What Happens |
+|--------------|--------------|
+| `/hunt <hypothesis>` | Starts a threat hunt on a case |
+| `/investigate <finding or context>` | Starts an incident-response run on a case |
+
 ### Adding to Cases
 
 | What You Say | What Happens |
@@ -99,7 +106,7 @@ permalink: /docs/chat-case-quick-reference/
 
 ### Moving a Case 🆕
 
-Escalation has been replaced by the beta move: a case is moved to another team with the `move_case` tool (or `POST /api/v1/cases/{case_id}/move`). The move requires the case's current team.
+Escalation has been replaced by the beta move: a case is moved to another team with the `move_case` tool (or `POST /api/v1/cases/{case_id}/move`). That route is **beta**: it is served under `/api/v1` but is versioned, not frozen — it is left out of the frozen contract snapshot and may change until its shape settles. The move requires `source_team_id`: the team **id** on the case as read. An unknown or archived destination team is refused. The tool is explicitly not a frozen tool, so it may change.
 
 | What You Say | What Happens |
 |--------------|--------------|
@@ -114,6 +121,8 @@ Escalation has been replaced by the beta move: a case is moved to another team w
 | "Close as false positive" | Marks as false positive |
 | "Close with root cause: phishing" | Closes with full documentation |
 
+> **Autonomy hold:** an agent-initiated close is checked against the autonomy ceiling first. Where a model may not close cases on its own, the close is held — the case stays open and the result reads "Left open for a person" — instead of closing.
+
 ## Activity Types
 
 Use these activity types when logging:
@@ -126,6 +135,7 @@ Use these activity types when logging:
 - `finding_added` - Findings added to the case
 - `task_update` - Task changes
 - `case_linked` - Case linked to another case
+- `case_closed` - Case closed (written by `close_case`)
 
 ## Timeline Event Types
 
@@ -165,6 +175,8 @@ Use these for timeline entries:
 ```
 
 ## Finding & Case ID Formats
+
+IDs are producer-assigned; the shapes below are examples, not prescribed formats.
 
 - **Finding IDs**: `f-YYYYMMDD-XXXXXXXX`
   - Example: `f-20260121-abc12345`

@@ -18,7 +18,7 @@ naming is not found.
 
 | Tool | Purpose |
 |---|---|
-| `security_lake_query` | Run Athena (Trino) SQL naming sources by short name against one AWS region, over an ISO 8601 time range (start inclusive, end exclusive). A `query_id` argument instead collects the results of an earlier query in that region. |
+| `security_lake_query` | Run Athena (Trino) SQL naming sources by short name (not by Glue database/table name) against one AWS region, over an ISO 8601 time range (start inclusive, end exclusive). Only a single SELECT or WITH statement runs. Select `cloud.region` and `cloud.account.uid` to keep each row's provenance. A `query_id` argument instead collects the results of an earlier query in that region. |
 
 ## Vigil configuration
 
@@ -39,6 +39,20 @@ server has its own HOME, so `~/.aws` is not read. The backend runs the
 Settings connection test on its own chain, so the backend and the MCP
 runner must share a credential source: on Helm the same service account,
 on Compose the same instance role or the same mounted config.
+
+Under the MCP runner, a file named by a pointer variable
+(`AWS_SHARED_CREDENTIALS_FILE`, `AWS_CONFIG_FILE`,
+`AWS_WEB_IDENTITY_TOKEN_FILE`, and the other AWS pointer variables) is
+read by the root runner and copied as the server's own uid, mode 0600,
+into its own 0700 HOME, refreshed every 60 seconds; only regular files
+of at most 1 MiB are copied, and paths written inside a config file are
+not copied — so mount the shared config root-owned and read-only. Raw
+AWS keys (`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` /
+`AWS_SESSION_TOKEN`) are never forwarded to any server: if the backend
+resolves static keys from its own environment, the Settings connection
+test says the server cannot use them and runs no discovery. On Helm the
+backend chart has no matching volume hook for a shared config, so prefer
+IRSA or Pod Identity there.
 
 ## Behaviour and limits
 

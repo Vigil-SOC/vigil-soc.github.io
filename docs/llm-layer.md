@@ -16,8 +16,10 @@ is no automated gate for the layer's internal boundaries (see Rule 1).
 The distinction that matters is **loop vs. call**. A *router* call is one
 stateless completion. The multi-turn agent loop — executing tools between
 turns — no longer lives in this package at all: it lives in the TypeScript
-agent service (`services/agent/`, whose harness wires the loop in
-`services/agent/core/loop.ts` to tool dispatch). What remains in
+agent service (`services/agent/`: `services/agent/core/loop.ts` defines
+the `Harness` interface and `commitTurn`, and
+`services/agent/core/stream.ts` exports `streamTurn`, which together
+wire the loop to tool dispatch). What remains in
 `core/llm/harness/` is the one-shot side of that distinction.
 
 | Sub-package | Owns | Never does |

@@ -162,7 +162,11 @@ secrets:
 The Secret must define keys matching env var names:
 `ANTHROPIC_API_KEY`, `POSTGRES_APP_PASSWORD`, `POSTGRES_AGENT_PASSWORD`,
 `JWT_SECRET_KEY`, plus `MCP_RUNNER_TOKEN` and `SHELL_TOKEN` for the MCP
-runner and agent shell, plus whichever integration creds you use
+runner and agent shell, plus whichever integration creds you use.
+It also carries `BIFROST_ADMIN_PASSWORD` (`secrets.bifrostAdminPassword`)
+for the Bifrost gateway's admin password — set it explicitly under
+GitOps/`helm template`, since a generated value cannot be preserved by
+lookup; agent pods do not receive it.
 (`SPLUNK_PASSWORD`, `SLACK_BOT_TOKEN`, …). The database owner password flows
 separately via `postgresql.auth.existingSecret` /
 `postgresql.external.existingSecret`.
@@ -219,7 +223,8 @@ See `values.yaml` for the full schema. Non-obvious choices:
   entrypoint (`services.worker`).
 - **Daemon probes**: target port `9091` (`/health`), not `9090`. Port `9090`
   is the Prometheus `/metrics` port, which is only served when
-  `config.VIGIL_OTEL_ENABLED=true`.
+  `DAEMON_METRICS_ENABLED` is on (the chart default is `"true"`).
+  (`VIGIL_OTEL_ENABLED` is a retired name Vigil never reads.)
 
 ## Optional features (all off by default)
 

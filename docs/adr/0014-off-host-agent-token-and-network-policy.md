@@ -11,6 +11,8 @@ Date: 2026-08-13
 
 Accepted. **Amends ADR 0010** — keeps its guarantees, drops its loopback half.
 
+> Status note (2026-11-19): still in force at Vigil 1.1.4; token rotation via a previous-token secret has been added since this decision was accepted.
+
 Governs #635 (the agent image, the Helm deployment and the Node CI job).
 
 ## Context

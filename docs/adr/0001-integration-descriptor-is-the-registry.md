@@ -84,4 +84,7 @@ its slice is now webhook/ingestion only, not a descriptor-backed Integration.
 - The bridge's dynamic-load path is deleted rather than repaired. Every server
   Vigil runs is declared in `mcp-config.json`, and the path only ever spawned
   modules that do not exist.
+
+> Status note (2026-11-19): re-checked at Vigil 1.1.4 — descriptor parity is still ungated, and this decision is still in force.
+
 {% endraw %}

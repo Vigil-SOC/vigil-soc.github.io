@@ -158,7 +158,6 @@ python scripts/generate_splunk_test_data.py \
 #
 # View:
 # - Cases → Select your test case
-# - Investigation tab → View graph and timeline
 ```
 
 ## Testing Different Scenarios
@@ -209,19 +208,17 @@ generator.save_to_file(events, "ransomware.json")
 ### Splunk Connection Issues
 
 ```bash
-# Test Splunk connection
+# Test Splunk connection (resolves the Settings-stored config the
+# same way the Splunk tool itself does)
 python -c "
-from core.integrations.splunk.client import SplunkService
-from core.config import get_integration_config
+from core.integrations.splunk.tool import get_splunk_service
 
-config = get_integration_config('splunk')
-splunk = SplunkService(
-    server_url=config['server_url'],
-    username=config['username'],
-    password=config['password']
-)
-success, msg = splunk.test_connection()
-print(f'Connection: {msg}')
+splunk = get_splunk_service()
+if splunk is None:
+    print('Connection: Splunk is not configured')
+else:
+    success, msg = splunk.test_connection()
+    print(f'Connection: {msg}')
 "
 ```
 

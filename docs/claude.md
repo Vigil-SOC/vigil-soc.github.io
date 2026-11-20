@@ -68,7 +68,7 @@ vigil/
 │   └── database/init/    # PostgreSQL init SQL (docker-compose: lex order by filename; Helm: values.yaml dbInit.sqlFiles)
 ├── scripts/              # Init and utility shell scripts
 ├── mcp-config.json       # MCP server definitions (+ `_comment_*` separator keys)
-└── env.example           # Template for environment variables (170 at 1.1.2)
+└── env.example           # Template for environment variables (171 assignments at 1.1.4)
 ```
 
 > **Layering:** `core/` is a library and must never import `services/`, and the
@@ -160,7 +160,7 @@ from the lock too.
 ### Prerequisites
 
 - **Python 3.12** — provisioned automatically by `uv` (see `.python-version`); no host Python needed
-- **Node.js 18+**
+- **Node.js 20+** (CI pins 20; the shipped images use Node 22)
 - **Docker Desktop** (must be running — used for PostgreSQL and Redis)
 - **Git**
 
@@ -169,7 +169,7 @@ from the lock too.
 Copy `env.example` to `.env` and populate as needed. `.env` is for
 bootstrap-only settings (DB URL, ports, dev flags). LLM provider keys,
 integration credentials, and other secrets are configured in the web UI
-(Settings → AI / LLM Providers, Settings → Integrations) and stored
+(Settings → AI models, Settings → Integrations) and stored
 encrypted at `~/.vigil/secrets.enc` — see [docs/STATE.md](/docs/state/).
 
 | Variable | Purpose | Default |
@@ -394,7 +394,7 @@ two filenames that are reserved and must never be reused.
 
 The daemon (`services/daemon/`) runs as a separate process with its own orchestration loop (`python services/daemon/main.py`). It polls for new alerts, processes them through the AI pipeline, and can execute automated responses.
 
-`env.example` lists `DAEMON_AUTO_TRIAGE`, `DAEMON_CONFIDENCE_THRESHOLD`, `ORCHESTRATOR_MAX_COST` and `ORCHESTRATOR_MAX_HOURLY_COST`; no matching typed fields were found in `core/config.py` at 1.1.2, so do not treat them as settings defined through the config channel described above without verifying where they are read.
+`env.example` lists `DAEMON_AUTO_TRIAGE`, `DAEMON_CONFIDENCE_THRESHOLD`, `ORCHESTRATOR_MAX_COST` and `ORCHESTRATOR_MAX_HOURLY_COST`; these map onto typed fields in `core/config.py` (`daemon_auto_triage`, `daemon_confidence_threshold` and the other daemon thresholds, `orchestrator_max_cost`, `orchestrator_max_hourly_cost` and the other orchestrator limits), and Settings is case-insensitive, so they are settings defined through the config channel described above.
 
 ---
 
@@ -465,7 +465,7 @@ No registration step — discovery mounts every module that exports a `router` a
 ### New Agent
 
 1. Add the agent record in `core/agents/builtins.py` (prompt text lives in `core/agents/prompts.py`)
-2. Wire agent invocation in `core/llm/harness/claude.py`
+2. Wire agent invocation in the agent layer (`core/agents/`, `services/agent/`) — not in `core/llm/harness/claude.py`, which is the one-shot completion service with no tools and no loop
 3. Expose via `services/api/routers/agents.py`
 4. Document in the site's agents documentation
 
@@ -497,11 +497,17 @@ GitHub Actions workflows in `.github/workflows/`:
 
 | Workflow | Trigger | Jobs |
 |----------|---------|------|
-| `ci-cd.yml` | Push/PR to main, develop | Lint → Unit Tests → Integration Tests → Security Scan → Docker Build |
-| `release-please.yml` | Push to `main`, manual | Read Conventional Commits since last tag → open/update a release PR with bumped `VERSION` / `Chart.yaml` (`appVersion` + `version`, lockstep) / `clients/web/package.json` / `clients/web/package-lock.json` + `CHANGELOG.md`. On merge, push `vX.Y.Z` tag and create the GitHub Release. See `RELEASING.md`. |
+| `ci-cd.yml` | Push/PR to main, `release/**` | Lint → Unit Tests → Integration Tests → Security Scan → Docker Build |
+| `release-please.yml` | Push to `main` and `release/**`, manual | Maintains a standing release PR with bumped `VERSION` / `Chart.yaml` (`appVersion` + `version`, lockstep) / `clients/web/package.json` / `clients/web/package-lock.json` + `CHANGELOG.md`. Minors and majors are cut by hand from `main` by merging its release PR (manual dispatch offers minor/major only); fix releases come from the single `release/X.Y.x` branch, whose pushes force a patch bump. On merge, push `vX.Y.Z` tag and create the GitHub Release. See `RELEASING.md`. |
 | `release.yml` | Version tags (`v*.*.*`) | Build & push `vigil-backend` + `vigil-daemon` images to GHCR → Trivy scan → smoke-test that they start → annotate the GitHub Release with image digests. **Publishes images only — it does not deploy.** Does **not** create the GitHub Release object either (release-please owns that). |
-| `helm-chart.yml` | Push/PR touching `infra/helm/**`, `infra/database/init/**`, or the workflow file itself (branches main/develop) | Verify `database/init/` ↔ chart-bundle copies are in sync (`diff -r`) → `helm lint`/`template` across default, dev, and Bitnami-subchart values → kubeconform → `ct lint` |
+| `helm-chart.yml` | Push/PR touching `infra/helm/**`, `infra/database/init/**`, or the workflow file itself (branches main, `release/**`) | Verify `database/init/` ↔ chart-bundle copies are in sync (`diff -r`) → `helm lint`/`template` across default, dev, and Bitnami-subchart values → kubeconform → `ct lint` |
 | `nightly.yml` | Daily 2 AM UTC | Comprehensive security & performance audits |
+
+The table above lists the principal workflows; `.github/workflows/`
+holds 21 workflow files at 1.1.4, also including `backport.yml`,
+`beta.yml`, `beta-cleanup.yml`, `build-images.yml`,
+`connectors-live.yml`, `erasure-nightly.yml`, the `medic*.yml` family,
+`release-branch.yml`, `release-guard.yml` and `scale-weekly.yml`.
 
 CI runs:
 - `black --check` + `flake8` + `isort --check` + `mypy` (Python)
@@ -524,7 +530,7 @@ section above.
 | `services/api/main.py` | FastAPI app entry, middleware wiring, startup/shutdown |
 | `services/api/discovery.py` | Router auto-discovery — scans `core/**/*_router.py` + `services/api/routers/` |
 | `core/routing.py` | `Auth` + `RouterMeta` — the declarative mount metadata every router exports |
-| `core/llm/harness/claude.py` | Central AI/agent orchestration |
+| `core/llm/harness/claude.py` | One-shot Anthropic completions (`ClaudeService`) — no tools, no loop |
 | `services/worker/jobs.py` | ARQ llm-worker jobs — the `arq:llm` queue consumer (`python -m services.worker`) |
 | `core/agents/` | Agent records (`builtins.py`), prompt assembly (`prompts.py`), runtime manager (`manager.py`) |
 | `infra/database/init/` | Schema SQL — see Database section for the add/modify checklist |
@@ -540,7 +546,7 @@ section above.
 
 ## Submodules
 
-The repo has no Git submodules at 1.1.2 (there is no `.gitmodules` file).
+The repo has no Git submodules at 1.1.4 (there is no `.gitmodules` file).
 
 Historically, `deeptempo-core` and `mcp-servers` were submodules until they
 were dropped: the former had **no production importer** in this repo, and the

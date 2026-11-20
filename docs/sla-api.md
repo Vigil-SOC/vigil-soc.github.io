@@ -11,6 +11,11 @@ The SLA Policy Management API provides comprehensive CRUD operations for managin
 
 **Base URL**: `/api/sla-policies`
 
+> Spelling note: the collection routes are registered with a trailing
+> slash (`POST /api/sla-policies/`). The no-slash spelling used in some
+> examples below redirects to it; scripted callers should standardise on
+> one spelling (the trailing-slash form) to avoid the redirect.
+
 > Note: Policy IDs, names, and times shown in the examples on this page (for example `sla-critical-default` with 1h response / 4h resolution) are illustrative examples only. No default policies are seeded or shipped pre-configured; policies are created through this API.
 
 ## Authentication
@@ -639,6 +644,11 @@ No SLA-specific rate limits are defined for these endpoints.
 
 ## Changelog
 
+### 1.1.4
+- Permission gating (`cases.read` / `cases.write`), restricted-case
+  counting (`restricted_not_counted`), the `since` usage parameter, and
+  the 409-on-delete rule are documented on this page
+
 ### Initial release
 - Initial release of SLA Policy Management API
 - Full CRUD operations for policies
@@ -663,5 +673,5 @@ For questions or issues:
 - **Case SLA Management**: `/api/cases/{case_id}/sla`
 - **SLA Metrics Summary**: `/api/cases/metrics/summary`
 - **Breached Cases**: `/api/cases/metrics/breached`
-- **Case Templates** (with SLA defaults): `/api/cases/templates`
+- **Case Templates**: `/api/cases/templates` — a template may name an SLA policy; on assignment a retired/deactivated policy is refused with a typed outcome (`POLICY_RETIRED`) instead of silently producing a case with no SLA
 {% endraw %}
