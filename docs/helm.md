@@ -18,16 +18,83 @@ not do yet.
 ## Prerequisites
 
 - Kubernetes 1.25+ (the chart declares `kubeVersion: '>=1.25.0-0'`)
-- Helm 3 (the chart sets no minimum Helm version; CI pins Helm v3.15.2)
+- Helm 3 (the chart sets no minimum Helm version; CI pins Helm v3.15.2).
+  Helm 4 is not in the CI matrix and has not been verified against this
+  chart.
 - A working container registry pull path. Release images are published to
   `ghcr.io/vigil-soc/vigil-backend`, `ghcr.io/vigil-soc/vigil-daemon`,
   `ghcr.io/vigil-soc/vigil-agent`, and
   `ghcr.io/vigil-soc/vigil-mcp-runner` by the `release.yml` workflow on
-  `vX.Y.Z` tags pushed by release-please.
-- An Anthropic API key
+  `vX.Y.Z` tags pushed by release-please, for both `linux/amd64` and
+  `linux/arm64`. A default install also pulls third-party images — see
+  the image list on the [Helm Chart](/docs/helm-chart/) page before
+  allow-listing a registry.
+- An LLM provider — an Anthropic API key, or another provider (see
+  "LLM providers" below). The chart does not require a key to install;
+  the AI features return errors until one provider is configured.
+
+## Get the chart
+
+No packaged chart (Helm repository or OCI) is published; install from a
+checkout of the code repository. Check out the release tag you intend
+to install — `main` can be ahead of the latest release, and the chart's
+default image tag comes from the chart `appVersion`, so installing from
+`main` can mix unreleased templates with release images:
+
+```bash
+git clone https://github.com/Vigil-SOC/vigil.git
+cd vigil
+git checkout <release-tag>   # for example the latest vX.Y.Z tag
+```
+
+## Build the chart dependencies
+
+The chart declares three subchart dependencies in `Chart.yaml`
+(Bitnami `postgresql`, Bitnami `redis`, `opentelemetry-collector`) and
+none are vendored in the repository. Helm checks for them on every
+install, even when the subcharts' conditions are off (the default), so
+this step is required for every install, not only for the optional
+Bitnami or OTEL modes:
+
+```bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+helm repo update
+helm dependency build ./infra/helm/vigil
+```
+
+Run it from the repository root, once after cloning (and again after
+checking out a release whose `Chart.lock` changed).
+
+## Local test cluster (kind)
 
 For local testing, [kind](https://kind.sigs.k8s.io/) or
-[minikube](https://minikube.sigs.k8s.io/) both work.
+[minikube](https://minikube.sigs.k8s.io/) both work. With kind:
+
+```bash
+kind create cluster --name vigil
+kubectl get nodes
+```
+
+- kind needs Docker usable by your current user, without `sudo`.
+- kind's default inotify limits are commonly too low for a stack this
+  size. Raise them on the host, as kind's own known-issues page
+  recommends:
+
+  ```bash
+  sudo sysctl -w fs.inotify.max_user_watches=524288
+  sudo sysctl -w fs.inotify.max_user_instances=512
+  ```
+
+- The Postgres, Redis, daemon, and upgrade PVCs use the cluster's
+  default StorageClass when no class is set in values. kind ships
+  `standard` (local-path) as the default; minikube ships its own. Check
+  with `kubectl get storageclass` before installing.
+- Sizing: the development profile's resource requests sum to roughly
+  1.3 CPU / 3.2 GiB across the default workloads, and the production
+  profile's to roughly 2.6 CPU / 5.6 GiB, before the cluster's own
+  overhead. Give a kind host at least 4 CPU and 8 GiB for the
+  development profile below.
 
 ## Quick install
 
@@ -38,6 +105,14 @@ post-install upgrade Job finishes, and Helm waits for pods to become
 Ready before it runs post-install hooks — so `--wait` deadlocks the
 install.
 
+The acknowledgement version must equal the chart `appVersion` of the
+checkout you are installing from. Derive it instead of copying a
+version number from this page, which will be stale by the next release:
+
+```bash
+ACK_VERSION="$(awk '/^appVersion:/ {print $2}' ./infra/helm/vigil/Chart.yaml)"
+```
+
 ```bash
 # Production-ish install with in-chart Postgres + Redis
 helm install vigil ./infra/helm/vigil \
@@ -46,7 +121,7 @@ helm install vigil ./infra/helm/vigil \
   --set secrets.postgresPassword="$(openssl rand -hex 24)" \
   --set secrets.vigilAppPassword="$(openssl rand -hex 24)" \
   --set secrets.jwtSecretKey="$(python -c 'import secrets; print(secrets.token_urlsafe(64))')" \
-  --set upgrade.acknowledgeVersion=1.1.2 \
+  --set upgrade.acknowledgeVersion="$ACK_VERSION" \
   --set upgrade.acknowledgeReason="initial install" \
   --timeout 10m
 ```
@@ -62,7 +137,7 @@ helm install vigil ./infra/helm/vigil \
   -f ./infra/helm/vigil/values-dev.yaml \
   --namespace vigil --create-namespace \
   --set secrets.anthropicApiKey="$ANTHROPIC_API_KEY" \
-  --set upgrade.acknowledgeVersion=1.1.2 \
+  --set upgrade.acknowledgeVersion="$ACK_VERSION" \
   --set upgrade.acknowledgeReason="dev install"
 ```
 
@@ -73,15 +148,81 @@ roles; the acknowledgement values are still required.)
 
 ```bash
 kubectl get pods -n vigil
-kubectl get jobs -n vigil
+kubectl get jobs -n vigil -l app.kubernetes.io/component=upgrade
 
 # End-to-end smoke test
 helm test vigil -n vigil
 
 # Port-forward and hit the API
 kubectl port-forward -n vigil svc/vigil-backend 6987:6987
-curl http://localhost:6987/api/health
+curl http://localhost:6987/api/health/ready
 ```
+
+Verify with `/api/health/ready`, not `/api/health`. `/api/health` is a
+liveness check: it returns HTTP 200 whenever the process is up, even on
+a broken install whose database has no schema yet. `/api/health/ready`
+returns the same JSON body, but HTTP 503 until the install is actually
+ready. On a working install it returns 200 with
+`"database_available": true` under `storage` and `"state": "ok"` under
+`schema`. The chart's own readiness probe and `helm test` use
+`/api/health/ready`. Every app pod showing `1/1 Running` is the other
+signal: the pods do not become Ready until the schema upgrade Job has
+finished.
+
+## First login
+
+The backend serves the web UI itself, so with the port-forward above
+running, open `http://localhost:6987`.
+
+No default admin account ships. On first visit the UI opens a
+bootstrap screen where you create the admin account with a password of
+your choosing. The screen asks for a setup code, which the backend
+logs once its database is ready:
+
+```bash
+kubectl logs -n vigil deploy/vigil-backend | grep 'First-run setup code:'
+```
+
+Bootstrap is one-time: it closes as soon as one account exists. Get
+the setup code from the backend's logs yourself, and do not expose the
+port-forward beyond your own machine (for example with
+`--address 0.0.0.0`) before the admin account exists.
+
+Two access notes:
+
+- **Secure cookies.** The production values set
+  `VIGIL_COOKIE_SECURE: "true"`. Browsers accept Secure cookies on
+  `http://localhost`, but not on `http://<lan-ip>:6987`, so browsing a
+  forwarded port by LAN IP will not keep a session. Port-forward to
+  localhost (as above), tunnel from a remote box with
+  `ssh -L 6987:localhost:6987 <host>`, or use Ingress with TLS (below)
+  for anything beyond local access.
+- **Remote boxes.** `kubectl port-forward` binds to localhost by
+  default; the SSH tunnel above is the way to reach a cluster you
+  administer remotely.
+
+## LLM providers
+
+All of Vigil's LLM traffic goes through the Bifrost gateway. The chart
+deploys it by default (`bifrost.enabled: true`, a StatefulSet with a
+ClusterIP Service) and points the workloads at it via
+`config.BIFROST_URL`. Set `bifrost.enabled: false` and
+`config.BIFROST_URL` to run against a gateway you operate yourself.
+See [Bifrost](/docs/bifrost/) for how the gateway routes providers.
+
+Configure at least one provider, or the AI features return errors (the
+chart's install notes warn about this too):
+
+- **Anthropic, OpenAI, or Gemini** — set `secrets.anthropicApiKey`,
+  `secrets.openaiApiKey`, or `secrets.geminiApiKey`, or supply the keys
+  through `secrets.existingSecret` / an ExternalSecret. Providers and
+  keys can also be managed after install in
+  Settings → AI models → Providers & Keys.
+- **Local Ollama** — point `config.OLLAMA_URL` (default
+  `http://ollama:11434`) at your Ollama server. For an Ollama running
+  on the host of a kind or minikube cluster, use an address that is
+  reachable from inside the cluster: `localhost` inside a pod is the
+  pod itself.
 
 ## Secrets
 
@@ -234,11 +375,16 @@ pods can start.
 
 ## Upgrades
 
+Re-derive `ACK_VERSION` from the new checkout first (see Quick
+install): the value from the previous release refuses by design, and
+`--reuse-values` carries that stale value forward unless it is set
+again here.
+
 ```bash
 helm upgrade vigil ./infra/helm/vigil -n vigil --reuse-values \
-  --set upgrade.acknowledgeVersion=1.1.2 \
+  --set upgrade.acknowledgeVersion="$ACK_VERSION" \
   --set upgrade.acknowledgeReason="nightly RDS snapshot" \
-  --timeout 15m
+  --timeout 30m
 ```
 
 Plan a maintenance window. Once the `apply` Job has stopped the
@@ -261,7 +407,7 @@ different tag than the chart's `appVersion` (for example, to deploy a
 
 ```bash
 helm upgrade vigil ./infra/helm/vigil -n vigil --reuse-values \
-  --set upgrade.acknowledgeVersion=1.1.2 \
+  --set upgrade.acknowledgeVersion="$ACK_VERSION" \
   --set upgrade.acknowledgeReason="nightly RDS snapshot" \
   --set backend.image.tag=latest \
   --set daemon.image.tag=latest
