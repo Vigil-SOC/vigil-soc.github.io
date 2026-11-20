@@ -7,10 +7,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vigil: The Open Source AI SOC (Agentic SOC)</title>
-  <meta name="description" content="Vigil is the leading open source AI SOC: an agentic SOC with specialized AI agents, extensible MCP integrations, and 7,200+ community detection rules, released under Apache 2.0. Local-first: your data never leaves your environment." />
+  <meta name="description" content="Vigil is the leading open source AI SOC: an agentic SOC with specialized AI agents, extensible MCP integrations, and community detection rules across Sigma, Splunk, Elastic, and KQL, released under Apache 2.0. Local-first: your data never leaves your environment." />
   <link rel="canonical" href="https://vigilsoc.org/" />
   <meta property="og:title" content="Vigil: The Open Source AI SOC (Agentic SOC)" />
-  <meta property="og:description" content="Specialized AI agents, extensible MCP integrations, 7,200+ detection rules. Apache 2.0. Local-first." />
+  <meta property="og:description" content="Specialized AI agents, extensible MCP integrations, community detection rules across Sigma, Splunk, Elastic, and KQL. Apache 2.0. Local-first." />
   <meta property="og:url" content="https://vigilsoc.org/" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://vigilsoc.org/dashboard.png" />
@@ -24,7 +24,7 @@
     "operatingSystem": "Linux, macOS, Windows",
     "url": "https://vigilsoc.org",
     "downloadUrl": "https://github.com/Vigil-SOC/vigil",
-    "description": "Vigil is the leading open source AI SOC: an agentic SOC with specialized AI agents, extensible MCP integrations, and 7,200+ community detection rules, released under Apache 2.0.",
+    "description": "Vigil is the leading open source AI SOC: an agentic SOC with specialized AI agents, extensible MCP integrations, and community detection rules across Sigma, Splunk, Elastic, and KQL, released under Apache 2.0.",
     "license": "https://www.apache.org/licenses/LICENSE-2.0",
     "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
     "publisher": {"@type": "Organization", "name": "DeepTempo", "url": "https://www.deeptempo.ai"}
@@ -108,7 +108,7 @@
   <div class="stats-inner">
     <div class="stat"><div class="stat-num">Multi-Agent</div><div class="stat-label">Specialized Team</div></div>
     <div class="stat"><div class="stat-num">Extensible</div><div class="stat-label">MCP Integrations</div></div>
-    <div class="stat"><div class="stat-num">7,200+</div><div class="stat-label">Detection Rules</div></div>
+    <div class="stat"><div class="stat-num">7,200+</div><div class="stat-label">Community Rules Indexed</div></div>
     <div class="stat"><div class="stat-num">$0</div><div class="stat-label">License Cost (Apache 2.0)</div></div>
     <div class="stat"><div class="stat-num">&lt; 3 min</div><div class="stat-label">Time to Running SOC</div></div>
   </div>
@@ -122,10 +122,10 @@
     <span class="autonomous-eyebrow">Auto-Ops</span>
     <h2>Machine-speed attacks need machine-speed defense.</h2>
     <p class="lead">
-      Vigil ships with an Auto-Response agent that correlates signals across your stack, scores its own confidence, and contains the threat. Above your configured threshold (0.90 by default) it auto-approves; below, it routes to a human reviewer. Surgical actions (WAF block, Gateway block, session revoke) execute through a full audit trail. You set the boundary. Vigil keeps pace.
+      Vigil ships with an Auto-Response agent that correlates signals across your stack, scores its own confidence, and proposes containment. Response actions are submitted as approval requests and wait for an analyst — no confidence threshold auto-approves them. Once approved, surgical actions (WAF block, Gateway block, session revoke) execute through a full audit trail. You set the boundary. Vigil keeps pace.
     </p>
     <div class="auto-pills">
-      <div class="auto-pill"><strong>Configurable</strong>confidence threshold</div>
+      <div class="auto-pill"><strong>Human</strong>approval for every response action</div>
       <div class="auto-pill"><strong>24/7</strong>continuous correlation</div>
       <div class="auto-pill"><strong>Full</strong>audit trail every action</div>
     </div>
@@ -151,7 +151,7 @@
         </div>
         <div class="pillar-label">Pillar 01</div>
         <h3>Threat Detection</h3>
-        <p>7,200+ rules across Sigma, Splunk, Elastic, and KQL. The Triage agent scores every alert; coverage keeps compounding as the community ships new rules.</p>
+        <p>7,200+ community rules across Sigma, Splunk, Elastic, and KQL, fetched separately and indexed for search and coverage analysis. The Triage agent scores every alert; coverage keeps compounding as the community ships new rules.</p>
       </div>
 
       <!-- VULNERABILITY ANALYSIS -->
@@ -464,8 +464,8 @@
 
     <div class="callout">
       <p>
-        🔒 <strong>The Confidence Threshold:</strong> The Responder auto-approves containment actions at 0.90+ confidence.
-        Below that, it routes to a human reviewer. You control the automation boundary.
+        🔒 <strong>Human Approval:</strong> The Responder proposes containment actions as approval requests, and a request always waits for an analyst — at any confidence.
+        Confidence informs the reviewer; it does not replace them. You control the automation boundary.
         No surprises. No runaway automation.
       </p>
     </div>
@@ -473,8 +473,8 @@
     <div class="grid-2" style="margin-top: 40px; gap: 20px;">
       <div class="card">
         <div class="card-icon">🛡️</div>
-        <h3>7,200+ Detection Rules</h3>
-        <p>Spanning Sigma, Splunk, Elastic, and KQL formats. AI-assisted coverage analysis, gap identification, and template generation. Every new community rule improves every deployment.</p>
+        <h3>Detection Rules — Indexed, Not Shipped</h3>
+        <p>Community rule sets spanning Sigma, Splunk, Elastic, and KQL formats, fetched with the setup script and indexed for AI-assisted coverage analysis, gap identification, and template generation.</p>
       </div>
       <div class="card">
         <div class="card-icon card-icon-navy">💬</div>
@@ -614,12 +614,12 @@
           </tr>
           <tr>
             <td>Detection Rules</td>
-            <td class="vigil-val"><span class="check">✓</span> 7,200+ included, community-maintained</td>
+            <td class="vigil-val"><span class="check">✓</span> 7,200+ community rules indexed for search &amp; coverage (fetched separately)</td>
             <td class="them-val">Proprietary or third-party subscription</td>
           </tr>
           <tr>
             <td>LLM Backend</td>
-            <td class="vigil-val"><span class="check">✓</span> Claude (default), extensible architecture</td>
+            <td class="vigil-val"><span class="check">✓</span> Anthropic (default), OpenAI, Vertex, or local Ollama</td>
             <td class="them-val"><span class="cross">✗</span> Vendor-locked to one provider</td>
           </tr>
         </tbody>
@@ -651,11 +651,11 @@
         <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 28px;">
           <div style="display:flex; gap:10px; align-items:center;">
             <span style="color:var(--forest); font-size:1.1rem;">✓</span>
-            <span>Python 3.10+</span>
+            <span>Python (provisioned automatically)</span>
           </div>
           <div style="display:flex; gap:10px; align-items:center;">
             <span style="color:var(--forest); font-size:1.1rem;">✓</span>
-            <span>Node.js 18+</span>
+            <span>Node.js 20+</span>
           </div>
           <div style="display:flex; gap:10px; align-items:center;">
             <span style="color:var(--forest); font-size:1.1rem;">✓</span>
