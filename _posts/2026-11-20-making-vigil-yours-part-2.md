@@ -12,7 +12,7 @@ In [Making Vigil Yours](https://vigilsoc.org/blog/2026/11/03/making-vigil-yours/
 
 Before your team closes a phishing case, someone runs the checklist. Did anyone else get the same email? Did anyone click? Was a password typed into the lure page? Is the sender blocked? That checklist lives on a wiki page, or in one senior analyst's head. Until now, Vigil's agents never saw it. They worked from the method Vigil ships with, which is good, but it isn't yours.
 
-A skill changes that. It's a folder with a `SKILL.md`: your process, written in plain text, the way you'd explain it to a new analyst. Write the phishing checklist down as a skill, and when an agent works a phishing case, it reads your steps and follows them. You don't need code or a new integration, just the words your team already uses. It's the same open format Claude Code and `npx skills` use, so a skill written for another agent works in Vigil, and one you write in Vigil works elsewhere.
+A skill changes that. It's a folder with a `SKILL.md`: your process, written in plain text, the way you'd explain it to a new analyst. Write the phishing checklist down as a skill, and when an agent works a phishing case, it reads your steps and follows them. You don't need code or a new integration, just the words your team already uses. It's the same open [Agent Skills](https://agentskills.io) format Claude Code and `npx skills` use: a folder named after the skill, with a `SKILL.md` whose frontmatter gives a lowercase, hyphenated `name` (up to 64 characters) and a `description` (up to 1,024). Anything else in the folder, such as `scripts/` or `references/`, travels with it. So a skill written for another agent works in Vigil, and one you write in Vigil works elsewhere.
 
 Here's how to get your team's know-how into Vigil, and how Vigil makes sure it's safe before any agent uses it.
 
@@ -51,13 +51,15 @@ If you'd rather not start from a blank page, describe the skill in a sentence an
 
 ### Import a file
 
-Already have skills written for Claude Code or another agent? Click **Import** and choose a `SKILL.md`, or a zip. A zip can hold a whole folder of skills, and Vigil installs every one it finds, or none if any of them is refused.
+Already have skills written for Claude Code or another agent? Click **Import** and choose a `SKILL.md`, or a zip. A zip can hold a whole folder of skills, and the import is all or nothing: if any skill in it can't be installed (it doesn't parse, its name is taken, it's too large, or it contains a symlink), Vigil refuses the whole zip and installs none of them. That check is about whether a skill is well-formed, not whether it's safe. The security scan comes next, once the skills are installed, and holds each one on its own; more on that [below](#checked-before-agents-see-it).
 
 ![The Import skills dialog: from a file or from a git repo](/assets/blog/2026-11-20-making-vigil-yours-part-2/import-dialog.png)
 
 ### Import from a git repo
 
 In the same dialog, paste `owner/repo` or a GitHub link to a folder, and add `@branch` to pick a branch or tag. Vigil reads the repo and lists every skill it finds, each with a tick box. A skill that can't be installed says why: its name is taken, it's too large, or it doesn't parse. Untick what you don't want and click **Install**. Vigil remembers the repo and commit each skill came from, which we'll come back to. Only hosts your admin allows can be read; GitHub is the default.
+
+The screenshots below use Anthropic's public [anthropics/skills](https://github.com/anthropics/skills) repo to show the dialog. The walkthrough at the end uses a security-focused one.
 
 ![anthropics/skills read as a tick list, with skills that can't install marked](/assets/blog/2026-11-20-making-vigil-yours-part-2/repo-tick-list.png)
 
@@ -67,9 +69,16 @@ In the same dialog, paste `owner/repo` or a GitHub link to a folder, and add `@b
 
 Your phishing checklist is safe to hand an agent because you wrote it. A skill from someone else's repo is a different matter: it could tell an agent to send data somewhere, or to skip a step you care about.
 
-So Vigil checks every skill you add, however it got in. It scans the skill with [NVIDIA SkillSpector](https://github.com/NVIDIA/skillspector) in a separate, locked-down process, and holds the skill back from every agent until the scan clears it. While it's held, its card says **Held**, and its panel shows what the scan found and why.
+So Vigil checks every skill you add, however it got in. It scans the whole skill folder, `SKILL.md` and any scripts or reference files beside it, with [NVIDIA SkillSpector](https://github.com/NVIDIA/skillspector) in a separate, locked-down process, and holds the skill back from every agent until the scan clears it. While it's held, its card says **Held**, and its panel shows what the scan found and why.
 
-If the scan flags something you've reviewed and are happy with, someone with the `skills.approve` permission (admins, by default) can click **Approve anyway**. The approval covers exactly the version they read. Edit the skill afterwards and it's scanned again, so nobody can approve a harmless version and then swap in something else.
+If the scan flags something you've reviewed and are happy with, someone with the `skills.approve` permission (admins, by default) can click **Approve anyway**. Treat that as a review, not a routine bypass. Read the whole skill, not just the finding, and look for:
+
+- instructions aimed at the agent rather than the analyst, such as "ignore previous instructions" or text hidden in comments or odd encodings;
+- URLs, webhooks or email addresses the skill sends data to, especially ones your team doesn't own;
+- steps that tell the agent to dismiss, suppress or downgrade alerts, skip approvals, or close cases early;
+- scripts that fetch and run code, or reach for credentials and tokens.
+
+If you can't explain why a flagged line is there, delete the skill instead. The approval covers exactly the version they read. Edit the skill afterwards and it's scanned again, so nobody can approve a harmless version and then swap in something else.
 
 The check doesn't stop at the door, either. If a skill is held while a run is already going, that run can't load it from then on.
 
@@ -77,7 +86,7 @@ Want to see what a repo would trip before you install anything? **Scan without i
 
 ## Where it gets used
 
-Once a skill clears, it goes to work. Vigil's workflows are all offered the skills you add, alongside the built-in ones they already use. So is Ask Vigil, the chat.
+Once a skill clears, it goes to work. Vigil's workflows are all offered the skills you add, alongside the built-in ones they already use. So does Ask Vigil, the chat interface.
 
 An agent doesn't read every skill up front. It sees a short list of names, each with its "when to use it" line, and loads a skill's full steps only when the case in front of it matches. That's why that one line matters so much: it's how the agent knows your checklist exists.
 
@@ -103,16 +112,16 @@ And when you're done with a library, you can delete one skill from it, or the wh
 
 ## From a repo to a closed case
 
-Here's the whole path in one go, with a real repo: [mukul975/Anthropic-Cybersecurity-Skills](https://github.com/mukul975/Anthropic-Cybersecurity-Skills), a community collection of over 800 security skills. (Despite the name, Anthropic didn't make it.) Your own `phishing-close-out` is already in Vigil from earlier.
+Here's the whole path in one go. To make it concrete we'll use a public community repo, [mukul975/Anthropic-Cybersecurity-Skills](https://github.com/mukul975/Anthropic-Cybersecurity-Skills), a collection of over 800 security skills. It's only an example. Neither Anthropic nor the Vigil project made, reviewed or endorses it, and the same goes for any third-party repo: a SkillSpector pass is a safety net, not a vetting process. Import only the skills you need, and read each one before you rely on it. Your own `phishing-close-out` is already in Vigil from earlier.
 
 **1. Import.** In **Import**, paste `mukul975/Anthropic-Cybersecurity-Skills` and click **Read repo**. Vigil lists every skill it finds. Keep `conducting-phishing-incident-response` ticked, untick the rest, and click **Install**.
 
-**2. Scan.** Vigil scans the skill before any agent can see it. If the scan flags something, the card says **Held** and its panel shows why. Someone reads it, and either an admin clicks **Approve anyway** or you delete it. Until then, no agent sees it.
+**2. Scan.** Vigil scans the skill before any agent can see it. If the scan flags something, the card says **Held** and its panel shows why. Someone reads the whole skill, using the checklist [above](#checked-before-agents-see-it), and either an admin clicks **Approve anyway** or you delete it. Even if it clears, skim its steps before the first case uses it. Until then, no agent sees it.
 
-**3. Use.** Later, a user reports a suspicious email and Vigil investigates it. The agent now has two skills that fit: the community one for the general method (headers, indicators, suspicious links, signs of stolen credentials) and `phishing-close-out` for your team's rules. It loads what the case calls for, so the case is worked the standard way and closed your way.
+**3. Use.** Later, a user reports a suspicious email and Vigil investigates it. The agent now has three skills that fit, and each does a different job. The built-in `phishing-triage` decides whether the email is phishing: headers, the lure, the indicators. The community skill picks up once it is, covering the response side `phishing-triage` doesn't: sandboxing links and attachments, purging the message from every mailbox, and fixing compromised accounts. `phishing-close-out` adds your team's rules before the case closes. The agent loads what the case calls for, so the case is triaged the standard way, responded to thoroughly and closed your way.
 
 **4. Check.** Back on the Skills tab, the card reads **Used 1 time in 7 days · by 1 agent**.
 
 **5. Keep current.** When the repo's author improves that skill, **Update library · new version** shows it under **Changed**. You update, it's scanned again, and the next case follows it.
 
-One last thing before you try it. Vigil reads only public repos for now, so for a private one, download it as a zip and import that. And playbooks run their fixed steps without your skills; workflows and Ask Vigil are where they're used. If either gets in your way, or you've written a skill you think others should have, tell us on [GitHub](https://github.com/Vigil-SOC/vigil) or in [Discord](https://discord.gg/SBtSHzMYFZ).
+One last thing before you try it. Vigil reads only public repos for now, so for a private one, download it as a zip and import that. And playbooks, which run a fixed sequence of steps, don't use your skills; [workflows](/docs/agents/#workflows), where agents decide what to do next, and Ask Vigil do. For how agents load skills and which tools each one gets, see the [agents docs](/docs/agents/). If either limit gets in your way, or you've written a skill you think others should have, tell us on [GitHub](https://github.com/Vigil-SOC/vigil) or in [Discord](https://discord.gg/SBtSHzMYFZ).
