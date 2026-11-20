@@ -34,6 +34,17 @@ You don't need to use specific syntax. Just describe what you want in natural la
 ✓ "Add these three findings to the APT case"
 ```
 
+### 3. Slash Commands That Start Runs
+
+The Ask Vigil dock has two built-in slash commands (also available in the command bar):
+
+- `/hunt <hypothesis>` - Starts the threat-hunt workflow on a case
+- `/investigate <finding or context>` - Starts the incident-response workflow on a case
+
+The server places the run on a case — opening one, or reusing the open case holding the alert — and the case is opened for you. A hunt started from a document attached to the dock can carry that document's proposed hypothesis subjects and approval with it.
+
+While the run is live, its Case page shows a "Now" block: the run's current step and what it is doing, anything waiting on a person (a paused run's questions, proposed actions), and — for a hunt stopped at a limit — a **Keep going** control that lets the hunt carry on from where it stopped.
+
 ## Example Workflows
 
 ### Workflow 1: Building a Case During Investigation
@@ -165,6 +176,7 @@ The Vigil chat assistant (the configured LLM) has access to these comprehensive 
 ### Case Closure
 - `close_case(case_id, closure_category, root_cause, lessons_learned, recommendations, executive_summary, false_positive_reason, closure_notes, false_positive_cause)` - Close case with full metadata
   - Closure categories: `resolved`, `false_positive`, `duplicate`, `unable_to_resolve`
+  - **Autonomy hold:** an agent/model close is first checked against the autonomy ceiling. Where the ceiling does not let a model close cases on its own, the close is held: nothing is written, the case stays open, a "Left open for a person" activity is logged on the case, and the tool returns that as an error result — it is not a success and not a tool failure. A re-close of an already-closed case is held the same way. The same gate applies to closing through `create_case(..., status="closed")` and `update_case(..., status="closed")`.
 
 ### Case Retrieval
 - `list_cases(status, severity, priority, limit)` - List all cases

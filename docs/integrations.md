@@ -611,6 +611,8 @@ Settings > Integrations > Custom Integration Builder:
 3. Review and test
 4. Saved to `~/.vigil/custom_integrations/<id>_server.py`
 
+> **Not running:** Vigil does not start saved custom integrations, so its tools do not reach chat or agents. Saving an integration does not start it, and setting it up under Integrations does not either — the saved server file is not run by Vigil.
+
 ## CloudCurrent VStrike (Network Topology Fusion)
 
 VStrike enriches DeepTempo findings with network topology, asset, segment,

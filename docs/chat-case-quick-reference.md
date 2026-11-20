@@ -114,6 +114,8 @@ Escalation has been replaced by the beta move: a case is moved to another team w
 | "Close as false positive" | Marks as false positive |
 | "Close with root cause: phishing" | Closes with full documentation |
 
+> **Autonomy hold:** an agent-initiated close is checked against the autonomy ceiling first. Where a model may not close cases on its own, the close is held — the case stays open and the result reads "Left open for a person" — instead of closing.
+
 ## Activity Types
 
 Use these activity types when logging:

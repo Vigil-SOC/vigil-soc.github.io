@@ -17,7 +17,9 @@ curl -X POST http://localhost:6987/api/cases \
   -d '{"title":"Issue","priority":"high","finding_ids":[]}'
 ```
 
-## 📋 Default Policies
+## 📋 Example Policies
+
+No default policies are seeded or shipped pre-configured; policies are created through the API. The values below are an example set you can start from:
 
 | Priority | Response | Resolution | Coverage |
 |----------|----------|------------|----------|
@@ -39,7 +41,7 @@ POST /api/cases/{case_id}/sla
 {"sla_policy_id": "sla-high-default"}  # or {} for default
 ```
 
-Re-POSTing does not replace an existing SLA: if the case already has an SLA assigned, the existing SLA is returned unchanged. The policy ID must be one that exists (for example a seeded default such as `sla-high-default`, or one an operator created); an unknown ID returns 404.
+Re-POSTing does not replace an existing SLA: if the case already has an SLA assigned, the existing SLA is returned unchanged. The policy ID must be one that exists (one an operator created — no policies are seeded); an unknown ID returns 404.
 
 ### Pause SLA
 ```bash
@@ -191,5 +193,5 @@ tail -f logs/backend.log | grep SLA
 
 ---
 
-**Version**: 1.1.2 | **Updated**: 2026-11-17
+**Version**: 1.1.4 | **Updated**: 2026-11-19
 {% endraw %}

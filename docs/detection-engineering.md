@@ -5,7 +5,7 @@ permalink: /docs/detection-engineering/
 ---
 
 {% raw %}
-Detection engineering in Vigil covers MITRE ATT&CK coverage analysis, detection-rule search, and drafting and saving new rules. It is provided by local backend tools, plus an optional MCP server (`security-detections`) for the external rule repositories.
+Detection engineering in Vigil covers MITRE ATT&CK coverage analysis, detection-rule search, and drafting and saving new rules. It is provided by local backend tools, by a detection surface on Vigil's own MCP server (`/mcp`) for external callers, plus an optional MCP server (`security-detections`) for the external rule repositories.
 
 ## Overview
 
@@ -20,7 +20,7 @@ Detection engineering features:
 
 Coverage and search over the external repositories return empty until those repositories have been fetched; the fetch is off by default (see Quick Start).
 
-**MCP Server (optional)**: The `security-detections` server in `mcp-config.json` runs the pinned `security-detections-mcp@3.3.4` package against the fetched repositories. Its tools and workflow prompts are provided by that upstream package and are not enumerated in the Vigil code repository, so they are not catalogued here.
+**MCP Server (optional)**: The `security-detections` server in `mcp-config.json` runs the pinned `security-detections-mcp@3.3.4` package against the fetched repositories. Its tools and workflow prompts are provided by that upstream package and are not enumerated in the Vigil code repository, so they are not catalogued here. This is a separate surface from Vigil's own MCP server, whose detection tools are catalogued under [Detection over MCP](#detection-over-mcp-vigils-own-server) below.
 
 ## Quick Start
 
@@ -67,11 +67,11 @@ Vigil provides 12 local backend detection tools, defined in `core/llm/tool_schem
 | `analyze_coverage` | `detections.read` | Analyze detection coverage for MITRE ATT&CK techniques: catalog counts by format (Sigma / Splunk / Elastic / KQL), per-SIEM rule checks for SIEM rules, or per-technique verdicts for a run passed by `run_id` or as action-trace steps |
 | `search_detections` | `detections.read` | Keyword search across the configured repositories, Vigil's overlay of drafted rules, and the rules run by Kibana, Splunk, and Wazuh, with filters such as `source_type`, `tool`, and rule-check results |
 | `link_detection_rule` | `detections.write` | Record which repo rule a SIEM rule (a copy in Kibana or Splunk) came from: `link`, `decline`, or `unlink` a copy's origin. Every call is written to the audit log with the actor and reason |
-| `identify_gaps` | `detections.read` | Compare the ATT&CK techniques seen on stored alerts with the detection rules actually loaded and list techniques no rule declares, including blind spots (data sources with no recent events) and rule-health flags. Reads stored data only and writes nothing |
+| `identify_gaps` | `detections.read` | Compare the ATT&CK techniques seen on stored alerts with the detection rules actually loaded and list techniques no rule declares, including blind spots (data sources with no recent events) and rule-health flags. Also reports `runs_rules_missed` — proven hunts and closed Cases no rule alerted on — and `rule_health` (Runs / Sees / Quiet / Noisy / Silent and drift pass→fail flags). Accepts `techniques` and `since_days`. Reads stored data only and writes nothing |
 | `get_coverage_stats` | `detections.read` | Overall detection coverage statistics, including total detections and techniques covered, optionally for one source format |
 | `detection_metrics` | `detections.read` | The detection rollout's success metrics, reported from data Vigil already stores; nothing is searched |
 | `get_detection_count` | `detections.read` | Count of detection rules, optionally filtered by source format |
-| `lint_detections` | `detections.read` | Lint Sigma detection rules for match keys tied to a specific IP, hostname, user, or subnet, returning rewrite guidance to make the rule behavioural. Accepts one rule's YAML or a source path of `.yml` files |
+| `lint_detections` | `detections.read` | Lint a Sigma detection rule for match keys tied to a specific IP, hostname, user, or subnet, returning rewrite guidance to make the rule behavioural. Accepts only one rule's YAML (`rule_yaml`); any other argument is ignored, and an empty or missing `rule_yaml` is an error. To read the lint result for a rule already in a source, use `search_detections` and read its `checks.lint` |
 | `check_detection_candidate` | `detections.read` | Lint a candidate Sigma rule and replay it against events the caller already has, including ruled-out events the draft must stay quiet on. Does not query findings or a SIEM and does not write a rule |
 | `save_detection_rule` | `detections.write` | Save one drafted or changed rule into Vigil's overlay, then sync it into the rule inventory. Accepts a Splunk copy, an Elastic copy, a Wazuh copy, or any of them together, plus an optional Sigma form. New Splunk, Elastic, and Wazuh copies enter shadow; saving writes nothing to a SIEM |
 | `detection_rule_exception` | `detections.write` | Add a customer-specific exception to one of Vigil's overlay copies, or remove one, so an expected host, address, or account is kept out of the rule's query instead of being named in the rule body |
@@ -92,6 +92,31 @@ Vigil provides 12 local backend detection tools, defined in `core/llm/tool_schem
 3. check_detection_candidate to replay the draft against proven and ruled-out events already in hand
 4. save_detection_rule to save the rule's copies into Vigil's overlay, where Splunk, Elastic, and Wazuh copies enter shadow
 ```
+
+## Detection over MCP (Vigil's own server)
+
+Separate from the backend tools above and from the upstream `security-detections` package, Vigil's own MCP server (served at `/mcp`) exposes a detection surface to external callers. Read tools require `detections.read` and write tools require `detections.write`:
+
+| Tool | Permission | Description |
+|------|------------|-------------|
+| `list_detection_rules` | `detections.read` | List rule copies, with filters such as health, SIEM (`elastic` / `splunk` / `wazuh`), and a search term |
+| `get_detection_rule` | `detections.read` | One rule copy: its latest version's query and checks, its `stage_history`, and the gaps-run `proposals` it answers |
+| `get_detection_coverage` | `detections.read` | ATT&CK coverage by technique and SIEM: each technique an active rule declares or an alert shows, proven, unproven, or with no rule |
+| `list_detection_proposals` | `detections.read` | Detection proposals, newest first; `state` narrows them (`draft`, `linted`, `replayed`, `converted`, `shadow`, `live`, `rejected`) |
+| `get_detection_proposal` | `detections.read` | One detection proposal with its Sigma, copies, and every step on its record |
+| `dismiss_detection_proposal` | `detections.write` | Reject a proposal, with a reason; it stays on the record and on the audit trail |
+| `switch_off_detection_rule` | `detections.write` | Switch a shadow rule off and hold it there, with a reason; a rule not in shadow is refused |
+| `start_gaps_run` | `detections.write` | Start the detection gaps run on demand (see below) |
+
+### The Proposed Tab
+
+The Detections screen has three sections — **Rules**, **Coverage**, and **Proposed**. The Proposed tab is where the proposals raised by the gaps run are reviewed; each proposal moves through the states listed for `list_detection_proposals` above.
+
+### The Gaps Run
+
+The `identify_gaps` backend tool is read-only: it reports gaps and writes nothing. The **gaps run** is the scheduled counterpart: a daily run that raises the report's gaps — over a rolling window, counting only evidence no earlier run raised — as proposals into the Proposed tab.
+
+The run can also be started on demand with `start_gaps_run` on `/mcp`. It returns a `status` of `queued` (with `proposal_ids`), `nothing_to_raise`, `blind_spots_only`, or `refused`, with a message saying why. Only one gaps run runs at a time: a start is refused while another gaps run is unfinished. The tool is for a caller outside Vigil; a call made inside a Vigil run is refused.
 
 ## Agent Integration
 
