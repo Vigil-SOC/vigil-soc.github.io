@@ -1,10 +1,15 @@
 {
-  "ran_at": "2026-11-16T14:09:11Z",
-  "commit": "161fbcf",
-  "run": "https://github.com/Vigil-SOC/vigil/actions/runs/43882344626",
+  "ran_at": "2026-11-23T16:42:16Z",
+  "commit": "dd209ad",
+  "run": "https://github.com/Vigil-SOC/vigil/actions/runs/45218944132",
   "connectors": [
     {
       "server": "alienvault-otx",
+      "status": "no live check",
+      "version": "in-repo"
+    },
+    {
+      "server": "amazon-security-lake",
       "status": "no live check",
       "version": "in-repo"
     },
@@ -66,7 +71,7 @@
     {
       "server": "firecrawl",
       "status": "pass",
-      "version": "firecrawl-mcp@3.40.0"
+      "version": "firecrawl-mcp@3.41.0"
     },
     {
       "server": "gcp-scc",
@@ -135,7 +140,7 @@
     },
     {
       "server": "opencti",
-      "status": "no live check",
+      "status": "pass",
       "version": "in-repo"
     },
     {
@@ -166,7 +171,7 @@
     {
       "server": "shodan",
       "status": "pass",
-      "version": "mcp-shodan@1.0.37"
+      "version": "mcp-shodan@1.0.41"
     },
     {
       "server": "slack",
@@ -191,7 +196,7 @@
     {
       "server": "virustotal",
       "status": "not-configured",
-      "version": "mcp-virustotal@1.0.38"
+      "version": "mcp-virustotal@1.0.40"
     },
     {
       "server": "vstrike",
