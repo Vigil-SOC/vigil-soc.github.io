@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Making Vigil Yours, Part 2: Bring Your Own Skills"
+title: "Making Vigil Yours, Part 2: Bring Your Own Skills, Securely"
 date: 2026-11-20
 author: "Gray Egboluche"
 category: "Tutorial"
