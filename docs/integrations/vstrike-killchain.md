@@ -38,8 +38,10 @@ What does **not** exist at 1.1.4:
   route list below.
 - No frontend Play button, iframe toolbar, or iframe host component.
   There is no `clients/web/src/components/graph/` directory and no
-  `VStrikeIframeHost.tsx` anywhere under `clients/`. The only VStrike
-  mention in the web UI source is in
+  `VStrikeIframeHost.tsx` anywhere under `clients/`. VStrike also
+  appears in the web UI source as integration configuration (for
+  example in `clients/web/src/config/integrations.ts`); the embedded
+  panel itself is only noted in
   `clients/web/src/screens/dashboard/FindingPopup.tsx`, which notes
   that the embedded VStrike `NetworkContextPanel` is "deliberately not
   ported: it needs the VStrike provider, which isn't mounted under the
@@ -55,7 +57,7 @@ When a Vigil analyst opens a case enriched by VStrike, every finding's
 `entity_context.vstrike` carries an `attack_path` (an ordered list of
 asset IDs from initial access to the target) plus `adjacent_assets` (the
 MITRE technique on each edge) —
-`core/integrations/vstrike/schemas.py:33,46-49`, with the per-edge
+`core/integrations/vstrike/schemas.py:45-50`, with the per-edge
 technique on `VStrikeAdjacentAsset.edge_technique` (`schemas.py:26-30`).
 There is currently no way to replay that kill chain across those nodes
 as an animated sequence.

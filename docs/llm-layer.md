@@ -37,7 +37,7 @@ router's `bifrost_headers` helper for Bifrost routing headers.
 
 Local Ollama supervision is not part of this layer at all: the supervisor is
 `core/platform/ollama_supervisor.py`, which runs `ollama serve` as a host
-process. `providers/` holds only Ollama discovery and capability tables.
+process. `providers/` holds Ollama discovery and capability tables alongside SDK client construction and the model registry.
 
 `security.py` (prompt-injection defenses) sits at the top level because the
 router and other callers inside and outside the layer need it — among them

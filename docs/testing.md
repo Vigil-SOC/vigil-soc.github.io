@@ -319,10 +319,7 @@ enumerated. There are three, and two of them own a client:
 | ARQ llm-worker (`python -m services.worker`) | **no** — it constructs `ClaudeService()` directly in `services/worker/jobs.py` and installs no process MCP client |
 
 Before any owner starts — which is the case in a plain test — it returns
-`None`, so importing the harness never spawns child processes. To supply a fake, pass
-`mcp_client=` to the constructor or override `provide_mcp_client`; only reach
-for `set_process_mcp_client` when the code under test resolves the process slot
-directly.
+`None`, so importing the harness never spawns child processes. To supply a fake, override `provide_mcp_client`; only reach for `set_process_mcp_client` when the code under test resolves the process slot directly.
 
 ---
 

@@ -27,7 +27,7 @@ runs it.)
 - **Manager** — User management and all integrations
 - **Admin** — Full system access
 
-The roles insert uses `ON CONFLICT (role_id) DO NOTHING`. Init inserts no
+The roles insert in the legacy copy uses `ON CONFLICT (role_id) DO NOTHING`. Init inserts no
 users.
 
 ## Create the first admin
@@ -42,10 +42,10 @@ This endpoint creates the first admin account and is only ever available
 on an empty instance. It is gated in two ways:
 
 - **Empty instance only.** Bootstrap closes permanently as soon as a human
-  user exists (the `has_human_user` check). Once any account exists, the
+  user exists (the `has_human_user` check). Once a human user exists, the
   endpoint refuses further calls.
 - **Startup setup code.** The request body must include the setup code the
-  API logs at startup while the user table is empty. Look for the
+  API logs at startup while no human user exists. Look for the
   `First-run setup code:` line in the API logs and copy the code from
   there.
 

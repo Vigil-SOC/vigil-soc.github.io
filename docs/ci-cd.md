@@ -255,7 +255,7 @@ dependencies.
 The per-image build jobs in `ci-cd.yml` build four images — agent, backend,
 daemon, and MCP runner. Images are built locally on the runner
 (`push: false`, `load: true`); they are **not** pushed from CI. GHCR pushes
-happen only in `release.yml`.
+happen only in release.yml and beta.yml.
 
 **Backend Image** (`infra/docker/Dockerfile.backend`):
 - Multi-stage build on `python:3.12-slim` (the version comes from
@@ -277,9 +277,9 @@ CMD ["python", "services/daemon/main.py"]
 
 **Exit Criteria**:
 - Images build successfully
-- Tagged with branch and SHA
+- Tagged vigil-<image>:ci
 - Not pushed — publishing to GitHub Container Registry happens only in
-  `release.yml`
+  `release.yml` and `beta.yml`
 
 ### Stage 6: Container Scanning
 
@@ -470,7 +470,7 @@ notifications, because there are no deployments.
     webhook-type: incoming-webhook
     payload: |
       {
-        "text": "Nightly Security Audit Failed"
+        "text": "⚠️ Nightly Security Audit Failed"
       }
 ```
 
@@ -539,7 +539,7 @@ gh run rerun --failed
 **Test Failures**:
 ```bash
 # Run tests locally
-pytest tests/unit/ -v --lf  # Run last failed
+pytest tests/ -v --lf  # Run last failed
 
 # Check test logs in GitHub Actions
 Actions → Failed workflow → <job name> → Logs

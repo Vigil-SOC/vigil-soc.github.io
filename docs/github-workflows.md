@@ -53,7 +53,7 @@ Note: `ci-cd.yml` does not run unit or integration test suites.
 ### 5. `connectors-live.yml` - Live Connector Checks
 - **Triggers**: Mondays at 6 AM UTC, manual dispatch
 - **Purpose**: Run each connector in `mcp-config.json` that can be run for free against a real instance — self-hosted backends in Docker, keyless servers, and free vendor tiers — and merge the results into the connector matrix (job summary and `connector-matrix` artifact). Vendor-tier probes read `LIVE_*` repository secrets (e.g. `LIVE_SHODAN_API_KEY`, `LIVE_OKTA_API_TOKEN`); a probe whose secret is unset reports "not configured". `tests/live/ACCOUNTS.md` lists the accounts and secret names.
-- **Deployment**: Runs on `main` publish the matrix to `_data/connector_matrix.json` in this site, which renders the status table on the [Integrations](/docs/integrations/) page. Publishing happens only on `main` and only when all three report files (`live-search-backends.json`, `live-local.json`, `live-free-tier.json`) are present; runs on other branches publish nothing.
+- **Deployment**: Runs on `main` publish the matrix to `_data/connector_matrix.json` in this site, which renders the status table on the [Integrations](/docs/integrations/) page. Publishing happens only on main and only when all four report files (live-search-backends.json, live-opencti.json, live-local.json, live-free-tier.json) are present; runs on other branches publish nothing.
 
 ### 6. `helm-chart.yml` - Helm Chart Checks
 - **Triggers**: Push or PR touching the Helm chart paths
@@ -96,12 +96,12 @@ Note: `ci-cd.yml` does not run unit or integration test suites.
 - **Deployment**: None (opens a PR; it never pushes to `main`)
 
 ### 14. `medic-pack-release.yml` - Medic Pack Release
-- **Triggers**: Push to `main` changing the medic-core pack version
+- **Triggers**: Push to main changing files under services/medic/packs/medic-core/**
 - **Purpose**: Build the pack, tag it `medic-core-v<version>`, publish a GitHub Release carrying the file and its SHA-256, and open a PR committing the file to the bundled pack directory
 - **Deployment**: None (publishes a GitHub Release and opens a PR; it never pushes to `main`)
 
 ### 15. `backport.yml` - Backport Fixes to the Release Branch
-- **Triggers**: A PR to `main` is closed (merged) or labelled `backport`
+- **Triggers**: A merged PR to main carrying the backport label (closed after merge, or labelled after merging)
 - **Purpose**: Cherry-pick a merged fix labelled `backport` onto the current `release/X.Y.x` branch and open a copy PR
 - **Deployment**: None
 
@@ -139,7 +139,7 @@ Note: `ci-cd.yml` does not run unit or integration test suites.
 
 Most workflows need no configured secrets, and none use `SSH_PRIVATE_KEY`, VM host variables, or `SENTRY_DSN`. But `GITHUB_TOKEN` is not the only credential in play:
 
-- `release-please.yml` and `connectors-live.yml` mint a GitHub App token from `vars.RELEASE_PLEASE_APP_ID` and `secrets.RELEASE_PLEASE_PRIVATE_KEY` (the latter also to publish the connector matrix to this docs site). `backport.yml` and `release-branch.yml` also mint the App token.
+- release-please.yml, connectors-live.yml, medic-pack-refresh.yml and medic-pack-release.yml mint a GitHub App token from vars.RELEASE_PLEASE_APP_ID and secrets.RELEASE_PLEASE_PRIVATE_KEY (the latter also to publish the connector matrix to this docs site). backport.yml and release-branch.yml also mint the App token.
 - `connectors-live.yml` reads `LIVE_*` repository secrets for vendor-tier probes (e.g. `LIVE_SHODAN_API_KEY`, `LIVE_OKTA_API_TOKEN`).
 - `nightly.yml` and `connectors-live.yml` read `SLACK_WEBHOOK_URL` to notify on failure, when it is configured; `scale-weekly.yml` also reads `SLACK_WEBHOOK_URL` for its notification.
 

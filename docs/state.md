@@ -83,9 +83,7 @@ is migrated (use `--dry-run` to keep the dotenv copy).
 
 ## `~/.vigil/general_config.json`
 
-Kept for one thing only: the `enable_keyring` flag. You can also set
-this via the `ENABLE_KEYRING` env var in `.env`. This file is benign
-and will likely be folded into `system_config` in a future cleanup.
+Kept for two flags: `enable_keyring` and `demo_mode` (read as a fallback when the demo_mode setting is unset). You can also set `enable_keyring` via the `ENABLE_KEYRING` env var in `.env`. This file is benign and will likely be folded into `system_config` in a future cleanup.
 
 ## Pointers (DB → secret store)
 

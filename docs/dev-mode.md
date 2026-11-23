@@ -208,7 +208,7 @@ Backend identity is different: `_get_dev_user` returns the real `admin` row if o
 - **No authentication** - Anyone who can reach the instance can access the system, subject to the exceptions above
 - **Full admin access** - Requests run with admin permissions
 - **Data exposure** - Sensitive data is unprotected
-- **Audit trail broken** - All actions appear to be from "dev-user"
+- **Audit trail broken** - All actions appear to be from the admin account (or "dev-user" when no admin row exists)
 - **Compliance violation** - Likely violates security compliance
 
 ### ✅ Safety Measures Implemented:
@@ -388,7 +388,7 @@ Use it:
 | **JWT Validation** | ✅ Enforced | ❌ Bypassed |
 | **Permissions Check** | ✅ RBAC enforced | ✅ Granted (frontend grants all; the backend grants only the built-in Admin role's catalog permissions and denies a name not in the catalog) |
 | **User Identity** | ✅ Real users | ⚠️ Mock "dev-user" |
-| **Audit Trail** | ✅ Accurate | ⚠️ All as "dev-user" |
+| **Audit Trail** | ✅ Accurate | ⚠️ Admin account (or "dev-user" when no admin row exists) |
 | **Security** | ✅ Secure | ❌ INSECURE |
 | **Iteration Speed** | 🐢 Slower | 🚀 Faster |
 | **Production Ready** | ✅ Yes | ❌ NEVER |

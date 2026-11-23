@@ -7,8 +7,10 @@ permalink: /docs/helm-secrets/
 {% raw %}
 The chart supports four ways to provide secrets to Vigil pods. Pick whichever
 fits your existing secret-management setup; all four end up behind the same
-Secret name, which backend, daemon, llm-worker, agent-worker, and
-agent-serve `envFrom`. The upgrade Jobs do not `envFrom` it — they read the
+Secret name, which backend, daemon, and llm-worker `envFrom`.
+Agent-worker and agent-serve do not load it whole: they read
+`AGENT_INTERNAL_TOKEN`, `AGENT_INTERNAL_TOKEN_PREVIOUS`, `BIFROST_API_KEY`,
+and `POSTGRES_AGENT_PASSWORD` from it by `secretKeyRef`. The upgrade Jobs do not `envFrom` it — they read the
 owner password plus `POSTGRES_APP_PASSWORD`/`POSTGRES_AGENT_PASSWORD` by
 `secretKeyRef`. Note the chart-rendered Secret carries
 `POSTGRES_APP_PASSWORD`/`POSTGRES_AGENT_PASSWORD`, not `POSTGRES_PASSWORD`
@@ -33,14 +35,16 @@ at minimum:
 - `JWT_SECRET_KEY` — required when `config.DEV_MODE=false`
 - `AGENT_INTERNAL_TOKEN` — required whenever the agent Deployments are
   enabled (the default); the agent surface fails closed when it is unset
-- `BIFROST_ADMIN_PASSWORD` (`secrets.bifrostAdminPassword`) — the Bifrost
-  gateway's admin password
+- `BIFROST_ADMIN_PASSWORD` (`secrets.bifrostAdminPassword`) - the Bifrost
+  gateway's admin password, which lives in its own Bifrost auth Secret,
+  not in the app Secret
 
 Supplied separately, not as a key of the app Secret:
 
-- `POSTGRES_PASSWORD` — owner password, used by Postgres and the upgrade
-  Jobs only, in the default in-chart-Postgres mode; it flows via its own
-  Secret (see the intro above), not via the app Secret
+- `POSTGRES_PASSWORD` - owner password, used by Postgres and the upgrade
+  Jobs only. In plain-values mode it flows via its own Secret, not via
+  the app Secret; with `secrets.existingSecret` it is read from that
+  Secret under `POSTGRES_PASSWORD`
 
 If the MCP runner / agent shell are enabled, the same Secret must also
 carry `MCP_RUNNER_TOKEN` / `SHELL_TOKEN`.

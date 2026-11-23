@@ -16,7 +16,7 @@ the platform.
 | `opencti_search_observable` | Look up an observable (IP, domain, URL, file hash). Returns matching observables with score, labels and linked indicators; `exact_match` marks results equal to the value asked for. |
 | `opencti_get_indicator` | Get one indicator: STIX pattern, validity window, score, labels, kill-chain phases. |
 | `opencti_search_entities` | Search by name or alias for threat actors, intrusion sets, malware, attack patterns, tools, campaigns or reports. Attack patterns carry `x_mitre_id`, the ATT&CK technique id. |
-| `opencti_get_related` | List the relationships going out of an entity (uses, targets, attributed-to, …). For a report (or grouping, case) it also lists the objects the report names. |
+| `opencti_get_related` | List the relationships of an entity in both directions: going out of it (uses, targets, attributed-to, …) and pointing at it (who uses this malware, which indicator indicates it, …). For a report (or grouping, case) it also lists the objects the report names. |
 
 ## Vigil configuration
 

@@ -25,10 +25,7 @@ or file location so it can be audited mechanically.
 | PostgreSQL Passwords | `POSTGRES_PASSWORD`, `POSTGRES_APP_PASSWORD`, `POSTGRES_AGENT_PASSWORD` | Compose change-me placeholders | Strong random, all three different | Owner, app role, and agent role passwords respectively. Fail-closed: when `DEV_MODE=false` the backend refuses a shipped/published default password and refuses a missing password at startup. |
 | LLM Budget Unlimited | `LLM_BUDGET_UNLIMITED` | `false` | `false` | Keep cost guardrails active. |
 
-`JWT_SECRET_KEY` is the root secret for the auth key ring: per-purpose keys
-are stored wrapped (Fernet) under a key HKDF-derived from it. It must be set
-when `DEV_MODE=false`; only in `DEV_MODE` does the backend fall back to a
-predictable dev value or mint one into the secret store (`~/.vigil/jwt_secret`).
+`JWT_SECRET_KEY` is the root secret for the auth key ring: per-purpose keys are stored wrapped (Fernet) under a key HKDF-derived from it. It must be set when `DEV_MODE=false`; only in `DEV_MODE` does the backend mint a random value into the secret store (`~/.vigil/secrets.enc`).
 
 `DEV_MODE` does not bypass all authentication. It opens only the gates listed
 in `DEV_MODE_OPEN_GATES`: session auth (every request runs as a mock admin)
