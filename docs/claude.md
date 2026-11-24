@@ -60,12 +60,12 @@ vigil/
 │   ├── llm/              # The LLM layer: router/, harness/, providers/, cost/
 │   └── workflows/definitions/  # Workflow definitions as WORKFLOW.md files (cloud-incident, forensic-analysis, full-investigation, incident-response, root-cause-analysis, shadow-adjudication, threat-hunt)
 ├── data/                 # Schemas, MITRE taxonomy, detection registry
-├── tests/                # pytest + vitest test suites
+├── tests/                # pytest test suites
 ├── docs/                 # Detailed documentation
 ├── infra/                # Deploy machinery (was docker/ + helm/ + database/init/)
 │   ├── docker/           # docker-compose.yml + Dockerfiles
 │   ├── helm/             # Helm chart (vigil/)
-│   └── database/init/    # PostgreSQL init SQL (docker-compose: lex order by filename; Helm: values.yaml dbInit.sqlFiles)
+│   └── database/init/    # PostgreSQL init SQL
 ├── scripts/              # Init and utility shell scripts
 ├── mcp-config.json       # MCP server definitions (+ `_comment_*` separator keys)
 └── env.example           # Template for environment variables (171 assignments at 1.1.4)
@@ -186,8 +186,10 @@ encrypted at `~/.vigil/secrets.enc` — see [docs/STATE.md](/docs/state/).
 
 ### Reading configuration
 
-Config flows through exactly three channels. Do not add `os.getenv` calls —
-`tests/unit/_ratchets/test_no_ambient_state.py` fails CI on them.
+Config flows through exactly three channels. Do not add `os.getenv` calls:
+config must flow through `core.config`, `core.secrets`, or the runtime config
+service. (The `tests/unit/_ratchets/` ratchet that used to enforce this was
+deleted with the unit suites, so this is currently ungated.)
 
 | Need | Use | Owner |
 |------|-----|-------|
@@ -195,9 +197,10 @@ Config flows through exactly three channels. Do not add `os.getenv` calls —
 | Credential | `core.secrets.get_secret("NAME")` | `~/.vigil/secrets.enc`, then env |
 | UI-editable at runtime | `core.platform.runtime_config` / `core.storage.config_service` | `system_config` table |
 
-`core/config.py` is the single definition site: every setting is a typed field
-with its default, and `tests/unit/_ratchets/test_settings_env_example.py` fails if a field
-is missing from `env.example` or vice versa. `get_settings()` is `lru_cache`d, so
+`core/config.py` is the single definition site for settings. (The
+`tests/unit/_ratchets/test_settings_env_example.py` check that used to enforce
+`env.example` parity was deleted with the unit suites, so this is currently
+ungated.) `get_settings()` is `lru_cache`d, so
 a test that changes env mid-test must call `get_settings.cache_clear()`.
 
 Config file paths go through `core.config.vigil_path()`, which reads from
@@ -228,26 +231,21 @@ pytest tests/
 # By marker
 pytest tests/ -m unit
 pytest tests/ -m integration   # requires running PostgreSQL
-pytest tests/ -m "not external_service"   # what CI's main unit job runs
+pytest tests/ -m "not external_service"   # runs the local unit-style suites; no pytest job runs in ci-cd.yml
 
 # Single test file (pass a real path under tests/)
 pytest tests/ -v -k <test-name>
 ```
 
-Available markers: `unit`, `integration`, `slow`, `auth`, `siem`, `claude`,
-`database`, `api`, `daemon`, `performance`, `external_service`.
-`--strict-markers` is on, so an unregistered marker is an error — add new ones to
-`tests/pytest.ini`.
+Available markers: `unit`, `unbound`, `integration`, `database`,
+`external_service`. `--strict-markers` is on, so an unregistered marker is an
+error; add new ones to `tests/pytest.ini`.
 
-### Frontend (vitest)
+### Frontend
 
-```bash
-cd clients/web
-npm run test           # watch mode
-npm run test:run       # single run with verbose output
-npm run test:coverage  # with coverage report
-npm run test:ci        # CI mode (JSON output)
-```
+The frontend has no test runner configured at 1.1.4:
+`clients/web/package.json` defines no test script and ships no vitest
+dependency.
 
 ### Linting
 
@@ -332,14 +330,11 @@ Agents access external tools through the MCP protocol. Tool definitions live in 
 - PostgreSQL 16 via SQLAlchemy ORM — models in the `core/storage/models/`
   package, sessions via `get_db_manager()` / `get_db_session()` / `get_session()`
   in `core/storage/connection.py`
-- Schema initialized by `infra/database/init/` SQL files. **Execution order
-  differs by deploy path:** docker-compose mounts the directory at
-  `/docker-entrypoint-initdb.d`, where Postgres runs files in
-  **lexicographic filename order** (the `01_`/`04_`/…/`16_` prefixes
-  are authoritative there). The Helm chart, by contrast, iterates
-  `infra/helm/vigil/values.yaml`'s `dbInit.sqlFiles` list in the **order
-  written there** — prefixes are decorative for the chart path
-- pgvector extension for embeddings
+- Schema is applied by the upgrade one-shot, not by mounting
+  `infra/database/init/` in docker-compose and not by a chart dbInit Job.
+  There is no `dbInit.sqlFiles` list in the chart at 1.1.4.
+- No pgvector extension: the pgvector embedding store was LogLM's and is gone.
+  The schema creates only uuid-ossp and pg_trgm.
 - Use `core/storage/database_data_service.py` for data access — do not query the DB directly from API handlers
 - **`infra/database/init/` is not the whole schema.** `cases`, `findings`,
   `case_evidence`, `case_tasks`, `case_watchers` and `investigations` have no
@@ -359,23 +354,9 @@ Agents access external tools through the MCP protocol. Tool definitions live in 
   cannot see
 
 **When adding or modifying an init SQL file under `infra/database/init/`:** the
-chart bundles a *copy* under `infra/helm/vigil/files/database-init/` (Helm can
-only read files inside the chart directory). You must (1) copy the file
-into the chart bundle, (2) add it to `infra/helm/vigil/values.yaml`
-`dbInit.sqlFiles` in the correct execution order, and (3) verify with
-`helm template ... | grep -E '^[[:space:]]*apply "NEWFILE\.sql"'` that
-the dbInit Job script applies it (a bare `grep NEWFILE.sql` false-matches
-the ConfigMap key and the SQL header comment). CI catches step 1
-(`Helm Chart / Lint and Template` runs `diff -r` between the two
-directories). Skipping step 2 is silent (the file is in the ConfigMap
-but never applied); skipping step 1 while keeping the file in
-`dbInit.sqlFiles` makes the Job hard-fail at runtime — *unless* the
-filename already has a row in `_vigil_schema_versions`, in which case
-it SKIPs as already-applied (the marker-table check runs before the
-file-existence check, so legacy `003_*` ghost rows on v0.1.x upgrades
-don't break `helm upgrade --reuse-values`). See
-[`infra/database/init/README.md`](/docs/database-init/), which also lists
-two filenames that are reserved and must never be reused.
+chart carries no database-init copy and `values.yaml` has no `dbInit.sqlFiles`
+list at 1.1.4, so this checklist does not apply. Verify how the upgrade
+one-shot picks up the new file instead.
 
 ### Authentication
 
@@ -497,10 +478,10 @@ GitHub Actions workflows in `.github/workflows/`:
 
 | Workflow | Trigger | Jobs |
 |----------|---------|------|
-| `ci-cd.yml` | Push/PR to main, `release/**` | Lint → Unit Tests → Integration Tests → Security Scan → Docker Build |
+| `ci-cd.yml` | Push/PR to main, `release/**` | Lint, Security Scan, and Docker Build, plus setup-path, typecheck, Helm schema, and generated-types checks. There is no unit-test or integration-test job in `ci-cd.yml`. |
 | `release-please.yml` | Push to `main` and `release/**`, manual | Maintains a standing release PR with bumped `VERSION` / `Chart.yaml` (`appVersion` + `version`, lockstep) / `clients/web/package.json` / `clients/web/package-lock.json` + `CHANGELOG.md`. Minors and majors are cut by hand from `main` by merging its release PR (manual dispatch offers minor/major only); fix releases come from the single `release/X.Y.x` branch, whose pushes force a patch bump. On merge, push `vX.Y.Z` tag and create the GitHub Release. See `RELEASING.md`. |
 | `release.yml` | Version tags (`v*.*.*`) | Build & push `vigil-backend` + `vigil-daemon` images to GHCR → Trivy scan → smoke-test that they start → annotate the GitHub Release with image digests. **Publishes images only — it does not deploy.** Does **not** create the GitHub Release object either (release-please owns that). |
-| `helm-chart.yml` | Push/PR touching `infra/helm/**`, `infra/database/init/**`, or the workflow file itself (branches main, `release/**`) | Verify `database/init/` ↔ chart-bundle copies are in sync (`diff -r`) → `helm lint`/`template` across default, dev, and Bitnami-subchart values → kubeconform → `ct lint` |
+| `helm-chart.yml` | Push/PR touching `infra/helm/**`, `infra/database/init/**`, or the workflow file itself (branches main, `release/**`) | Verify Bifrost config matches Compose's → `helm lint`/`template` across default, dev, and Bitnami-subchart values → kubeconform → `ct lint` |
 | `nightly.yml` | Daily 2 AM UTC | Comprehensive security & performance audits |
 
 The table above lists the principal workflows; `.github/workflows/`
@@ -513,9 +494,8 @@ CI runs:
 - `black --check` + `flake8` + `isort --check` + `mypy` (Python)
 - `eslint` (TypeScript)
 - `hadolint` (Dockerfiles)
-- `pytest --cov` (backend unit + integration)
-- `vitest run` (frontend)
 - `bandit -r core/ services/ tools/ scripts/ -ll -ii` + `npm audit --omit=dev --audit-level=high` (security)
+- There is no pytest job in `ci-cd.yml` and no vitest run for the frontend.
 
 The gating CI checks must pass before merging; some steps in `ci-cd.yml`
 are advisory (`continue-on-error: true`, e.g. mypy), as noted in the Linting

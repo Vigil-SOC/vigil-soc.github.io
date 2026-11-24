@@ -217,7 +217,7 @@ chart's install notes warn about this too):
   `secrets.openaiApiKey`, or `secrets.geminiApiKey`, or supply the keys
   through `secrets.existingSecret` / an ExternalSecret. Providers and
   keys can also be managed after install in
-  Settings → AI models → Providers & Keys.
+  Settings → AI models → Keys.
 - **Local Ollama** — point `config.OLLAMA_URL` (default
   `http://ollama:11434`) at your Ollama server. For an Ollama running
   on the host of a kind or minikube cluster, use an address that is
@@ -311,10 +311,10 @@ The chart's own defaults for the external database and username are
 `deeptempo_soc` / `deeptempo`. App pods always log in as `vigil_app`
 regardless of the configured username.
 
-There is no `postgresql.external.sslRequired` setting — the chart
-injects discrete `POSTGRES_*` variables, not a DSN, and no template
-consumes that key. To require SSL, set `POSTGRES_SSL_MODE=require`
-via `extraConfig` / `extraEnv`.
+`postgresql.external.sslRequired` exists in `values.yaml` but is unused:
+the chart injects discrete `POSTGRES_*` variables, not a DSN, and no
+template consumes that key. To require SSL, set
+`POSTGRES_SSL_MODE=require` via `extraConfig` / `extraEnv`.
 
 ## Ingress + TLS
 

@@ -146,7 +146,8 @@ rejects. `./setup_dev.sh` does both steps for you.
 - TypeScript/React: follow existing patterns in `clients/web/`.
 - Workflows: follow the format of existing
   `core/workflows/definitions/*/WORKFLOW.md` files.
-- MCP servers: follow the patterns in `tools/`.
+- MCP servers: follow the patterns in `core/integrations/<vendor>/tool.py`
+  (`tools/mcp/` holds only Vigil's own server).
 
 ### Testing
 

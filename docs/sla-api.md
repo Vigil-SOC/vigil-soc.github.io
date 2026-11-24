@@ -671,7 +671,7 @@ For questions or issues:
 ## Related Endpoints
 
 - **Case SLA Management**: `/api/cases/{case_id}/sla`
-- **SLA Metrics Summary**: `/api/cases/metrics/summary`
-- **Breached Cases**: `/api/cases/metrics/breached`
-- **Case Templates**: `/api/cases/templates` — a template may name an SLA policy; on assignment a retired/deactivated policy is refused with a typed outcome (`POLICY_RETIRED`) instead of silently producing a case with no SLA
+- **SLA Metrics Summary**: `/api/v1/cases/metrics/summary`
+- **Breached Cases**: `/api/v1/cases/metrics/breached`
+- **Case Templates**: `/api/cases/templates`, a template may name an SLA policy; on assignment from a template a retired/deactivated policy falls back to the active default policy for the case's priority (with the fallback logged), it is not refused. A direct assignment naming a retired policy is refused with 409 and the typed outcome (`POLICY_RETIRED`).
 {% endraw %}

@@ -167,7 +167,8 @@ mkdir -p logs evidence backups
 ### 4. Configure Firewall
 
 Only the API and the daemon webhook are published on all interfaces by
-the Compose file. The daemon metrics and health ports are bound to
+the Compose file in the default set; opt-in profiles publish additional
+ports on all interfaces. The daemon metrics and health ports are bound to
 loopback in Compose and must stay host-local — do not open them in the
 firewall.
 
@@ -260,13 +261,17 @@ operator step.
 
 ### Method 3: Kubernetes (Helm)
 
+ACK_VERSION="$(awk '/^appVersion:/ {print $2}' ./infra/helm/vigil/Chart.yaml)"
+
 ```bash
 helm install vigil ./infra/helm/vigil \
   --namespace vigil --create-namespace \
   --set secrets.anthropicApiKey="$ANTHROPIC_API_KEY" \
   --set secrets.postgresPassword="$(openssl rand -hex 24)" \
   --set secrets.vigilAppPassword="$(openssl rand -hex 24)" \
-  --set secrets.jwtSecretKey="$(python -c 'import secrets; print(secrets.token_urlsafe(64))')"
+  --set secrets.jwtSecretKey="$(python -c 'import secrets; print(secrets.token_urlsafe(64))')" \
+  --set upgrade.acknowledgeVersion="$ACK_VERSION" \
+  --set upgrade.acknowledgeReason="initial install"
 ```
 
 See [Helm Values](/docs/helm/) for the full chart reference.
@@ -282,7 +287,7 @@ See [Helm Values](/docs/helm/) for the full chart reference.
 
 `.env` is for bootstrap-only settings. LLM provider keys, SIEM
 credentials, and other secrets are configured through the web UI
-(Settings → AI / LLM Providers, Settings → Integrations) and stored
+(Settings → AI models, Settings → Integrations) and stored
 encrypted at `~/.vigil/secrets.enc`. For server-side / orchestrated
 deployments where the UI isn't available at first boot, inject secrets
 via the Helm chart values (see [Helm Values](/docs/helm/)) or your secret
@@ -293,7 +298,7 @@ manager of choice.
 # POSTGRESQL_CONNECTION_STRING first, then POSTGRES_*). It never reads
 # DATABASE_URL; only the TypeScript agent reads DATABASE_URL first,
 # and env.example says to leave it unset.
-# Three distinct passwords are required:
+# Three passwords are required (use a distinct value for each):
 POSTGRES_PASSWORD=owner_password_change_me          # owner role: deeptempo
 POSTGRES_APP_PASSWORD=app_password_change_me        # app role: vigil_app (backend, daemon, workers)
 POSTGRES_AGENT_PASSWORD=agent_password_change_me    # agent role: vigil_agent (agent-serve, agent-worker)

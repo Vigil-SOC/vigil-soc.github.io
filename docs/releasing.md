@@ -287,11 +287,7 @@ minor.
    ```
 4. The tag push triggers `release.yml` (build and publish the four
    GHCR images, smoke-test, update the Release notes).
-5. **Manually create the GitHub Release** at
-   [github.com/Vigil-SOC/vigil/releases/new](https://github.com/Vigil-SOC/vigil/releases/new),
-   selecting the tag you just pushed. release-please normally creates
-   this; in manual mode nothing else will. Use the `CHANGELOG.md`
-   section you wrote as the Release body.
+5. **Set the GitHub Release body**: the tag push already created the Release for the tag (release.yml creates it if none exists, and appends the image digests), so open the Release for the tag you just pushed and replace its body with the `CHANGELOG.md` section you wrote.
 
 ## Future Improvements
 

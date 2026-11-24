@@ -54,7 +54,7 @@ Each connector in `mcp-config.json` is checked weekly by the [live connector che
 {% assign failed = rows | where: "status", "fail" %}
 Checked on {{ matrix.ran_at | date: "%B %-d, %Y" }} at commit `{{ matrix.commit }}` ([run]({{ matrix.run }})).
 
-> Note: this table is generated from the snapshot above, which predates the current release; it does not yet include every configured connector (for example, `amazon-security-lake` is missing from this snapshot).
+> Note: this table is generated from the snapshot above.
 
 | Connector | Version | Live result |
 |-----------|---------|-------------|
@@ -416,9 +416,7 @@ Cloudflare-pushed events with attached Cloudy natural-language summaries.
 yet; the router only mounts when `CLOUDY_INGESTION_ENABLED=true` and a
 `CLOUDY_WEBHOOK_SECRET` is set for HMAC-SHA256 verification.
 
-When enabled, Cloudy summaries land on findings as
-`finding.evidence.cloudy_summary` (cited verbatim, with provenance) and
-are surfaced into the Threat Intel agent's context window.
+When enabled, Cloudy summaries become the finding's description, with the raw payload kept in `entity_context.source_evidence`, and are surfaced into the Threat Intel agent's context window.
 
 ### CrowdStrike
 
@@ -444,9 +442,9 @@ SLACK_BOT_TOKEN="xoxb-..."
 SLACK_DEFAULT_CHANNEL="#soc-alerts"
 ```
 
-The in-repo server (`core/integrations/slack/tool.py`) exposes one tool:
+The in-repo server (`core/integrations/slack/tool.py`) exposes two tools:
 
-Tools: `slack_send_alert`
+Tools: `slack_auth_test`, `slack_send_alert`
 
 ### Jira
 
@@ -686,7 +684,7 @@ These are MCP tools only; there are no corresponding Vigil REST routes
 for adjacent assets, blast radius, network graph, legend apply, or
 right-panel focus.
 
-Service methods accept `**kwargs` and REST routes use `extra="allow"` Pydantic models, so future schema bumps on VStrike's side don't require a Vigil refactor.
+Service methods accept `**kwargs`, so future schema bumps on VStrike's side don't require a Vigil refactor.
 
 ### Configuration
 

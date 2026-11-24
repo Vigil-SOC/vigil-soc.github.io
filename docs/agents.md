@@ -177,7 +177,7 @@ workflows service initialises. There is no reload endpoint.
 
 ## Approval Workflow Integration
 
-All agents can submit actions to the approval queue. Confidence bands are
+Agents granted `create_approval_action` can submit actions to the approval queue. Confidence bands are
 defined in `core/response/config.py` (`confidence_threshold` 0.90,
 `review_threshold` 0.85, `monitor_threshold` 0.70) and are rendered into
 agent prompts as routing guidance. They do not release an action: the

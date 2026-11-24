@@ -176,7 +176,7 @@ The Vigil chat assistant (the configured LLM) has access to these comprehensive 
 ### Case Closure
 - `close_case(case_id, closure_category, root_cause, lessons_learned, recommendations, executive_summary, false_positive_reason, closure_notes, false_positive_cause)` - Close case with full metadata
   - Closure categories: `resolved`, `false_positive`, `duplicate`, `unable_to_resolve`
-  - **Autonomy hold:** an agent/model close is first checked against the autonomy ceiling. Where the ceiling does not let a model close cases on its own, the close is held: nothing is written, the case stays open, a "Left open for a person" activity is logged on the case, and the tool returns that as an error result — it is not a success and not a tool failure. A re-close of an already-closed case is held the same way. The same gate applies to closing through `create_case(..., status="closed")` and `update_case(..., status="closed")`.
+  - **Autonomy hold:** an agent/model close is first checked against the autonomy ceiling. Where the ceiling does not let a model close cases on its own, the close is held: nothing is written, the case stays open, a "Left open for a person" activity is logged on the case, and the tool returns that as an error result — it is not a success and not a tool failure. A re-close of an already-closed case is held the same way, except no "Left open for a person" activity is logged for it. The same gate applies to closing through `create_case(..., status="closed")` and `update_case(..., status="closed")`.
 
 ### Case Retrieval
 - `list_cases(status, severity, priority, limit)` - List all cases

@@ -340,7 +340,7 @@ Adding a finding to an existing case is a separate tool, not part of
 `reason` are all required; only `evidence` is optional.
 `action_type` is one of `isolate_host`,
 `block_ip`, `block_domain`, `quarantine_file`, `disable_user`, or
-`custom`, and `confidence` is a number between 0 and 1.
+`custom`, and `confidence` is a number between 0 and 1, and must be above 0 for the five containment kinds.
 
 The action is created with `human_only=True`, and the caller's
 `confidence` never releases it: the row waits in the queue for a

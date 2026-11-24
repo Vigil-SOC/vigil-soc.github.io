@@ -63,9 +63,8 @@ IRSA or Pod Identity there.
   in each region. That location, its lifecycle and the workgroup's
   data-scan limit are the operator's; the scan limit is the only cap on
   Athena spend.
-- **Result rows pass Vigil's credential redaction**, which masks known
-  credential field names (such as `password`, `secretAccessKey`,
-  `sessionToken`) and token shapes only. A secret under any other name —
-  for example an SSM parameter value or EC2 user data inside CloudTrail
-  `requestParameters` or `responseElements` — can reach a run.
+- **Result rows are returned as Athena returns them, with no credential
+  redaction applied.** A secret under any name, for example an SSM
+  parameter value or EC2 user data inside CloudTrail
+  `requestParameters` or `responseElements`, can reach a run.
 {% endraw %}
