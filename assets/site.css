@@ -148,6 +148,17 @@
       text-decoration: none;
     }
     .nav-link.active { color: var(--forest); }
+    .nav-link { white-space: nowrap; }
+    /* Keep the nav on one line: shed the in-page section links as the window narrows. */
+    @media (max-width: 1180px) {
+      .nav-links .nav-link[href$="#history"],
+      .nav-links .nav-link[href$="#access"],
+      .nav-links .nav-link[href$="#architecture"] { display: none; }
+    }
+    @media (max-width: 860px) {
+      .nav-links .nav-link[href$="#usecases"],
+      .nav-links .nav-link[href$="docs/"] { display: none; }
+    }
     .nav-github {
       display: inline-flex; align-items: center; justify-content: center;
       width: 40px; height: 40px; margin-left: 6px; border-radius: 8px;
