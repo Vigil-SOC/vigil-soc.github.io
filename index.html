@@ -35,6 +35,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Space+Grotesk:wght@400;500;600;700&family=Martian+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/site.css" />
+  <link rel="stylesheet" href="assets/home.css" />
 </head>
 <body>
 
@@ -49,13 +50,14 @@
       <img src="assets/logo-black.svg" alt="VIGIL" />
     </a>
     <div class="nav-links">
-      <a href="#what" class="nav-link">What</a>
-      <a href="#how" class="nav-link">How</a>
-      <a href="#agents" class="nav-link">Agents</a>
-      <a href="#compare" class="nav-link">Compare</a>
+      <a href="#start" class="nav-link">Quick start</a>
+      <a href="#usecases" class="nav-link">Use cases</a>
+      <a href="#history" class="nav-link">History</a>
+      <a href="#access" class="nav-link">Access</a>
+      <a href="#architecture" class="nav-link">Architecture</a>
+      <a href="docs/" class="nav-link">Docs</a>
       <a href="community/" class="nav-link">Community</a>
       <a href="blog/" class="nav-link">Blog</a>
-      <a href="#start" class="nav-link">Get Started</a>
       <div style="display:flex; align-items:center; height:40px; gap:4px;">
         <a href="https://github.com/Vigil-SOC/vigil" target="_blank" rel="noopener noreferrer" class="nav-github" aria-label="Vigil on GitHub">
           <svg viewBox="0 0 98 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.225-22.23-5.378-22.23-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z"/></svg>
@@ -70,684 +72,716 @@
   </div>
   </nav>
 
+<main>
+
 <!-- ══════════════════════════════════════════════════════
-     HERO
+     HERO AND QUICK START
 ═══════════════════════════════════════════════════════ -->
-<section class="hero">
-  <div class="hero-inner">
-    <div class="hero-copy">
-      <span class="hero-eyebrow">Open Source AI SOC</span>
-      <h1>The Open Source<br>AI SOC <span class="accent">community.</span></h1>
-      <p class="lead">
-        Vigil SOC brings together security engineers, researchers, and builders to develop and operate next-generation security systems in the open, through collaborative events, shared infrastructure, and real-world exercises.
-      </p>
-      <div class="hero-actions">
-        <a href="community/" class="btn btn-primary">Join the Community</a>
-        <a href="https://github.com/Vigil-SOC/vigil" target="_blank" class="btn btn-outline">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-          View on GitHub
-        </a>
+<header class="vh-hero" id="top">
+  <div class="vh-wrap vh-hero-inner">
+    <div class="vh-hero-copy">
+      <div class="vh-pills">
+        <span class="vh-pill">Open source AI SOC</span>
+        <a class="vh-pill" href="https://github.com/Vigil-SOC/vigil/releases/latest">Latest release</a>
       </div>
+      <h1>The open source AI SOC <span>you run yourself.</span></h1>
+      <p class="vh-hero-lead">Specialist agents triage, investigate, hunt and respond beside your analysts, connected to the security tools you already run. Install it with one script and run it in your environment with the model provider you choose.</p>
+      <div class="vh-actions">
+        <a class="btn btn-primary" href="https://github.com/Vigil-SOC/vigil">Get Vigil on GitHub</a>
+        <a class="btn btn-outline" href="#usecases">Explore use cases</a>
+      </div>
+      <p class="vh-fine">Licensed under Apache 2.0, with no license key and no registration.</p>
     </div>
-    <div class="hero-art" aria-label="Vigil in motion">
-      <video class="hero-video"
-             autoplay muted loop playsinline
-             preload="metadata"
-             poster="assets/hero-poster.jpg">
-        <source src="assets/hero.webm" type="video/webm" />
-        <source src="assets/hero.mp4"  type="video/mp4"  />
-      </video>
+
+    <section class="vh-install" id="start" aria-label="Quick start">
+      <div class="vh-term">
+        <div class="vh-tabs" role="tablist" aria-label="Install method">
+          <button type="button" role="tab" class="vh-tab" id="tab-local" aria-controls="panel-local" aria-selected="true">Local clone</button>
+          <button type="button" role="tab" class="vh-tab" id="tab-docker" aria-controls="panel-docker" aria-selected="false" tabindex="-1">Docker Compose</button>
+          <button type="button" role="tab" class="vh-tab" id="tab-helm" aria-controls="panel-helm" aria-selected="false" tabindex="-1">Kubernetes</button>
+          <button type="button" role="tab" class="vh-tab" id="tab-desktop" aria-controls="panel-desktop" aria-selected="false" tabindex="-1">Desktop app</button>
+        </div>
+        <div class="vh-panel" id="panel-local" role="tabpanel" aria-labelledby="tab-local" data-copy="git clone https://github.com/Vigil-SOC/vigil.git&#10;cd vigil&#10;./start.sh">
+          <pre><span class="p">$</span> git clone https://github.com/Vigil-SOC/vigil.git
+<span class="p">$</span> cd vigil
+<span class="p">$</span> ./start.sh<span class="vh-cursor" aria-hidden="true"></span></pre>
+          <p>The script provisions Python, starts PostgreSQL, Redis and the LLM gateway in Docker, and launches the API, the agent layer and the console. The first run takes a few minutes.</p>
+        </div>
+        <div class="vh-panel" id="panel-docker" role="tabpanel" aria-labelledby="tab-docker" data-copy="./setup_dev.sh&#10;docker compose --env-file .env -f infra/docker/docker-compose.yml up -d" hidden>
+          <pre><span class="p">$</span> ./setup_dev.sh   <span class="c"># once: writes the database passwords into .env</span>
+<span class="p">$</span> docker compose --env-file .env \
+    -f infra/docker/docker-compose.yml up -d</pre>
+          <p>The default set runs the database, cache, gateway, backup, API and agent layer. Set JWT_SECRET_KEY in .env first. Add <code>--profile daemon</code> for unattended monitoring.</p>
+        </div>
+        <div class="vh-panel" id="panel-helm" role="tabpanel" aria-labelledby="tab-helm" data-copy="helm install vigil ./infra/helm/vigil \&#10;  --namespace vigil --create-namespace \&#10;  --set secrets.anthropicApiKey=&quot;$ANTHROPIC_API_KEY&quot; \&#10;  --set secrets.postgresPassword=&quot;$(openssl rand -hex 24)&quot; \&#10;  --set secrets.vigilAppPassword=&quot;$(openssl rand -hex 24)&quot; \&#10;  --set secrets.jwtSecretKey=&quot;$(python -c &#x27;import secrets; print(secrets.token_urlsafe(64))&#x27;)&quot;" hidden>
+          <pre><span class="p">$</span> helm install vigil ./infra/helm/vigil \
+    --namespace vigil --create-namespace \
+    --set secrets.anthropicApiKey="$ANTHROPIC_API_KEY" \
+    --set secrets.postgresPassword="$(openssl rand -hex 24)" \
+    --set secrets.vigilAppPassword="$(openssl rand -hex 24)" \
+    --set secrets.jwtSecretKey="$(python -c 'import secrets; print(secrets.token_urlsafe(64))')"</pre>
+          <p>The <a href="/docs/helm/">Helm guide</a> covers values, external Postgres and Redis, ingress and troubleshooting.</p>
+        </div>
+        <div class="vh-panel" id="panel-desktop" role="tabpanel" aria-labelledby="tab-desktop" data-copy="bash clients/desktop/scripts/bundle-image.sh linux/arm64&#10;cd clients/desktop &amp;&amp; npm run dist" hidden>
+          <pre><span class="p">$</span> bash clients/desktop/scripts/bundle-image.sh linux/arm64
+<span class="p">$</span> cd clients/desktop &amp;&amp; npm run dist</pre>
+          <p>Builds a macOS DMG or Linux AppImage that packages the stack without a source tree. Docker must be installed and running.</p>
+        </div>
+        <div class="vh-term-foot">
+          <span>Then open <a href="http://localhost:6988">http://localhost:6988</a></span>
+          <button type="button" class="vh-copy">Copy commands</button>
+        </div>
+      </div>
+      <p class="vh-fine">For a tested build, check out a release tag: git checkout v&lt;version&gt;</p>
+    </section>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════
+     USE CASES
+═══════════════════════════════════════════════════════ -->
+<section class="vh-section vh-usecases" id="usecases">
+  <div class="vh-wrap">
+    <div class="vh-head">
+      <h2 class="vh-h2">Highlighted use cases</h2>
+      <p class="vh-lede">A selection of what security teams run on Vigil today. Write your own workflows for anything else.</p>
+    </div>
+    <div class="vh-chips" role="group" aria-label="Filter use cases">
+      <button type="button" class="vh-chip" data-group="all" aria-pressed="true">All</button>
+      <button type="button" class="vh-chip" data-group="investigate" aria-pressed="false">Investigate</button>
+      <button type="button" class="vh-chip" data-group="hunt" aria-pressed="false">Hunt</button>
+      <button type="button" class="vh-chip" data-group="detect" aria-pressed="false">Detect</button>
+      <button type="button" class="vh-chip" data-group="respond" aria-pressed="false">Respond</button>
+      <button type="button" class="vh-chip" data-group="operate" aria-pressed="false">Operate</button>
+    </div>
+    <div class="vh-grid">
+      <article class="vh-uc" data-group="detect">
+        <div class="vh-uc-top"><span class="vh-uc-group">Detect</span><span class="vh-tag is-partial">First slices shipped</span></div>
+        <h3>Agentic attacks</h3>
+        <p>The FBI warns that threat actors use ARTEX, an agentic framework, to reach privileged access in under three hours. Hunt for such harnesses with detection rules and LogLM (optional).</p>
+        <div class="vh-try"><span>Hunt hypothesis</span><code>An agentic harness such as ARTEX is active in our environment</code></div>
+        <details class="vh-more">
+          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <dl>
+            <div><dt>Runs on</dt><dd>threat-hunt workflow, seeded from your TIP's advisories</dd></div>
+            <div><dt>Detections</dt><dd>Rules for agentic attack behavior, proven on your SIEM's own events</dd></div>
+            <div><dt>Optional</dt><dd>LogLM (optional) for compound behavioral detection</dd></div>
+            <div><dt>You get</dt><dd>A verdict per host and account</dd></div>
+          </dl>
+        </details>
+      </article>
+      <article class="vh-uc" data-group="investigate">
+        <div class="vh-uc-top"><span class="vh-uc-group">Investigate</span><span class="vh-tag is-shipped">Shipped</span></div>
+        <h3>Alert triage</h3>
+        <p>Each new finding gets a verdict, a confidence score and context on its users and hosts before an analyst opens the queue.</p>
+        <div class="vh-try"><span>Start the daemon</span><code>./start.sh -d</code></div>
+        <details class="vh-more">
+          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <dl>
+            <div><dt>Runs on</dt><dd>Triage agent and the SOC daemon</dd></div>
+            <div><dt>Skills</dt><dd>phishing-triage, beaconing-review, rdp-lateral-movement, attack-mapping</dd></div>
+            <div><dt>You get</dt><dd>A queue ranked by severity and confidence</dd></div>
+          </dl>
+        </details>
+      </article>
+      <article class="vh-uc" data-group="detect">
+        <div class="vh-uc-top"><span class="vh-uc-group">Detect</span><span class="vh-tag is-partial">First slices shipped</span></div>
+        <h3>OT and critical infrastructure</h3>
+        <p>Protect water, power and transportation networks with no new hardware. LogLM (optional) understands OT telemetry and flags concerning sequences; Vigil hunts, investigates and reports on them.</p>
+        <div class="vh-try"><span>Hunt hypothesis</span><code>A PLC is receiving writes outside its maintenance window</code></div>
+        <details class="vh-more">
+          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <dl>
+            <div><dt>Covers</dt><dd>Water plants, power grids, substations and transportation</dd></div>
+            <div><dt>Detections</dt><dd>LogLM (optional) across OT protocols, beside the rules you run</dd></div>
+            <div><dt>Proof</dt><dd>Validated on water-plant traffic at the TAC, the NSA-established OT cyber center</dd></div>
+            <div><dt>In build</dt><dd>OT baselines, prebuilt agents and standard views</dd></div>
+          </dl>
+        </details>
+      </article>
+      <article class="vh-uc" data-group="investigate">
+        <div class="vh-uc-top"><span class="vh-uc-group">Investigate</span><span class="vh-tag is-shipped">Shipped</span></div>
+        <h3>Incident investigation</h3>
+        <p>From one alert to a disposition: triage, investigation, a containment plan and a report. Root cause analysis traces a compromise to its origin.</p>
+        <div class="vh-try"><span>Say in chat</span><code>Run incident response on finding f-20260215-abc123</code></div>
+        <details class="vh-more">
+          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <dl>
+            <div><dt>Runs on</dt><dd>incident-response, full-investigation and root-cause-analysis workflows</dd></div>
+            <div><dt>Agents</dt><dd>Investigator, Correlator, MITRE Analyst, Reporter</dd></div>
+            <div><dt>You get</dt><dd>A cited conclusion, a timeline and declared gaps</dd></div>
+          </dl>
+        </details>
+      </article>
+      <article class="vh-uc" data-group="hunt">
+        <div class="vh-uc-top"><span class="vh-uc-group">Hunt</span><span class="vh-tag is-shipped">Shipped</span></div>
+        <h3>Threat hunting</h3>
+        <p>Start from a hypothesis or an IOC. A lead agent dispatches workers, follows the evidence and records verdicts the next hunt recalls.</p>
+        <div class="vh-try"><span>Say in chat</span><code>Proactive hunt: look for lateral movement via RDP</code></div>
+        <details class="vh-more">
+          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <dl>
+            <div><dt>Runs on</dt><dd>threat-hunt workflow</dd></div>
+            <div><dt>Agents</dt><dd>Threat Hunter leading Network Analyst, Malware Analyst and Threat Intel</dd></div>
+            <div><dt>You get</dt><dd>A verdict per hypothesis, kept in memory</dd></div>
+          </dl>
+        </details>
+      </article>
+      <article class="vh-uc" data-group="operate">
+        <div class="vh-uc-top"><span class="vh-uc-group">Operate</span><span class="vh-tag is-partial">First slices shipped</span></div>
+        <h3>Air-gapped operations</h3>
+        <p>Run the SOC with no route out: a local model, LogLM (optional) on your own hardware, and Medic watching the install's health.</p>
+        <div class="vh-try"><span>Serve a local model</span><code>scripts/local_model.sh</code></div>
+        <details class="vh-more">
+          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <dl>
+            <div><dt>Runs on</dt><dd>Docker Compose or Kubernetes on your hardware, with no cloud dependency</dd></div>
+            <div><dt>Trust</dt><dd>An internal certificate authority for the console</dd></div>
+            <div><dt>In build</dt><dd>Offline release bundles, GitOps for declared state, one-way roll-up to a central SOC</dd></div>
+            <div><dt>You get</dt><dd>A SOC that works where nothing leaves the enclave</dd></div>
+          </dl>
+        </details>
+      </article>
+      <article class="vh-uc" data-group="hunt">
+        <div class="vh-uc-top"><span class="vh-uc-group">Hunt</span><span class="vh-tag is-shipped">Shipped</span></div>
+        <h3>Threat intelligence to hunts</h3>
+        <p>New reports in your threat intelligence platform become hunt hypotheses for review, so a team can search its estate for an advisory the day it lands.</p>
+        <div class="vh-try"><span>Connect in Settings</span><code>Integrations: OpenCTI, MISP or AlienVault OTX</code></div>
+        <details class="vh-more">
+          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <dl>
+            <div><dt>Runs on</dt><dd>Threat Intel agent feeding the threat-hunt workflow</dd></div>
+            <div><dt>Connects to</dt><dd>OpenCTI, MISP and AlienVault OTX; VirusTotal and Shodan for enrichment</dd></div>
+            <div><dt>You get</dt><dd>Hypotheses with source and confidence</dd></div>
+          </dl>
+        </details>
+      </article>
+      <article class="vh-uc" data-group="investigate">
+        <div class="vh-uc-top"><span class="vh-uc-group">Investigate</span><span class="vh-tag is-shipped">Shipped</span></div>
+        <h3>Forensics and reporting</h3>
+        <p>Preserve evidence with chain of custody, then report to the reader who needs it: the technical team, executives or the board.</p>
+        <div class="vh-try"><span>Say in chat</span><code>Post-incident forensics for case CASE-20260215-breach</code></div>
+        <details class="vh-more">
+          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <dl>
+            <div><dt>Runs on</dt><dd>forensic-analysis workflow</dd></div>
+            <div><dt>Agents</dt><dd>Forensics, Malware Analyst, Reporter, Compliance</dd></div>
+            <div><dt>You get</dt><dd>Audit-ready documentation and an audit trail by principal</dd></div>
+          </dl>
+        </details>
+      </article>
+      <article class="vh-uc" data-group="hunt">
+        <div class="vh-uc-top"><span class="vh-uc-group">Hunt</span><span class="vh-tag is-partial">First slices shipped</span></div>
+        <h3>AI agent defense</h3>
+        <p>See which AI agents act in your estate, which tools and MCP servers they call and as whom, then judge each for misuse.</p>
+        <div class="vh-try"><span>Hunt hypothesis</span><code>An AI agent is calling MCP tools outside its role</code></div>
+        <details class="vh-more">
+          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <dl>
+            <div><dt>Reads</dt><dd>OpenTelemetry GenAI and MCP spans in your SIEM</dd></div>
+            <div><dt>Optional</dt><dd>LogLM (optional) for behavioral detection</dd></div>
+            <div><dt>You get</dt><dd>An inventory of agent activity and a verdict per lead</dd></div>
+          </dl>
+        </details>
+      </article>
+      <article class="vh-uc" data-group="hunt">
+        <div class="vh-uc-top"><span class="vh-uc-group">Hunt</span><span class="vh-tag is-partial">First slices shipped</span></div>
+        <h3>Insider threat</h3>
+        <p>Hunt an account, not a person: identity context from your provider, benign explanations weighed first, cases restricted to named readers.</p>
+        <div class="vh-try"><span>Hunt subject</span><code>user:&lt;name&gt;</code></div>
+        <details class="vh-more">
+          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <dl>
+            <div><dt>Runs on</dt><dd>threat-hunt workflow with the insider-threat skill</dd></div>
+            <div><dt>Connects to</dt><dd>Okta or Entra ID</dd></div>
+            <div><dt>You get</dt><dd>A conclusion on what the account did</dd></div>
+          </dl>
+        </details>
+      </article>
+      <article class="vh-uc" data-group="operate">
+        <div class="vh-uc-top"><span class="vh-uc-group">Operate</span><span class="vh-tag is-partial">First slices shipped</span></div>
+        <h3>MSP and multi-site SOC</h3>
+        <p>Run Vigil at each client site or enclave, keep telemetry there, and roll incidents and evidence up to one central SOC.</p>
+        <div class="vh-try"><span>Deploy per site</span><code>helm install vigil ./infra/helm/vigil --namespace site-a</code></div>
+        <details class="vh-more">
+          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <dl>
+            <div><dt>Runs on</dt><dd>One Vigil per site or client, each in its own environment</dd></div>
+            <div><dt>Detections</dt><dd>Federated rules run where they live, in each site's SIEM</dd></div>
+            <div><dt>Guardrail</dt><dd>No real-time control from the center back to a site</dd></div>
+            <div><dt>In build</dt><dd>One-way roll-up of incidents and evidence; shared configuration through GitOps</dd></div>
+          </dl>
+        </details>
+      </article>
+      <article class="vh-uc" data-group="detect">
+        <div class="vh-uc-top"><span class="vh-uc-group">Detect</span><span class="vh-tag is-shipped">Shipped</span></div>
+        <h3>Detection engineering</h3>
+        <p>Search community rule sets, measure ATT&amp;CK coverage, draft a rule from a case and prove it on your SIEM's own events before it goes live.</p>
+        <div class="vh-try"><span>Fetch the rules</span><code>./scripts/setup_detection_repos.sh</code></div>
+        <details class="vh-more">
+          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <dl>
+            <div><dt>Rule sets</dt><dd>Sigma, Splunk ESCU, Elastic and KQL</dd></div>
+            <div><dt>Rule libraries</dt><dd>Import, update and remove rule repos the way you import skills</dd></div>
+            <div><dt>Works with</dt><dd>Rules you already run in Splunk, Elastic and Wazuh</dd></div>
+            <div><dt>You get</dt><dd>Coverage, gaps and proven rules</dd></div>
+          </dl>
+        </details>
+      </article>
+      <article class="vh-uc" data-group="detect">
+        <div class="vh-uc-top"><span class="vh-uc-group">Detect</span><span class="vh-tag is-shipped">Shipped</span></div>
+        <h3>Posture analysis</h3>
+        <p>Know where you stand on day one and track it after. The Day 1 Report covers what Vigil can see, coverage gaps, settings checks and a cost forecast, and reruns on a cadence.</p>
+        <div class="vh-try"><span>Open in the console</span><code>Day 1 Report</code></div>
+        <details class="vh-more">
+          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <dl>
+            <div><dt>Reports</dt><dd>Day 1 Report and Production Start Report</dd></div>
+            <div><dt>Over MCP</dt><dd>Read the gaps report and start a report run</dd></div>
+            <div><dt>In build</dt><dd>An environment context graph</dd></div>
+            <div><dt>You get</dt><dd>A dated record, and a notice when a setting regresses</dd></div>
+          </dl>
+        </details>
+      </article>
+      <article class="vh-uc" data-group="detect">
+        <div class="vh-uc-top"><span class="vh-uc-group">Detect</span><span class="vh-tag is-shipped">Shipped</span></div>
+        <h3>Red team validation</h3>
+        <p>Emulate an ATT&amp;CK technique on a listed host, from the console or the coverage map, and score whether your rules caught it within the hour.</p>
+        <div class="vh-try"><span>Mark an emulator</span><code>Settings: Limits &amp; autonomy: Outside tools</code></div>
+        <details class="vh-more">
+          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <dl>
+            <div><dt>Connects to</dt><dd>Atomic Red Team, or any tool bound as an emulator</dd></div>
+            <div><dt>Guardrail</dt><dd>Emulators run only on hosts you list</dd></div>
+            <div><dt>You get</dt><dd>Rules proven in shadow, and each miss filed as a confirmed gap</dd></div>
+          </dl>
+        </details>
+      </article>
+      <article class="vh-uc" data-group="respond">
+        <div class="vh-uc-top"><span class="vh-uc-group">Respond</span><span class="vh-tag is-partial">First slices shipped</span></div>
+        <h3>Response and containment</h3>
+        <p>Agents propose actions and a person approves them. Host isolation and account disable run through the EDR and identity tools you already have.</p>
+        <div class="vh-try"><span>Review in the console</span><code>Approvals</code></div>
+        <details class="vh-more">
+          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <dl>
+            <div><dt>Connects to</dt><dd>Defender, Carbon Black and Entra ID; PagerDuty, Jira and Slack</dd></div>
+            <div><dt>Guardrail</dt><dd>Only a person approves; blocking runs through Wazuh or similar</dd></div>
+            <div><dt>You get</dt><dd>Approved actions carried out, each on the audit trail</dd></div>
+          </dl>
+        </details>
+      </article>
+      <article class="vh-uc" data-group="hunt">
+        <div class="vh-uc-top"><span class="vh-uc-group">Hunt</span><span class="vh-tag is-partial">First slices shipped</span></div>
+        <h3>Fly-away kit</h3>
+        <p>Carry a preloaded Vigil to a mission partner's network, hunt its telemetry with no reach-back, and bring the verdicts home.</p>
+        <div class="vh-try"><span>Pack</span><code>Vigil, a local model and LogLM (optional) on one portable server</code></div>
+        <details class="vh-more">
+          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <dl>
+            <div><dt>Runs on</dt><dd>A single portable server, fully offline</dd></div>
+            <div><dt>Connects to</dt><dd>The partner's SIEM or EDR through the same integrations</dd></div>
+            <div><dt>Leaves behind</dt><dd>The partner's telemetry, untouched on its own network</dd></div>
+            <div><dt>You get</dt><dd>Verdicts in the kit's memory, ready for the next deployment</dd></div>
+          </dl>
+        </details>
+      </article>
+      <article class="vh-uc" data-group="respond">
+        <div class="vh-uc-top"><span class="vh-uc-group">Respond</span><span class="vh-tag is-shipped">Shipped</span></div>
+        <h3>Cloud incident response</h3>
+        <p>AWS, Azure and GCP incidents: identity blast radius, IAM abuse, cross-account pivots and containment suited to the provider.</p>
+        <div class="vh-try"><span>Say in chat</span><code>Run cloud incident response on finding f-20260215-abc123</code></div>
+        <details class="vh-more">
+          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <dl>
+            <div><dt>Runs on</dt><dd>cloud-incident workflow</dd></div>
+            <div><dt>Connects to</dt><dd>AWS security services, Security Lake, Sentinel, Entra ID, Google SCC</dd></div>
+            <div><dt>You get</dt><dd>Blast radius, a containment plan and a report</dd></div>
+          </dl>
+        </details>
+      </article>
+    </div>
+    <p class="vh-note">Shipped: in the current release. First slices shipped: usable now, with core pieces still in build.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     HISTORY: TIMELINE AND MOMENTUM
+═══════════════════════════════════════════════════════ -->
+<section class="vh-section" id="history">
+  <div class="vh-wrap">
+    <div class="vh-head">
+      <span class="vh-kicker">2026</span>
+      <h2 class="vh-h2">History</h2>
+      <p class="vh-lede">What has shipped, and who has joined, since the first commit in March 2026.</p>
+    </div>
+    <div class="vh-history-body">
+      <div class="vh-tl-col">
+        <ol class="vh-tl">
+        <li>
+          <span class="vh-tl-dot k-community" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">March 13</span><span class="vh-kind k-community">Community</span></div>
+          <h3>First commit</h3>
+          <p>The team begins building Vigil in public.</p>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-release" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">March 23 to 26</span><span class="vh-kind k-release">Release</span></div>
+          <h3>Public launch at RSAC 2026</h3>
+          <p>DeepTempo releases Vigil under Apache 2.0.</p>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-community" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">May 17</span><span class="vh-kind k-community">Community</span></div>
+          <h3>Contributors reach 10</h3>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-release" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">May 18</span><span class="vh-kind k-release">Release</span></div>
+          <h3>First tagged release</h3>
+          <p>Incident response, full investigation, threat hunting, forensic analysis and cloud incident workflows.</p>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-community" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">August 2</span><span class="vh-kind k-community">Community</span></div>
+          <h3>Contributors reach 20</h3>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-usecase" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">September 3</span><span class="vh-kind k-usecase">Use case</span></div>
+          <h3>Root cause analysis</h3>
+          <p>Trace a confirmed compromise back to where it began.</p>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-capability" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">September 4</span><span class="vh-kind k-capability">Capability</span></div>
+          <h3>Memory across runs</h3>
+          <p>Each run records what it saw and concluded, and later runs start from it.</p>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-capability" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">September 22</span><span class="vh-kind k-capability">Capability</span></div>
+          <h3>Vigil's own MCP server</h3>
+          <p>One server, acting as whoever called it: the base for Claude Code and headless operation.</p>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-community" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">September 27</span><span class="vh-kind k-community">Community</span></div>
+          <h3>Contributors reach 30</h3>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-adoption" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">October 22</span><span class="vh-kind k-adoption">Adoption</span></div>
+          <h3>Clones pass 100,000</h3>
+          <p>Counted from July 31, when daily records begin.</p>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-release" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">October 29</span><span class="vh-kind k-release">Release</span></div>
+          <h3>Vigil 1.0, generally available</h3>
+          <p>Stable APIs and a human on the loop.</p>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-release" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">November 11</span><span class="vh-kind k-release">Release</span></div>
+          <h3>Vigil 1.1</h3>
+          <p>Threat intelligence feeding hunts, rules proven on your SIEM's own events, and the Claude Code client.</p>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-adoption" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">November 11</span><span class="vh-kind k-adoption">Adoption</span></div>
+          <h3>Clones pass 200,000</h3>
+          <p>Twenty days after passing 100,000.</p>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-capability" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">November 14</span><span class="vh-kind k-capability">Capability</span></div>
+          <h3>Service accounts for headless operation</h3>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-usecase" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">November 17</span><span class="vh-kind k-usecase">Use case</span></div>
+          <h3>AI agent defense</h3>
+          <p>Hunts and triage read AI agent activity from OpenTelemetry spans.</p>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-usecase" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">November 18</span><span class="vh-kind k-usecase">Use case</span></div>
+          <h3>Insider threat</h3>
+          <p>Hunts whose subject is an account, with context from the identity provider.</p>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-capability" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">November 19</span><span class="vh-kind k-capability">Capability</span></div>
+          <h3>OAuth sign-in for MCP clients</h3>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-usecase" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">November 23</span><span class="vh-kind k-usecase">Use case</span></div>
+          <h3>Posture analysis</h3>
+          <p>The Day 1 Report records what an install can see.</p>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-usecase" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">November 24</span><span class="vh-kind k-usecase">Use case</span></div>
+          <h3>Red team validation</h3>
+          <p>Emulate a technique from the console and score it against your rules.</p>
+        </li>
+        <li>
+          <span class="vh-tl-dot k-release" aria-hidden="true"></span>
+          <div class="vh-tl-meta"><span class="vh-tl-date">November 27</span><span class="vh-kind k-release">Release</span></div>
+          <h3>Vigil 1.2</h3>
+          <p>The Day 1 Report with coverage gaps, emulation scored against your rules, and rule libraries imported like skills.</p>
+        </li>
+        </ol>
+      </div>
+      <aside class="vh-charts" aria-label="Momentum">
+        <figure class="vh-chart" id="chart-clones">
+          <figcaption>
+            <span class="vh-chart-title">Clones, cumulative</span>
+            <span class="vh-chart-value">275K</span>
+            <span class="vh-chart-since">Since July 31, 2026</span>
+          </figcaption>
+          <div class="vh-plot" role="img" aria-label="Cumulative clones of Vigil since July 31, 2026"></div>
+          <div class="vh-xaxis" aria-hidden="true"></div>
+        </figure>
+        <figure class="vh-chart" id="chart-commits">
+          <figcaption>
+            <span class="vh-chart-title">Commits, cumulative</span>
+            <span class="vh-chart-value">2,544</span>
+            <span class="vh-chart-since">Since March 13, 2026</span>
+          </figcaption>
+          <div class="vh-plot" role="img" aria-label="Cumulative commits to Vigil since March 13, 2026"></div>
+          <div class="vh-xaxis" aria-hidden="true"></div>
+        </figure>
+        <p class="vh-chart-note"><span id="chart-asof">Updated daily from GitHub.</span> <a href="https://github.com/Vigil-SOC/metrics/blob/main/METHODOLOGY.md">How each figure is counted</a></p>
+      </aside>
     </div>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════════════════
-     STATS BAR
+     ACCESS: GUI, CLAUDE, OR AGENT
 ═══════════════════════════════════════════════════════ -->
-<div class="stats-bar">
-  <div class="stats-inner">
-    <div class="stat"><div class="stat-num">Multi-Agent</div><div class="stat-label">Specialized Team</div></div>
-    <div class="stat"><div class="stat-num">Extensible</div><div class="stat-label">MCP Integrations</div></div>
-    <div class="stat"><div class="stat-num">7,200+</div><div class="stat-label">Community Rules Indexed</div></div>
-    <div class="stat"><div class="stat-num">$0</div><div class="stat-label">License Cost (Apache 2.0)</div></div>
-    <div class="stat"><div class="stat-num">&lt; 3 min</div><div class="stat-label">Time to Running SOC</div></div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════
-     AUTO-OPS BANNER
-═══════════════════════════════════════════════════════ -->
-<section class="autonomous" id="autonomous">
-  <div class="autonomous-inner">
-    <span class="autonomous-eyebrow">Auto-Ops</span>
-    <h2>Machine-speed attacks need machine-speed defense.</h2>
-    <p class="lead">
-      Vigil ships with an Auto-Response agent that correlates signals across your stack, scores its own confidence, and proposes containment. Response actions are submitted as approval requests and wait for an analyst — no confidence threshold auto-approves them. Once approved, surgical actions (WAF block, Gateway block, session revoke) execute through a full audit trail. You set the boundary. Vigil keeps pace.
-    </p>
-    <div class="auto-pills">
-      <div class="auto-pill"><strong>Human</strong>approval for every response action</div>
-      <div class="auto-pill"><strong>24/7</strong>continuous correlation</div>
-      <div class="auto-pill"><strong>Full</strong>audit trail every action</div>
+<section class="vh-section" id="access" style="padding-top: 40px;">
+  <div class="vh-wrap">
+    <div class="vh-head">
+      <h2 class="vh-h2">GUI, Claude, or Agent</h2>
+      <p class="vh-lede">Hunts, investigations and threat intelligence prioritization run through each. Administration stays in the GUI.</p>
     </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════════════
-     CAPABILITIES — 5 pillars
-═══════════════════════════════════════════════════════ -->
-<section class="capabilities" id="capabilities">
-  <div class="capabilities-inner">
-    <div class="capabilities-header">
-      <span class="tag">Capabilities</span>
-      <h2>Five Pillars. One Operational Stack.</h2>
-      <p class="lead">Vigil works the SOC lifecycle end-to-end, from raw signal to audit-ready report, with agents that share the same context, the same workflows, and the same open architecture.</p>
-    </div>
-    <div class="pillar-grid">
-
-      <!-- THREAT DETECTION -->
-      <div class="pillar">
-        <div class="pillar-icon">
-          <img src="assets/icons/threat-detection.svg" alt="" aria-hidden="true" />
-        </div>
-        <div class="pillar-label">Pillar 01</div>
-        <h3>Threat Detection</h3>
-        <p>7,200+ community rules across Sigma, Splunk, Elastic, and KQL, fetched separately and indexed for search and coverage analysis. The Triage agent scores every alert; coverage keeps compounding as the community ships new rules.</p>
+    <div class="vh-access-grid">
+      <div class="vh-card">
+        <figure class="vh-shot">
+          <img src="assets/blog/2026-11-20-making-vigil-yours-part-2/build-a-skill.png" width="1440" height="900" loading="lazy" alt="The Vigil console, Agents and workflows screen, with the Build a skill panel open" />
+          <figcaption>The console: building a skill</figcaption>
+        </figure>
+        <span class="vh-kicker">GUI</span>
+        <h3>The Vigil console</h3>
+        <p>Analysts see the queue, follow a run as it unfolds and approve each proposed action, with the evidence beside it.</p>
+        <ul class="vh-list"><li>Findings, cases, approvals and workflows</li><li>Chat-driven case management</li><li>Detection coverage on the ATT&amp;CK map</li></ul>
+        <a class="vh-card-link" href="docs/">Read the docs</a>
       </div>
-
-      <!-- VULNERABILITY ANALYSIS -->
-      <div class="pillar">
-        <div class="pillar-icon">
-          <img src="assets/icons/vulnerability-analysis.svg" alt="" aria-hidden="true" />
+      <div class="vh-card">
+        <span class="vh-kicker">Claude</span>
+        <h3>Your SOC inside Claude Code</h3>
+        <p>Cases, hunts, memory and the audit trail remain in Vigil, shared with colleagues. Analysts start runs from the session, steer them and read cited conclusions under their own role.</p>
+        <div class="vh-code" aria-label="Claude Code commands">
+          <div class="c"># in a Claude Code session</div>
+          <div>/vigil-soc:queue</div>
+          <div>/vigil-soc:hunt &lt;case id&gt; &lt;hypothesis&gt;</div>
+          <div>/vigil-soc:investigate &lt;case id&gt;</div>
         </div>
-        <div class="pillar-label">Pillar 02</div>
-        <h3>Vulnerability Analysis</h3>
-        <p>The Investigator, Correlator, Threat Intel, Forensics, Network Analyst, and Malware Analyst agents trace root cause across your full stack. Every step inspectable, every decision traceable.</p>
+        <p>The client installs from the Vigil repository on GitHub.</p>
+        <a class="vh-card-link" href="https://github.com/Vigil-SOC/vigil/tree/main/clients/claude-code">Install the Claude Code client</a>
       </div>
-
-      <!-- AGENT RED TEAMING -->
-      <div class="pillar">
-        <div class="pillar-icon">
-          <img src="assets/icons/agent-red-teaming.svg" alt="" aria-hidden="true" />
-        </div>
-        <div class="pillar-label">Pillar 03</div>
-        <h3>Agent Red Teaming</h3>
-        <p>Proactive, hypothesis-driven hunts mapped to MITRE ATT&amp;CK. Workflows like Threat Hunt chain agents to probe assumptions, surface gaps, and pressure-test your defenses before adversaries do.</p>
-      </div>
-
-      <!-- SECURE PRACTICES -->
-      <div class="pillar">
-        <div class="pillar-icon">
-          <img src="assets/icons/secure-practices.svg" alt="" aria-hidden="true" />
-        </div>
-        <div class="pillar-label">Pillar 04</div>
-        <h3>Secure Practices</h3>
-        <p>Apache 2.0, local-first, inspectable reasoning. Workflows are text files you can read, modify, and share. Every run leaves an audit trail, and the community's operational knowledge compounds.</p>
-      </div>
-
-      <!-- AI SOC -->
-      <div class="pillar">
-        <div class="pillar-icon">
-          <img src="assets/icons/ai-soc.svg" alt="" aria-hidden="true" />
-        </div>
-        <div class="pillar-label">Pillar 05</div>
-        <h3>AI SOC</h3>
-        <p>Specialized agents coordinated through Bifrost, the open LLM gateway, plus extensible MCP integrations. The Responder routes findings by confidence so they reach a human reviewer, and its actions wait for approval — no threshold releases them.</p>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════════════
-     SHADE BANNER — calling out the "so 2025" vendors
-═══════════════════════════════════════════════════════ -->
-<section class="section section-alt" id="shade">
-  <div class="container">
-    <div class="shade-banner">
-      <div class="shade-title">⚠️ A Word About the "AI SOC" Market</div>
-      <p>
-        The year is 2026. A venture-backed startup wraps a Claude API call in some middleware,
-        slaps "Agentic AI SOC" on the homepage, and charges you <strong>$40,000–$200,000 a year</strong> to start.
-        The agent reasoning? <strong>A black box.</strong> The integrations? <strong>Proprietary.</strong>
-        Your data? <strong>Uploaded to their cloud.</strong> When you ask why an agent made a call?
-        <strong>"Trust us."</strong> We're looking at you, AI SOC vendors. You know who you are and what you did.
-        The silver bullet cycle isn't working. It's time to build the capability, not buy the box.
-        <strong>That's Vigil.</strong>
-      </p>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════════════
-     WHAT IS VIGIL
-═══════════════════════════════════════════════════════ -->
-<section class="section" id="what">
-  <div class="container">
-    <div class="section-header">
-      <span class="tag">Open Source AI SOC</span>
-      <h2>What Is Vigil?</h2>
-      <p class="lead">
-        Vigil is an open source AI SOC: an agentic SOC released under Apache 2.0. It puts a coordinated team of specialized AI agents
-        to work as your SOC, each with deep access to your security stack, each purpose-built for a specific part of the investigation lifecycle.
-      </p>
-    </div>
-
-    <div class="grid-2" style="gap: 40px; align-items: center;">
-      <div>
-        <p style="font-size:1.05rem; color: var(--text-muted); margin-bottom: 20px;">
-          Built on <strong style="color:var(--brown)">Bifrost</strong> (an open LLM gateway) and the <strong style="color:var(--brown)">Model Context Protocol (MCP)</strong>,
-          Vigil is designed around a simple principle: <em>AI agents should do the work, not just answer questions.</em>
-        </p>
-        <div class="callout">
-          <p>Say <strong>"Run incident response on finding XYZ"</strong> and agents execute in sequence:
-          triage scores the alert, the investigator traces root cause, the responder submits containment actions,
-          and the reporter generates audit-ready documentation. No hand-offs required.</p>
-        </div>
-        <p style="margin-top: 16px;">
-          Apache 2.0 licensed. Every agent's reasoning is inspectable.
-          Every workflow is a text file you can read, modify, and share.
-        </p>
-        <div style="margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
-          <a href="https://github.com/Vigil-SOC/vigil" target="_blank" class="btn btn-primary">View on GitHub</a>
-          <a href="#start" class="btn btn-outline">Quick Start →</a>
-        </div>
-      </div>
-      <div>
-        <div class="screenshot-frame screenshot-ph">
-          <img src="dashboard.png" alt="Vigil web dashboard: AI SOC interface" loading="lazy" decoding="async" />
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════════════
-     WHY OPEN SOURCE
-═══════════════════════════════════════════════════════ -->
-<section class="section section-alt">
-  <div class="container">
-    <div class="section-header">
-      <span class="tag tag-navy">The Problem</span>
-      <h2>Why Open Source?</h2>
-      <p class="lead">
-        The cybersecurity market has a well-documented structural problem. Closed-source AI SOC platforms deepen it.
-      </p>
-    </div>
-    <div class="grid-3">
-      <div class="card">
-        <div class="card-icon">🔍</div>
-        <h3>Transparency</h3>
-        <p>When agent reasoning is inspectable, detection quality becomes measurable. You know <em>why</em> an agent made a call, not just <em>that</em> it did.</p>
-      </div>
-      <div class="card">
-        <div class="card-icon card-icon-navy">🔗</div>
-        <h3>Open Integrations</h3>
-        <p>Built on MCP, an open standard. When integrations are built on open standards, the ecosystem grows the platform. Every new MCP server is a free Vigil integration.</p>
-      </div>
-      <div class="card">
-        <div class="card-icon card-icon-silver">🤝</div>
-        <h3>Collective Knowledge</h3>
-        <p>When workflows are text files, the community's collective operational knowledge compounds. Share a playbook and everyone's SOC gets smarter.</p>
-      </div>
-    </div>
-    <div style="margin-top: 40px; text-align: center;">
-      <p style="font-size: 1rem; color: var(--brown); font-weight: 600; max-width: 680px; margin: 0 auto;">
-        "Security operations shouldn't be a black box you buy. It should be a capability you build, together."
-      </p>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════════════
-     HOW IT WORKS — SKILLS / MCP / AGENTS
-═══════════════════════════════════════════════════════ -->
-<section class="section" id="how">
-  <div class="container">
-    <div class="section-header">
-      <span class="tag">Architecture</span>
-      <h2>How Vigil Works</h2>
-      <p class="lead">Three interlocking layers that give every agent real-time access to your entire stack.</p>
-    </div>
-
-    <!-- Skills -->
-    <div style="margin-bottom: 64px;">
-      <h3 style="font-size: 1.4rem; color: var(--brown); margin-bottom: 8px;">⚙️ Workflows · Complete Playbooks in a Single Command</h3>
-      <p style="max-width: 760px; margin-bottom: 28px;">
-        A workflow is a multi-agent playbook that chains specialized agents into a complete, end-to-end run.
-        Each workflow maps to a real operational sequence and produces real outputs. Creating your own workflow is writing a
-        <code style="background:var(--silver-pale); padding: 2px 6px; border-radius: 4px;">WORKFLOW.md</code> file. If your team has a process, Vigil can run it.
-      </p>
-      <div class="grid-2">
-        <div class="skill-card">
-          <div class="skill-header"><span class="skill-icon">🚨</span><span class="skill-name">Incident Response</span></div>
-          <div class="skill-chain">
-            <span class="skill-step">Triage</span>
-            <span class="skill-arrow">→</span>
-            <span class="skill-step">Investigate</span>
-            <span class="skill-arrow">→</span>
-            <span class="skill-step">Respond</span>
-            <span class="skill-arrow">→</span>
-            <span class="skill-step">Report</span>
-          </div>
-          <p class="skill-desc">End-to-end from alert to audit-ready documentation.</p>
-        </div>
-        <div class="skill-card">
-          <div class="skill-header"><span class="skill-icon">🔬</span><span class="skill-name">Full Investigation</span></div>
-          <div class="skill-chain">
-            <span class="skill-step">Deep Dive</span>
-            <span class="skill-arrow">→</span>
-            <span class="skill-step">Correlate</span>
-            <span class="skill-arrow">→</span>
-            <span class="skill-step">Timeline</span>
-          </div>
-          <p class="skill-desc">Deep-dive reconstruction with correlation across all connected data sources.</p>
-        </div>
-        <div class="skill-card">
-          <div class="skill-header"><span class="skill-icon">🎯</span><span class="skill-name">Threat Hunt</span></div>
-          <div class="skill-chain">
-            <span class="skill-step">Hypothesis</span>
-            <span class="skill-arrow">→</span>
-            <span class="skill-step">Hunt</span>
-            <span class="skill-arrow">→</span>
-            <span class="skill-step">ATT&amp;CK Map</span>
-          </div>
-          <p class="skill-desc">Proactive hypothesis-driven search using MITRE ATT&amp;CK as the framework.</p>
-        </div>
-        <div class="skill-card">
-          <div class="skill-header"><span class="skill-icon">⚖️</span><span class="skill-name">Forensic Analysis</span></div>
-          <div class="skill-chain">
-            <span class="skill-step">Collect</span>
-            <span class="skill-arrow">→</span>
-            <span class="skill-step">Chain-of-Custody</span>
-            <span class="skill-arrow">→</span>
-            <span class="skill-step">Report</span>
-          </div>
-          <p class="skill-desc">Evidence collection and analysis.</p>
-        </div>
-        <div class="skill-card">
-          <div class="skill-header"><span class="skill-icon">☁️</span><span class="skill-name">Cloud Incident</span></div>
-          <div class="skill-chain">
-            <span class="skill-step">Identify</span>
-            <span class="skill-arrow">→</span>
-            <span class="skill-step">Blast Radius</span>
-            <span class="skill-arrow">→</span>
-            <span class="skill-step">Contain</span>
-            <span class="skill-arrow">→</span>
-            <span class="skill-step">Report</span>
-          </div>
-          <p class="skill-desc">AWS/Azure/GCP incident response. IAM blast-radius, control-plane vs. data-plane analysis, provider-aware containment.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- MCP -->
-    <div style="margin-bottom: 64px;">
-      <h3 style="font-size: 1.4rem; color: var(--brown); margin-bottom: 8px;">🔌 MCP · Your Entire Stack, Connected</h3>
-      <p style="max-width: 760px; margin-bottom: 28px;">
-        Vigil uses the Model Context Protocol to give every agent real-time access to your existing tools.
-        Extensive integrations out of the box. If a tool has an MCP server, Vigil can connect to it.
-      </p>
-      <div class="grid-4">
-        <!-- integration pills -->
-        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--brown);">Splunk</div>
-        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--brown);">CrowdStrike</div>
-        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--brown);">VirusTotal</div>
-        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--brown);">Shodan</div>
-        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--brown);">Hybrid Analysis</div>
-        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--brown);">Jira</div>
-        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--brown);">Slack</div>
-        <div style="background:var(--silver-pale); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--brown);">DeepTempo</div>
-        <div style="background:var(--forest-light); border: 1px dashed var(--forest); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:600; color:var(--forest);">+ Ecosystem</div>
-        <div style="background:var(--forest-light); border: 1px dashed var(--forest); border-radius:var(--radius); padding: 12px 16px; text-align:center; font-size:.85rem; font-weight:700; color:var(--forest); grid-column: span 3;">Write your own → Any MCP server plugs right in</div>
-      </div>
-    </div>
-
-    <!-- Architecture Diagram -->
-    <div>
-      <h3 style="font-size: 1.4rem; color: var(--brown); margin-bottom: 16px;">🏗️ Architecture</h3>
-      <div class="arch-layer arch-layer-3">
-        <div class="arch-label" style="color: var(--forest);">Workflow Layer</div>
-        <div>
-          <div class="arch-title">WORKFLOW.md Files · Multi-Agent Playbooks</div>
-          <div class="arch-desc">Composable playbooks. Define agent sequence, phase-level tool access, and natural-language instructions. Workflows can invoke other workflows as sub-runs.</div>
-        </div>
-      </div>
-      <div style="text-align:center; font-size: 1.2rem; color: var(--silver); margin: -4px 0; z-index:1; position:relative;">↕</div>
-      <div class="arch-layer arch-layer-1">
-        <div class="arch-label" style="color: var(--brown-mid);">Agent Layer</div>
-        <div>
-          <div class="arch-title">Bifrost · Specialized Agents</div>
-          <div class="arch-desc">Defined roles, tool access, and reasoning modes. Bifrost is an open LLM gateway that handles routing, coordination, and tool invocation. A deep backend tool surface plus extended tools via MCP.</div>
-        </div>
-      </div>
-      <div style="text-align:center; font-size: 1.2rem; color: var(--silver); margin: -4px 0; z-index:1; position:relative;">↕</div>
-      <div class="arch-layer arch-layer-2">
-        <div class="arch-label" style="color: var(--forest);">Integration Layer</div>
-        <div>
-          <div class="arch-title">MCP · Tool Integrations</div>
-          <div class="arch-desc">Any MCP-speaking tool or data source plugs in without custom code. Handles authentication, rate limiting, and response normalization. Open standard, ecosystem grows the platform.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════════════
-     SPECIALIZED AGENTS
-═══════════════════════════════════════════════════════ -->
-<section class="section section-alt" id="agents">
-  <div class="container">
-    <div class="section-header">
-      <span class="tag">The Team</span>
-      <h2>Specialized Agents. Each Built for a Job.</h2>
-      <p class="lead">
-        Specialists with defined roles, tuned reasoning modes, and access to a deep backend tool surface plus extended tools via MCP.
-        You set the routing thresholds — approvals always stay with a person. Vigil keeps humans in the loop where it counts, and gets out of the way everywhere else.
-      </p>
-    </div>
-
-    <div class="agent-list" style="margin-bottom: 40px;">
-      <div class="agent-pill"><span class="agent-badge badge-green">T</span> Triage Agent <span style="font-size:.75rem; color:var(--text-muted)">⚡ Fast mode</span></div>
-      <div class="agent-pill"><span class="agent-badge badge-navy">I</span> Investigator <span style="font-size:.75rem; color:var(--text-muted)">🧠 Deep mode</span></div>
-      <div class="agent-pill"><span class="agent-badge badge-red">H</span> Threat Hunter</div>
-      <div class="agent-pill"><span class="agent-badge badge-navy">C</span> Correlator</div>
-      <div class="agent-pill"><span class="agent-badge badge-red">R</span> Responder <span style="font-size:.75rem; color:var(--text-muted)">🔒 Approval-gated</span></div>
-      <div class="agent-pill"><span class="agent-badge badge-silver">📄</span> Reporter</div>
-      <div class="agent-pill"><span class="agent-badge badge-teal">M</span> MITRE Analyst</div>
-      <div class="agent-pill"><span class="agent-badge badge-silver">⚖️</span> Forensics</div>
-      <div class="agent-pill"><span class="agent-badge badge-navy">🔎</span> Threat Intel</div>
-      <div class="agent-pill"><span class="agent-badge badge-silver">📋</span> Compliance</div>
-      <div class="agent-pill"><span class="agent-badge badge-red">🦠</span> Malware Analyst</div>
-      <div class="agent-pill"><span class="agent-badge badge-teal">🌐</span> Network Analyst</div>
-      <div class="agent-pill"><span class="agent-badge badge-green">A</span> Auto Responder</div>
-    </div>
-
-    <div class="callout">
-      <p>
-        🔒 <strong>Human Approval:</strong> The Responder proposes containment actions as approval requests, and a request always waits for an analyst — at any confidence.
-        Confidence informs the reviewer; it does not replace them. You control the automation boundary.
-        No surprises. No runaway automation.
-      </p>
-    </div>
-
-    <div class="grid-2" style="margin-top: 40px; gap: 20px;">
-      <div class="card">
-        <div class="card-icon">🛡️</div>
-        <h3>Detection Rules — Indexed, Not Shipped</h3>
-        <p>Community rule sets spanning Sigma, Splunk, Elastic, and KQL formats, fetched with the setup script and indexed for AI-assisted coverage analysis, gap identification, and template generation.</p>
-      </div>
-      <div class="card">
-        <div class="card-icon card-icon-navy">💬</div>
-        <h3>Chat-Driven Case Management</h3>
-        <p>Build and update cases through natural language. Tell the system a finding is part of the lateral movement kill chain, and it handles the MITRE tagging, timeline updates, and case linkage automatically.</p>
-      </div>
-      <div class="card">
-        <div class="card-icon card-icon-silver">🔁</div>
-        <h3>Auto-Ops · 24/7 Coverage</h3>
-        <p>The Auto-Response agent runs continuously, ingesting findings, correlating across signals, and proposing actions that wait for your approval — confidence routes the work, it never releases an action. The web UI remains your control plane for routing, escalations, and approvals. Start it with <code>./start.sh</code> alongside the React + FastAPI frontend.</p>
-      </div>
-      <div class="card">
-        <div class="card-icon">🏠</div>
-        <h3>Local-First Architecture</h3>
-        <p>Your data never leaves your environment. No cloud dependency for core functionality. MCP connections are under your control. State persists in PostgreSQL with pgvector, running locally via Docker by default.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════════════
-     TRY IN 60 SECONDS
-═══════════════════════════════════════════════════════ -->
-<section class="section">
-  <div class="container">
-    <div class="grid-1" style="gap:48px; align-items: center;">
-      <div>
-        <span class="tag">60-Second Demo</span>
-        <h2>See It Work in Under a Minute</h2>
-        <p>After starting Vigil, open the web UI and try the full incident response workflow live, using sample data included in the repo.</p>
-        <div class="contrib-item">
-          <div class="contrib-num">1</div>
-          <div class="contrib-body">
-            <h3>Paste a finding</h3>
-            <p>Use a real alert ID from your SIEM, or one of the included sample findings from the repo.</p>
-          </div>
-        </div>
-        <div class="contrib-item">
-          <div class="contrib-num">2</div>
-          <div class="contrib-body">
-            <h3>Run the workflow</h3>
-            <p>Type: <code style="background:var(--silver-pale); padding:2px 6px; border-radius:4px;">Run incident response on finding f-20260215-a1b2c3d4</code></p>
-          </div>
-        </div>
-        <div class="contrib-item">
-          <div class="contrib-num">3</div>
-          <div class="contrib-body">
-            <h3>Watch agents execute</h3>
-            <p>Triage → Investigate → Respond → Report. Every step visible, every decision inspectable.</p>
-          </div>
-        </div>
-        <div class="contrib-item" style="border: none;">
-          <div class="contrib-num">4</div>
-          <div class="contrib-body">
-            <h3>Review the output</h3>
-            <p>Complete incident report with MITRE ATT&CK mapping, timeline, and recommended actions. Audit-ready.</p>
-          </div>
-        </div>
-      </div>
-      
-      <!-- 
-      <div>
-        <div class="img-placeholder screenshot-ph" style="height: 420px;"> 
-          <span class="ph-icon">🔍</span>
-          <span>Vigil — Incident Response Walkthrough</span>
-          <span style="font-size:.72rem; color: var(--silver-light)"></span>
-        </div>
-      </div>
-    -->
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════════════
-     COMPARISON TABLE
-═══════════════════════════════════════════════════════ -->
-<section class="section section-alt" id="compare">
-  <div class="container">
-    <div class="section-header">
-      <span class="tag">The Honest Comparison</span>
-      <h2>Vigil vs. Commercial AI SOCs</h2>
-      <p class="lead">
-        Every serious AI SOC platform on the market is closed source. Here's the full picture.
-        <br><em style="font-size:.9rem;">(Including Dropzone AI, Conifers CognitiveSOC, Radiant Security, Prophet Security, Exaforce, Torq HyperSOC. None are open source, and their integrations are proprietary rather than built on open standards like MCP.)</em>
-      </p>
-    </div>
-
-    <div style="overflow-x: auto;">
-      <table class="compare-table">
-        <thead>
-          <tr>
-            <th></th>
-            <th class="vigil-col">⚔️ Vigil (Open Source)</th>
-            <th>Commercial AI SOCs</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>License</td>
-            <td class="vigil-val"><span class="check">✓</span> Apache 2.0, free forever</td>
-            <td class="them-val"><span class="cross">✗</span> Proprietary, $36K–$200K+/yr</td>
-          </tr>
-          <tr>
-            <td>Source Code</td>
-            <td class="vigil-val"><span class="check">✓</span> Fully inspectable on GitHub</td>
-            <td class="them-val"><span class="cross">✗</span> Closed / opaque</td>
-          </tr>
-          <tr>
-            <td>Agent Logic</td>
-            <td class="vigil-val"><span class="check">✓</span> Transparent, modifiable Python</td>
-            <td class="them-val"><span class="cross">✗</span> Black box or patented</td>
-          </tr>
-          <tr>
-            <td>Integrations</td>
-            <td class="vigil-val"><span class="check">✓</span> MCP (open standard, plug &amp; play)</td>
-            <td class="them-val">Proprietary APIs &amp; vendor lock-in</td>
-          </tr>
-          <tr>
-            <td>Extensibility</td>
-            <td class="vigil-val"><span class="check">✓</span> Write a WORKFLOW.md file</td>
-            <td class="them-val"><span class="cross">✗</span> Vendor roadmap or pro services</td>
-          </tr>
-          <tr>
-            <td>Data Residency</td>
-            <td class="vigil-val"><span class="check">✓</span> 100% local, your machine</td>
-            <td class="them-val"><span class="cross">✗</span> Cloud APIs, data leaves your env</td>
-          </tr>
-          <tr>
-            <td>Time to Try</td>
-            <td class="vigil-val"><span class="check">✓</span> git clone, &lt; 3 minutes</td>
-            <td class="them-val"><span class="cross">✗</span> Sales call, 30-day POC, procurement</td>
-          </tr>
-          <tr>
-            <td>Community</td>
-            <td class="vigil-val"><span class="check">✓</span> Open contributions welcome</td>
-            <td class="them-val">Feature requests into a backlog</td>
-          </tr>
-          <tr>
-            <td>Detection Rules</td>
-            <td class="vigil-val"><span class="check">✓</span> 7,200+ community rules indexed for search &amp; coverage (fetched separately)</td>
-            <td class="them-val">Proprietary or third-party subscription</td>
-          </tr>
-          <tr>
-            <td>LLM Backend</td>
-            <td class="vigil-val"><span class="check">✓</span> Anthropic, OpenAI, Vertex, or local Ollama</td>
-            <td class="them-val"><span class="cross">✗</span> Vendor-locked to one provider</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <p style="margin-top:20px; font-size:.95rem;">
-      Don't take the table's word for it. <a href="https://socbench.org" target="_blank">SOCBench</a> is the open benchmark
-      for AI in cybersecurity operations: efficacy, cost, latency, and reliability, measured and reproducible.
-      Run it against Vigil, or against anything else.
-    </p>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════════════
-     GET STARTED
-═══════════════════════════════════════════════════════ -->
-<section class="section section-alt" id="start">
-  <div class="container">
-    <div class="section-header">
-      <span class="tag">Quick Start</span>
-      <h2>Up and Running in 3 Minutes</h2>
-      <p class="lead">Three commands. No sales call. No procurement. No 30-day POC.</p>
-    </div>
-
-    <div class="grid-2" style="gap: 40px; align-items: flex-start;">
-      <div>
-        <h3 style="color:var(--brown); margin-bottom: 16px;">Requirements</h3>
-        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 28px;">
-          <div style="display:flex; gap:10px; align-items:center;">
-            <span style="color:var(--forest); font-size:1.1rem;">✓</span>
-            <span>Python (provisioned automatically)</span>
-          </div>
-          <div style="display:flex; gap:10px; align-items:center;">
-            <span style="color:var(--forest); font-size:1.1rem;">✓</span>
-            <span>Node.js 20+</span>
-          </div>
-          <div style="display:flex; gap:10px; align-items:center;">
-            <span style="color:var(--forest); font-size:1.1rem;">✓</span>
-            <span>Docker</span>
-          </div>
-          <div style="display:flex; gap:10px; align-items:center; color: var(--text-muted);">
-            <span style="color:var(--silver); font-size:1.1rem;">○</span>
-            <span>Claude API key <em>(optional for initial testing)</em></span>
-          </div>
-        </div>
-        <h3 style="color:var(--brown); margin-bottom: 16px;">Installation</h3>
-        <div class="code-block" style="position:relative;">
-          <button class="copy-btn" onclick="navigator.clipboard.writeText('git clone --recurse-submodules https://github.com/Vigil-SOC/vigil.git\ncd vigil\n./start.sh')">Copy</button>
-          <div><span class="c-green">$</span> <span class="c-blue">git clone</span> --recurse-submodules \</div>
-          <div style="padding-left:16px;">https://github.com/Vigil-SOC/vigil.git</div>
-          <div><span class="c-green">$</span> <span class="c-blue">cd</span> vigil</div>
-          <div><span class="c-green">$</span> ./start.sh</div>
-          <div>&nbsp;</div>
-          <div><span class="c-grey"># First run: 2–3 minutes</span></div>
-          <div><span class="c-grey"># Subsequent starts: &lt;30 seconds</span></div>
-        </div>
-
-        <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
-          <div style="background: var(--silver-pale); border-radius: var(--radius); padding: 10px 16px; font-size:.85rem;">
-            <strong>Frontend:</strong> <code>http://localhost:6988</code>
-          </div>
-          <div style="background: var(--silver-pale); border-radius: var(--radius); padding: 10px 16px; font-size:.85rem;">
-            <strong>API Docs:</strong> <code>http://localhost:6987/docs</code>
-          </div>
-        </div>
-      </div>
-        <div style="margin-top: 24px;">
-          <h3 style="color:var(--brown); margin-bottom: 12px;">DeepTempo + Vigil</h3>
-          <p style="font-size:.9rem;">
-            Vigil is sponsored by <a href="https://deeptempo.ai" target="_blank" style="color:var(--forest);">DeepTempo</a>.
-            DeepTempo's <a href="https://www.deeptempo.ai/platform" target="_blank" style="color:var(--forest);"><strong>LogLM</strong></a> is a purpose-built model for behavioral anomaly detection that pairs naturally with Vigil,
-            though the two are loosely coupled. LogLM can enhance any AI SOC or SIEM with high-fidelity detections,
-            and Vigil works across any mix of security systems.
-            Read more: <a href="https://www.deeptempo.ai/learning-center/what-is-an-agentic-soc" target="_blank" style="color:var(--forest);">What is an agentic SOC?</a>
-          </p>
-        </div>
-
-        <div style="margin-top: 24px;">
-          <a href="https://github.com/Vigil-SOC/vigil" target="_blank" class="btn btn-primary" style="width:100%; justify-content: center;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-            Clone Vigil on GitHub
-          </a>
-        </div>
+      <div class="vh-card">
+        <span class="vh-kicker">Agent</span>
+        <h3>Headless over MCP</h3>
+        <p>Agents, scripts and service accounts start, steer and read runs through Vigil's MCP surface and the HTTP API, with no console in the loop. Each call lands on the audit trail.</p>
+        <ul class="vh-list"><li>OAuth sign-in for MCP clients</li><li>Service accounts with scoped, expiring tokens</li><li>Stable tool names and schemas across releases</li><li>OpenTelemetry traces and metrics to your own collector</li></ul>
+        <a class="vh-card-link" href="docs/mcp-oauth/">Read the MCP sign-in guide</a>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════════════════
-     FOOTER
+     ARCHITECTURE
 ═══════════════════════════════════════════════════════ -->
-<footer class="site-footer">
-  <div>
-    <strong style="color:rgba(255,255,255,.6);">VIGIL</strong> · Open Source AI SOC &nbsp;|&nbsp;
-    <a href="https://github.com/Vigil-SOC/vigil" target="_blank">github.com/Vigil-SOC/vigil</a> &nbsp;|&nbsp;
-    Apache 2.0 License &nbsp;|&nbsp;
-    <a href="https://socbench.org" target="_blank">SOCBench</a> &nbsp;|&nbsp;
-    Sponsored by <a href="https://deeptempo.ai" target="_blank">DeepTempo</a>
+<section class="vh-section" id="architecture">
+  <div class="vh-wrap">
+    <div class="vh-head"><h2 class="vh-h2">Architecture</h2></div>
+    <div class="vh-arch">
+      <div class="vh-parts">
+        <div><h3>Agents</h3><p>Built-in specialists cover the core SOC roles. Each is a manifest you can read, fork and rewire, and you can build your own from the console.</p></div>
+        <div><h3>Workflows</h3><p>A workflow is one WORKFLOW.md file: YAML that says what runs, Markdown that explains it. Mark a phase approval_required and it waits for a person.</p></div>
+        <div><h3>Skills and workflows you already have</h3><p>Import skills from a file, a zip or any git repository, popular cyber skills repositories included; Vigil scans and holds each before it runs. Detection rule libraries load the same way. Workflows are Markdown, so playbooks from your SOAR port across as WORKFLOW.md files.</p></div>
+        <div><h3>Integrations</h3><p>Your existing SIEM, EDR, cloud, identity, threat intelligence and ticketing tools connect over MCP, the open standard. Build a new one from API docs with the Custom Integration Builder.</p></div>
+        <div><h3>Memory</h3><p>Prior conclusions are recalled when a run starts and verdicts are written back when it ends, so the learning remains yours, inside your environment.</p></div>
+      </div>
+      <div class="vh-stack">
+        <div class="vh-layer"><strong>Clients</strong><span>Web console · Chat · Desktop app · MCP clients</span></div>
+        <div class="vh-layer"><strong>API</strong><span>Findings · Cases · Approvals · Detections · ATT&amp;CK · Workflows</span></div>
+        <div class="vh-layer is-dark"><strong>Agent layer</strong><span>Workflow runtimes: compose · investigate · root cause · hunt</span></div>
+        <div class="vh-layer-row">
+          <div class="vh-layer"><strong>LLM gateway</strong><span>Anthropic · OpenAI · Vertex · Ollama</span></div>
+          <div class="vh-layer"><strong>MCP integrations</strong><span>SIEM · EDR · cloud · identity · intel · sandbox · ticketing</span></div>
+        </div>
+        <div class="vh-layer is-green"><strong>PostgreSQL</strong><span>Findings, cases, approvals, runs, settings. Your data stays in your environment.</span></div>
+        <figure class="vh-shot" style="margin-top: 14px;">
+          <img src="assets/blog/2026-11-20-making-vigil-yours-part-2/import-dialog.png" width="1440" height="900" loading="lazy" alt="The Import skills dialog: choose a SKILL.md or zip file, or read skills from a git repository" />
+          <figcaption>Import skills from a file or any git repository</figcaption>
+        </figure>
+      </div>
+    </div>
   </div>
-  <div style="margin-top: 8px;">
-    Built with <a href="https://github.com/maximhq/bifrost" target="_blank">Bifrost</a> &amp;
-    <a href="https://modelcontextprotocol.io" target="_blank">Model Context Protocol</a>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     OPTIONAL COMPONENTS
+═══════════════════════════════════════════════════════ -->
+<section class="vh-section vh-optional" id="optional">
+  <div class="vh-wrap">
+    <div class="vh-head">
+      <span class="vh-kicker">Optional components</span>
+      <h2 class="vh-h2">Batteries included, not required</h2>
+      <p class="vh-lede">The install above yields a working SOC. Add these components as your needs grow.</p>
+    </div>
+    <div class="vh-opt-grid">
+      <div class="vh-opt">
+        <h3>LogLM (optional)</h3>
+        <p>DeepTempo's foundation model for security telemetry, connected as one MCP integration among many. Add it as a detection layer when you want one; Vigil does not require it.</p>
+        <code>Settings: Integrations</code>
+      </div>
+      <div class="vh-opt">
+        <h3>SOC daemon</h3>
+        <p>Alert polling, automatic triage and AutoOps for unattended, around-the-clock monitoring. The foreground start leaves it off.</p>
+        <code>./start.sh -d</code>
+      </div>
+      <div class="vh-opt">
+        <h3>Medic</h3>
+        <p>Watches the health, load and headroom of your own install. It changes nothing in Vigil and sends nothing off the machine.</p>
+        <code>VIGIL_MEDIC_ENABLED=true</code>
+      </div>
+      <div class="vh-opt">
+        <h3>Vigil MCP server</h3>
+        <p>Vigil's own SOC operations, served to outside clients and agents: findings, cases, approvals, hunts. Off on a fresh install.</p>
+        <code>Settings: Integrations</code>
+      </div>
+      <div class="vh-opt">
+        <h3>Custom Integration Builder</h3>
+        <p>Generate a new MCP integration from a vendor's API docs when the catalogue lacks the tool you run. Then contribute it.</p>
+        <code>Settings: Integrations</code>
+      </div>
+      <div class="vh-opt">
+        <h3>Local models</h3>
+        <p>Run with no provider key. A local Ollama model works, and one script serves a small model the gateway can reach.</p>
+        <code>scripts/local_model.sh</code>
+      </div>
+      <div class="vh-opt">
+        <h3>Detection rule sets</h3>
+        <p>Sigma, Splunk ESCU, Elastic and KQL community rules. Vigil indexes them; it does not ship them.</p>
+        <code>./scripts/setup_detection_repos.sh</code>
+      </div>
+      <div class="vh-opt">
+        <h3>Profiled services</h3>
+        <p>Splunk, Kafka, pgAdmin, Jaeger, Prometheus, Grafana and an OpenTelemetry collector, added one at a time or together.</p>
+        <code>./start.sh --with splunk</code>
+      </div>
+      <div class="vh-opt">
+        <h3>Kubernetes</h3>
+        <p>A Helm chart for clusters, with external Postgres and Redis, ingress and secrets covered in the guide.</p>
+        <code>helm install vigil ./infra/helm/vigil</code>
+      </div>
+      <div class="vh-opt">
+        <h3>Threat intelligence platform</h3>
+        <p>Connect OpenCTI, MISP or AlienVault OTX, and new reports become hunt hypotheses for a person to review.</p>
+        <code>Settings: Integrations: OpenCTI</code>
+      </div>
+      <div class="vh-opt">
+        <h3>Experimental integrations</h3>
+        <p>CrowdStrike Falcon, SentinelOne, Microsoft Sentinel and others not yet run against a live instance. Try one and tell us what happened.</p>
+        <code>Settings: Integrations</code>
+      </div>
+      <div class="vh-opt">
+        <h3>Vigil Assured</h3>
+        <p>Commercial support from the team that built Vigil: signed builds, SBOMs, validated deployment profiles and patch SLAs.</p>
+        <code>deeptempo.ai/vigil-assured</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     MISSION AND COMMUNITY
+═══════════════════════════════════════════════════════ -->
+<section class="vh-section vh-community" id="community">
+  <div class="vh-wrap">
+    <span class="vh-kicker">Mission</span>
+    <p class="vh-mission">Security operations shouldn't be a black box you buy. It should be a capability you build, together.</p>
+    <div class="vh-pillars">
+      <div class="vh-pillar">
+        <span class="vh-kicker">License</span>
+        <h3>Apache 2.0, in full</h3>
+        <p>Vigil is 100% open source. The upstream project has no open core, no license key and no call-home telemetry. OpenTelemetry export stays off until you point it at your own collector.</p>
+      </div>
+      <div class="vh-pillar">
+        <span class="vh-kicker">Principle</span>
+        <h3>Human on the loop</h3>
+        <p>The system can only demote its own autonomy; only people promote it. Proposed actions wait for a person unless your autonomy setting lets the run act.</p>
+      </div>
+      <div class="vh-pillar">
+        <span class="vh-kicker">Team</span>
+        <h3>Built by an AI-native cyber team</h3>
+        <p>The people behind Vigil come from StackStorm, Dragos, Palo Alto Networks and the Allen Institute for AI, among others. They build Vigil with agents in the loop, the way they expect security teams to work.</p>
+      </div>
+      <div class="vh-pillar">
+        <span class="vh-kicker">Community</span>
+        <h3>Built in the open</h3>
+        <p>Contributions are welcome under the DCO: bug fixes, integrations, agent prompts, workflows and new agents. Contributors coordinate on <a href="https://discord.gg/SBtSHzMYFZ">Discord</a>.</p>
+      </div>
+      <div class="vh-pillar">
+        <span class="vh-kicker">Numbers</span>
+        <h3>Numbers you can check</h3>
+        <p>Daily views, clones, stars, forks and contributor history are published unaltered in the <a href="https://github.com/Vigil-SOC/metrics">Vigil-SOC/metrics</a> repository.</p>
+      </div>
+      <div class="vh-pillar">
+        <span class="vh-kicker">Sponsor</span>
+        <h3>DeepTempo</h3>
+        <p>Vigil is sponsored by <a href="https://deeptempo.ai">DeepTempo</a>. LogLM (optional) connects over MCP as a detection layer, and <a href="https://www.deeptempo.ai/vigil-assured">Vigil Assured</a> offers commercial support.</p>
+      </div>
+    </div>
+    <div class="vh-actions">
+      <a class="btn btn-primary" href="https://github.com/Vigil-SOC/vigil">Get Vigil on GitHub</a>
+      <a class="btn vh-btn-light" href="https://github.com/Vigil-SOC/vigil">Star the repository</a>
+      <a class="btn vh-btn-light" href="https://discord.gg/SBtSHzMYFZ">Join the Discord</a>
+      <a class="btn vh-btn-light" href="docs/contributing/">Contribute</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="vh-footer">
+  <div class="vh-wrap vh-footer-inner">
+    <div class="vh-footer-cols">
+      <div class="vh-footer-brand">
+        <img src="assets/logo-white.svg" alt="VIGIL" />
+        <span>The open source AI SOC.<br />Apache 2.0.</span>
+      </div>
+      <div><h4>Product</h4><ul><li><a href="#start">Quick start</a></li><li><a href="#usecases">Use cases</a></li><li><a href="#history">History</a></li><li><a href="#access">Access</a></li><li><a href="#optional">Optional components</a></li><li><a href="https://github.com/Vigil-SOC/vigil/releases/latest">Releases</a></li></ul></div>
+      <div><h4>Resources</h4><ul><li><a href="docs/">Documentation</a></li><li><a href="docs/agents/">Agents</a></li><li><a href="docs/integrations/">Integrations</a></li><li><a href="docs/detection-engineering/">Detection engineering</a></li><li><a href="https://socbench.org">SOCBench</a></li></ul></div>
+      <div><h4>Community</h4><ul><li><a href="community/">Community</a></li><li><a href="blog/">Blog</a></li><li><a href="https://discord.gg/SBtSHzMYFZ">Discord</a></li><li><a href="docs/contributing/">Contributing</a></li><li><a href="https://github.com/Vigil-SOC/metrics">Adoption figures</a></li></ul></div>
+      <div><h4>Legal</h4><ul><li><a href="https://github.com/Vigil-SOC/vigil/blob/main/LICENSE">Apache 2.0 License</a></li><li><a href="https://github.com/Vigil-SOC/vigil/blob/main/SECURITY.md">Security policy</a></li><li><a href="privacy/">Privacy</a></li><li><a href="terms/">Terms</a></li><li><a href="https://deeptempo.ai">DeepTempo</a></li></ul></div>
+    </div>
+    <div class="vh-footer-base">
+      <span>Built with <a href="https://github.com/maximhq/bifrost">Bifrost</a> and the <a href="https://modelcontextprotocol.io">Model Context Protocol</a>.</span>
+      <span>Sponsored by <a href="https://deeptempo.ai">DeepTempo</a>.</span>
+    </div>
   </div>
 </footer>
 
-<script>
-  // Smooth nav active state
-  const sections = document.querySelectorAll('section[id]');
-  const navLinks = document.querySelectorAll('.nav-link');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        navLinks.forEach(l => l.classList.remove('active'));
-        const match = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
-        if (match) match.classList.add('active');
-      }
-    });
-  }, { threshold: 0.4 });
-  sections.forEach(s => observer.observe(s));
-
-  // Honor prefers-reduced-motion: pause the hero loop and show the poster.
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    document.querySelector('.hero-video')?.pause();
-  }
-</script>
-  <script async defer src="https://buttons.github.io/buttons.js"></script>
+<script src="assets/home.js" defer></script>
+<script async defer src="https://buttons.github.io/buttons.js"></script>
 </body>
 </html>
-
-
