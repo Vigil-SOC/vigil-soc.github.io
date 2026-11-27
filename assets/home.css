@@ -88,34 +88,28 @@ a.vh-pill:hover { background: rgba(54,76,22,.08); text-decoration: none; }
 .vh-chip[aria-pressed="true"] { background: var(--charcoal); border-color: var(--charcoal); color: #ffffff; }
 .vh-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 22px; align-items: stretch; }
 .vh-uc {
-  background: #ffffff; border: 1px solid rgba(37,37,39,.1); border-radius: 18px; padding: 28px;
+  background: #ffffff; border: 1px solid rgba(37,37,39,.1); border-radius: 18px; padding: 24px 28px 14px;
   display: flex; flex-direction: column; gap: 14px; box-sizing: border-box;
 }
 .vh-uc[hidden] { display: none; }
-.vh-uc-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .vh-uc-group { font-family: var(--font-mono); font-size: 12px; letter-spacing: .04em; color: var(--rust); }
-.vh-tag {
-  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase;
-  border-radius: 999px; padding: 6px 10px; white-space: nowrap;
-}
-.vh-tag.is-shipped { background: var(--forest-light); color: var(--forest-dark); }
-.vh-tag.is-partial { background: #f1eee2; color: var(--charcoal); border: 1px solid var(--ochre); padding: 5px 10px; }
 .vh-uc h3 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 24px; line-height: 1.15; color: var(--charcoal); }
 .vh-uc p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--charcoal-mid); text-wrap: pretty; }
 .vh-try { margin-top: auto; background: var(--charcoal); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
 .vh-try span { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--sage); }
 .vh-try code { font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55; color: var(--cream); background: none; padding: 0; overflow-wrap: anywhere; }
 .vh-more summary {
-  font-family: var(--font-mono); font-size: 12px; min-height: 44px; display: flex; align-items: center;
-  color: var(--forest); cursor: pointer; list-style: none; text-decoration: underline; text-underline-offset: 4px;
+  min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  cursor: pointer; list-style: none;
 }
+.vh-more-link { font-family: var(--font-mono); font-size: 12px; color: var(--forest); text-decoration: underline; text-underline-offset: 4px; }
+.vh-more summary:hover .vh-more-link { color: var(--forest-dark); }
 .vh-more summary::-webkit-details-marker { display: none; }
 .vh-more[open] summary .vh-show { display: none; }
 .vh-more:not([open]) summary .vh-hide { display: none; }
-.vh-more dl { margin: 0; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid rgba(37,37,39,.1); padding-top: 16px; }
+.vh-more dl { margin: 4px 0 12px; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid rgba(37,37,39,.1); padding-top: 16px; }
 .vh-more dt { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--charcoal-muted); }
 .vh-more dd { margin: 3px 0 0; font-size: 14px; line-height: 1.5; color: var(--charcoal); }
-.vh-note { margin: 28px 0 0; font-family: var(--font-mono); font-size: 12px; line-height: 1.7; color: var(--charcoal-muted); }
 
 /* ─── History: timeline beside the charts ──────────────────────── */
 .vh-history-body { display: flex; flex-wrap: wrap; gap: 56px; align-items: flex-start; }

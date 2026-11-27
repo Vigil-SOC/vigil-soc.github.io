@@ -156,12 +156,11 @@
     </div>
     <div class="vh-grid">
       <article class="vh-uc" data-group="detect">
-        <div class="vh-uc-top"><span class="vh-uc-group">Detect</span><span class="vh-tag is-partial">First slices shipped</span></div>
         <h3>Agentic attacks</h3>
         <p>The FBI warns that threat actors use ARTEX, an agentic framework, to reach privileged access in under three hours. Hunt for such harnesses with detection rules and LogLM (optional).</p>
         <div class="vh-try"><span>Hunt hypothesis</span><code>An agentic harness such as ARTEX is active in our environment</code></div>
         <details class="vh-more">
-          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <summary><span class="vh-uc-group">Detect</span><span class="vh-more-link"><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></span></summary>
           <dl>
             <div><dt>Runs on</dt><dd>threat-hunt workflow, seeded from your TIP's advisories</dd></div>
             <div><dt>Detections</dt><dd>Rules for agentic attack behavior, proven on your SIEM's own events</dd></div>
@@ -171,12 +170,11 @@
         </details>
       </article>
       <article class="vh-uc" data-group="investigate">
-        <div class="vh-uc-top"><span class="vh-uc-group">Investigate</span><span class="vh-tag is-shipped">Shipped</span></div>
         <h3>Alert triage</h3>
         <p>Each new finding gets a verdict, a confidence score and context on its users and hosts before an analyst opens the queue.</p>
         <div class="vh-try"><span>Start the daemon</span><code>./start.sh -d</code></div>
         <details class="vh-more">
-          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <summary><span class="vh-uc-group">Investigate</span><span class="vh-more-link"><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></span></summary>
           <dl>
             <div><dt>Runs on</dt><dd>Triage agent and the SOC daemon</dd></div>
             <div><dt>Skills</dt><dd>phishing-triage, beaconing-review, rdp-lateral-movement, attack-mapping</dd></div>
@@ -185,12 +183,11 @@
         </details>
       </article>
       <article class="vh-uc" data-group="detect">
-        <div class="vh-uc-top"><span class="vh-uc-group">Detect</span><span class="vh-tag is-partial">First slices shipped</span></div>
         <h3>OT and critical infrastructure</h3>
         <p>Protect water, power and transportation networks with no new hardware. LogLM (optional) understands OT telemetry and flags concerning sequences; Vigil hunts, investigates and reports on them.</p>
         <div class="vh-try"><span>Hunt hypothesis</span><code>A PLC is receiving writes outside its maintenance window</code></div>
         <details class="vh-more">
-          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <summary><span class="vh-uc-group">Detect</span><span class="vh-more-link"><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></span></summary>
           <dl>
             <div><dt>Covers</dt><dd>Water plants, power grids, substations and transportation</dd></div>
             <div><dt>Detections</dt><dd>LogLM (optional) across OT protocols, beside the rules you run</dd></div>
@@ -200,12 +197,11 @@
         </details>
       </article>
       <article class="vh-uc" data-group="investigate">
-        <div class="vh-uc-top"><span class="vh-uc-group">Investigate</span><span class="vh-tag is-shipped">Shipped</span></div>
         <h3>Incident investigation</h3>
         <p>From one alert to a disposition: triage, investigation, a containment plan and a report. Root cause analysis traces a compromise to its origin.</p>
         <div class="vh-try"><span>Say in chat</span><code>Run incident response on finding f-20260215-abc123</code></div>
         <details class="vh-more">
-          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <summary><span class="vh-uc-group">Investigate</span><span class="vh-more-link"><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></span></summary>
           <dl>
             <div><dt>Runs on</dt><dd>incident-response, full-investigation and root-cause-analysis workflows</dd></div>
             <div><dt>Agents</dt><dd>Investigator, Correlator, MITRE Analyst, Reporter</dd></div>
@@ -214,12 +210,11 @@
         </details>
       </article>
       <article class="vh-uc" data-group="hunt">
-        <div class="vh-uc-top"><span class="vh-uc-group">Hunt</span><span class="vh-tag is-shipped">Shipped</span></div>
         <h3>Threat hunting</h3>
         <p>Start from a hypothesis or an IOC. A lead agent dispatches workers, follows the evidence and records verdicts the next hunt recalls.</p>
         <div class="vh-try"><span>Say in chat</span><code>Proactive hunt: look for lateral movement via RDP</code></div>
         <details class="vh-more">
-          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <summary><span class="vh-uc-group">Hunt</span><span class="vh-more-link"><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></span></summary>
           <dl>
             <div><dt>Runs on</dt><dd>threat-hunt workflow</dd></div>
             <div><dt>Agents</dt><dd>Threat Hunter leading Network Analyst, Malware Analyst and Threat Intel</dd></div>
@@ -228,12 +223,11 @@
         </details>
       </article>
       <article class="vh-uc" data-group="operate">
-        <div class="vh-uc-top"><span class="vh-uc-group">Operate</span><span class="vh-tag is-partial">First slices shipped</span></div>
         <h3>Air-gapped operations</h3>
         <p>Run the SOC with no route out: a local model, LogLM (optional) on your own hardware, and Medic watching the install's health.</p>
         <div class="vh-try"><span>Serve a local model</span><code>scripts/local_model.sh</code></div>
         <details class="vh-more">
-          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <summary><span class="vh-uc-group">Operate</span><span class="vh-more-link"><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></span></summary>
           <dl>
             <div><dt>Runs on</dt><dd>Docker Compose or Kubernetes on your hardware, with no cloud dependency</dd></div>
             <div><dt>Trust</dt><dd>An internal certificate authority for the console</dd></div>
@@ -243,12 +237,11 @@
         </details>
       </article>
       <article class="vh-uc" data-group="hunt">
-        <div class="vh-uc-top"><span class="vh-uc-group">Hunt</span><span class="vh-tag is-shipped">Shipped</span></div>
         <h3>Threat intelligence to hunts</h3>
         <p>New reports in your threat intelligence platform become hunt hypotheses for review, so a team can search its estate for an advisory the day it lands.</p>
         <div class="vh-try"><span>Connect in Settings</span><code>Integrations: OpenCTI, MISP or AlienVault OTX</code></div>
         <details class="vh-more">
-          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <summary><span class="vh-uc-group">Hunt</span><span class="vh-more-link"><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></span></summary>
           <dl>
             <div><dt>Runs on</dt><dd>Threat Intel agent feeding the threat-hunt workflow</dd></div>
             <div><dt>Connects to</dt><dd>OpenCTI, MISP and AlienVault OTX; VirusTotal and Shodan for enrichment</dd></div>
@@ -257,12 +250,11 @@
         </details>
       </article>
       <article class="vh-uc" data-group="investigate">
-        <div class="vh-uc-top"><span class="vh-uc-group">Investigate</span><span class="vh-tag is-shipped">Shipped</span></div>
         <h3>Forensics and reporting</h3>
         <p>Preserve evidence with chain of custody, then report to the reader who needs it: the technical team, executives or the board.</p>
         <div class="vh-try"><span>Say in chat</span><code>Post-incident forensics for case CASE-20260215-breach</code></div>
         <details class="vh-more">
-          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <summary><span class="vh-uc-group">Investigate</span><span class="vh-more-link"><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></span></summary>
           <dl>
             <div><dt>Runs on</dt><dd>forensic-analysis workflow</dd></div>
             <div><dt>Agents</dt><dd>Forensics, Malware Analyst, Reporter, Compliance</dd></div>
@@ -271,12 +263,11 @@
         </details>
       </article>
       <article class="vh-uc" data-group="hunt">
-        <div class="vh-uc-top"><span class="vh-uc-group">Hunt</span><span class="vh-tag is-partial">First slices shipped</span></div>
         <h3>AI agent defense</h3>
         <p>See which AI agents act in your estate, which tools and MCP servers they call and as whom, then judge each for misuse.</p>
         <div class="vh-try"><span>Hunt hypothesis</span><code>An AI agent is calling MCP tools outside its role</code></div>
         <details class="vh-more">
-          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <summary><span class="vh-uc-group">Hunt</span><span class="vh-more-link"><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></span></summary>
           <dl>
             <div><dt>Reads</dt><dd>OpenTelemetry GenAI and MCP spans in your SIEM</dd></div>
             <div><dt>Optional</dt><dd>LogLM (optional) for behavioral detection</dd></div>
@@ -285,12 +276,11 @@
         </details>
       </article>
       <article class="vh-uc" data-group="hunt">
-        <div class="vh-uc-top"><span class="vh-uc-group">Hunt</span><span class="vh-tag is-partial">First slices shipped</span></div>
         <h3>Insider threat</h3>
         <p>Hunt an account, not a person: identity context from your provider, benign explanations weighed first, cases restricted to named readers.</p>
         <div class="vh-try"><span>Hunt subject</span><code>user:&lt;name&gt;</code></div>
         <details class="vh-more">
-          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <summary><span class="vh-uc-group">Hunt</span><span class="vh-more-link"><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></span></summary>
           <dl>
             <div><dt>Runs on</dt><dd>threat-hunt workflow with the insider-threat skill</dd></div>
             <div><dt>Connects to</dt><dd>Okta or Entra ID</dd></div>
@@ -299,12 +289,11 @@
         </details>
       </article>
       <article class="vh-uc" data-group="operate">
-        <div class="vh-uc-top"><span class="vh-uc-group">Operate</span><span class="vh-tag is-partial">First slices shipped</span></div>
         <h3>MSP and multi-site SOC</h3>
         <p>Run Vigil at each client site or enclave, keep telemetry there, and roll incidents and evidence up to one central SOC.</p>
         <div class="vh-try"><span>Deploy per site</span><code>helm install vigil ./infra/helm/vigil --namespace site-a</code></div>
         <details class="vh-more">
-          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <summary><span class="vh-uc-group">Operate</span><span class="vh-more-link"><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></span></summary>
           <dl>
             <div><dt>Runs on</dt><dd>One Vigil per site or client, each in its own environment</dd></div>
             <div><dt>Detections</dt><dd>Federated rules run where they live, in each site's SIEM</dd></div>
@@ -314,12 +303,11 @@
         </details>
       </article>
       <article class="vh-uc" data-group="detect">
-        <div class="vh-uc-top"><span class="vh-uc-group">Detect</span><span class="vh-tag is-shipped">Shipped</span></div>
         <h3>Detection engineering</h3>
         <p>Search community rule sets, measure ATT&amp;CK coverage, draft a rule from a case and prove it on your SIEM's own events before it goes live.</p>
         <div class="vh-try"><span>Fetch the rules</span><code>./scripts/setup_detection_repos.sh</code></div>
         <details class="vh-more">
-          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <summary><span class="vh-uc-group">Detect</span><span class="vh-more-link"><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></span></summary>
           <dl>
             <div><dt>Rule sets</dt><dd>Sigma, Splunk ESCU, Elastic and KQL</dd></div>
             <div><dt>Rule libraries</dt><dd>Import, update and remove rule repos the way you import skills</dd></div>
@@ -329,12 +317,11 @@
         </details>
       </article>
       <article class="vh-uc" data-group="detect">
-        <div class="vh-uc-top"><span class="vh-uc-group">Detect</span><span class="vh-tag is-shipped">Shipped</span></div>
         <h3>Posture analysis</h3>
         <p>Know where you stand on day one and track it after. The Day 1 Report covers what Vigil can see, coverage gaps, settings checks and a cost forecast, and reruns on a cadence.</p>
         <div class="vh-try"><span>Open in the console</span><code>Day 1 Report</code></div>
         <details class="vh-more">
-          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <summary><span class="vh-uc-group">Detect</span><span class="vh-more-link"><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></span></summary>
           <dl>
             <div><dt>Reports</dt><dd>Day 1 Report and Production Start Report</dd></div>
             <div><dt>Over MCP</dt><dd>Read the gaps report and start a report run</dd></div>
@@ -344,12 +331,11 @@
         </details>
       </article>
       <article class="vh-uc" data-group="detect">
-        <div class="vh-uc-top"><span class="vh-uc-group">Detect</span><span class="vh-tag is-shipped">Shipped</span></div>
         <h3>Red team validation</h3>
         <p>Emulate an ATT&amp;CK technique on a listed host, from the console or the coverage map, and score whether your rules caught it within the hour.</p>
         <div class="vh-try"><span>Mark an emulator</span><code>Settings: Limits &amp; autonomy: Outside tools</code></div>
         <details class="vh-more">
-          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <summary><span class="vh-uc-group">Detect</span><span class="vh-more-link"><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></span></summary>
           <dl>
             <div><dt>Connects to</dt><dd>Atomic Red Team, or any tool bound as an emulator</dd></div>
             <div><dt>Guardrail</dt><dd>Emulators run only on hosts you list</dd></div>
@@ -358,12 +344,11 @@
         </details>
       </article>
       <article class="vh-uc" data-group="respond">
-        <div class="vh-uc-top"><span class="vh-uc-group">Respond</span><span class="vh-tag is-partial">First slices shipped</span></div>
         <h3>Response and containment</h3>
         <p>Agents propose actions and a person approves them. Host isolation and account disable run through the EDR and identity tools you already have.</p>
         <div class="vh-try"><span>Review in the console</span><code>Approvals</code></div>
         <details class="vh-more">
-          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <summary><span class="vh-uc-group">Respond</span><span class="vh-more-link"><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></span></summary>
           <dl>
             <div><dt>Connects to</dt><dd>Defender, Carbon Black and Entra ID; PagerDuty, Jira and Slack</dd></div>
             <div><dt>Guardrail</dt><dd>Only a person approves; blocking runs through Wazuh or similar</dd></div>
@@ -372,12 +357,11 @@
         </details>
       </article>
       <article class="vh-uc" data-group="hunt">
-        <div class="vh-uc-top"><span class="vh-uc-group">Hunt</span><span class="vh-tag is-partial">First slices shipped</span></div>
         <h3>Fly-away kit</h3>
         <p>Carry a preloaded Vigil to a mission partner's network, hunt its telemetry with no reach-back, and bring the verdicts home.</p>
         <div class="vh-try"><span>Pack</span><code>Vigil, a local model and LogLM (optional) on one portable server</code></div>
         <details class="vh-more">
-          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <summary><span class="vh-uc-group">Hunt</span><span class="vh-more-link"><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></span></summary>
           <dl>
             <div><dt>Runs on</dt><dd>A single portable server, fully offline</dd></div>
             <div><dt>Connects to</dt><dd>The partner's SIEM or EDR through the same integrations</dd></div>
@@ -387,12 +371,11 @@
         </details>
       </article>
       <article class="vh-uc" data-group="respond">
-        <div class="vh-uc-top"><span class="vh-uc-group">Respond</span><span class="vh-tag is-shipped">Shipped</span></div>
         <h3>Cloud incident response</h3>
         <p>AWS, Azure and GCP incidents: identity blast radius, IAM abuse, cross-account pivots and containment suited to the provider.</p>
         <div class="vh-try"><span>Say in chat</span><code>Run cloud incident response on finding f-20260215-abc123</code></div>
         <details class="vh-more">
-          <summary><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></summary>
+          <summary><span class="vh-uc-group">Respond</span><span class="vh-more-link"><span class="vh-show">Details</span><span class="vh-hide">Hide details</span></span></summary>
           <dl>
             <div><dt>Runs on</dt><dd>cloud-incident workflow</dd></div>
             <div><dt>Connects to</dt><dd>AWS security services, Security Lake, Sentinel, Entra ID, Google SCC</dd></div>
@@ -401,7 +384,6 @@
         </details>
       </article>
     </div>
-    <p class="vh-note">Shipped: in the current release. First slices shipped: usable now, with core pieces still in build.</p>
   </div>
 </section>
 
