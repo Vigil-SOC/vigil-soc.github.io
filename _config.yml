@@ -28,6 +28,7 @@ exclude:
   - vendor
   - CONTRIBUTING.md
   - "*.sh"
+  - scripts
 
 defaults:
   - scope:
